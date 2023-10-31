@@ -1,5 +1,8 @@
 cmake_minimum_required( VERSION 3.14 )
-project( vpaa_msm )
+project( unittest
+  DESCRIPTION "Fortran90 unittest"
+  LANGUAGES CXX
+  )
 
 cmake_policy( SET CMP0076 NEW )
 
