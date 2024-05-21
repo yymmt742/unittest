@@ -1,0 +1,15 @@
+#:include "common.fypp"
+submodule(mod_unittest) mod_unittest_assert
+contains
+#:for routine in ["assert", "assert_true"]
+#:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
+  module procedure ${routine_name(routine, post, 0)}$
+    logical :: err
+    integer :: ios
+    call utest_assert_printer(this, assertion, unitname, err)
+    if (err) write (STDOUT, '(2A)', IOSTAT=ios) AssertionError, ' xxx ASSERT ERROR'
+  end procedure ${routine_name(routine, post, 0)}$
+
+#:endfor
+#:endfor
+end submodule mod_unittest_assert

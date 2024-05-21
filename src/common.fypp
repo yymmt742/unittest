@@ -1,0 +1,33 @@
+#:mute
+
+#:set INTEGER_KINDS = ["INT8", "INT16", "INT32", "INT64"]
+#:set INTEGER_POSTFIX = ["i8", "i16", "i32", "i64"]
+#:set REAL_KINDS = ["REAL32", "REAL64", "REAL128"]
+#:set REAL_POSTFIX = ["r32", "r64", "r128"]
+#:set COMPLEX_POSTFIX = ["c32", "c64", "c128"]
+#:set LOGICAL_KINDS = [""]
+#:set LOGICAL_TYPES = ["logical"]
+#:set LOGICAL_POSTFIX = ["bool"]
+
+#:set REAL_TYPES = [f"real({k})" for k in REAL_KINDS]
+#:set COMPLEX_TYPES = [f"complex({k})" for k in REAL_KINDS]
+#:set LOGICAL_TYPES = [f"logical"]
+#
+#:set REAL_KIND_TYPE_POSTS = list(zip(REAL_KINDS, REAL_TYPES, REAL_POSTFIX))
+#:set COMPLEX_KIND_TYPE_POSTS = list(zip(REAL_KINDS, COMPLEX_TYPES, COMPLEX_POSTFIX))
+#:set LOGICAL_KIND_TYPE_POSTS = list(zip(LOGICAL_KINDS, LOGICAL_TYPES, LOGICAL_POSTFIX))
+
+#:def decimal_suffix(type)
+#{if 'REAL' in type}#.0#{endif}#
+#:enddef
+
+#:def routine_name(g, post, rank1, rank2=None)
+$:f"unittest_{g}_{post}_{rank1}" if rank2 is None else f"unittest_{g}_{post}_{rank1}{rank2}"
+#:enddef
+
+#:def rank_suffix(rank)
+#{if rank>0}#(${":" + ",:" * (rank - 1)}$)#{endif}#
+#:enddef
+
+#:endmute
+
