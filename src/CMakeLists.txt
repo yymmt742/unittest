@@ -5,7 +5,9 @@ endif()
 
 list(APPEND fyppFiles
   assert.fypp
-  equal.fypp)
+  equal.fypp
+  compare.fypp
+  )
 set(fyppFlags)
 
 foreach(fyppfile ${fyppFiles})

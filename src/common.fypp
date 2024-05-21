@@ -37,12 +37,14 @@ $:f"unittest_{g}_{post}_{rank1}" if rank2 is None else f"unittest_{g}_{post}_{ra
 #{if rank>0}#(${",".join(COUNTER_VAR[:rank])}$)#{endif}#
 #:enddef
 
-#:def generic_procedure(g, tup, rank1, rank2=None)
+#:def generic_procedure(g, tup, ranks)
+#:for rank1, rank2 in ranks
 #:for kind, type, post in tup
   procedure, private :: ${routine_name(g, post, rank1, rank2)}$
 #:endfor
+#:endfor
   generic            :: ${g}$  => &
-  ${", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup])}$
+  ${", &\n  ".join([", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup]) for rank1, rank2 in ranks])}$
 #:enddef
 
 #:endmute

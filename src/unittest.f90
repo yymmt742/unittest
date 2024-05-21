@@ -27,8 +27,7 @@ module mod_unittest
     procedure         :: init => utest_init
     include "assert.h"
     include "equal.h"
-    !include "unittest_assert_equal.h"
-    include "unittest_assert_compare.h"
+    include "compare.h"
     include "unittest_assert_almost_equal.h"
     procedure         :: finish => utest_finish
     procedure         :: finish_and_terminate => utest_finish_and_terminate
@@ -39,9 +38,10 @@ contains
 !
   include "assert.f90"
   include "equal.f90"
+  include "compare.f90"
 ! include "unittest_assert.f90"
 ! include "unittest_assert_equal.f90"
-  include "unittest_assert_compare.f90"
+! include "unittest_assert_compare.f90"
   include "unittest_assert_almost_equal.f90"
 !
 !=========================================================!

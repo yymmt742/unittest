@@ -1,6 +1,4 @@
 #:include "common.fypp"
-#:for rank in [0, 1]
 #:for routine in ["assert", "assert_true", "assert_false"]
-${generic_procedure(routine, LOGICAL_KIND_TYPE_POSTS, rank)}$
-#:endfor
+${generic_procedure(routine, LOGICAL_KIND_TYPE_POSTS, [(0, None), (1, None)])}$
 #:endfor
