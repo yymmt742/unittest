@@ -7,7 +7,7 @@
 #:set COMPLEX_POSTFIX = ["c32", "c64", "c128"]
 #:set LOGICAL_KINDS = [""]
 #:set LOGICAL_TYPES = ["logical"]
-#:set LOGICAL_POSTFIX = ["bool"]
+#:set LOGICAL_POSTFIX = ["logical"]
 
 #:set REAL_TYPES = [f"real({k})" for k in REAL_KINDS]
 #:set COMPLEX_TYPES = [f"complex({k})" for k in REAL_KINDS]
@@ -29,5 +29,12 @@ $:f"unittest_{g}_{post}_{rank1}" if rank2 is None else f"unittest_{g}_{post}_{ra
 #{if rank>0}#(${":" + ",:" * (rank - 1)}$)#{endif}#
 #:enddef
 
-#:endmute
+#:def generic_procedure(g, tup, rank1, rank2=None)
+#:for kind, type, post in tup
+  procedure, private :: ${routine_name(routine, post, rank1, rank2)}$
+#:endfor
+  generic            :: ${g}$  => &
+  ${", &\n".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup])}$
+#:enddef
 
+#:endmute

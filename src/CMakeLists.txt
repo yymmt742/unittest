@@ -8,18 +8,30 @@ set(fyppFlags)
 
 foreach(fyppfile ${fyppFiles})
   string(REGEX REPLACE "\\.fypp" ".f90" f90file ${fyppfile})
+  string(REGEX REPLACE "\\.fypp" ".h" incfile ${fyppfile})
+  string(REGEX REPLACE "\\.fypp" ".h.fypp" incsrc ${fyppfile})
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${incfile}
+    COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/${incsrc}
+            ${CMAKE_CURRENT_BINARY_DIR}/${incfile}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${incsrc}
+            ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${f90file}
     COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/${fyppfile}
             ${CMAKE_CURRENT_BINARY_DIR}/${f90file}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${fyppfile}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${incfile}
+            ${CMAKE_CURRENT_SOURCE_DIR}/${fyppfile}
             ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
   list(APPEND f90files ${CMAKE_CURRENT_BINARY_DIR}/${f90file})
 endforeach()
 
-set(unittest_src unittest.f90 ${f90files})
+add_custom_target(custom_header DEPENDS ${f90files})
 
+set(unittest_src unittest.f90)
 add_library(${PROJECT_NAME} STATIC ${unittest_src})
+add_dependencies(${PROJECT_NAME} custom_header)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 set_target_properties(
   ${PROJECT_NAME} PROPERTIES CMAKE_POSITION_INDEPENDENT_CODE ON
                              WINDOWS_EXPORT_ALL_SYMBOLS ON)

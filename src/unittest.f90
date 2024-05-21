@@ -1,30 +1,31 @@
 module mod_unittest
   use, intrinsic :: ISO_FORTRAN_ENV, only: STDOUT => OUTPUT_UNIT, &
-                  &                        IK => INT32,    &
+                  &                        STDERR => ERROR_UNIT, &
                   &                        RK => REAL64
   implicit none
   private
   public  :: unittest
 !
-  character(60), parameter :: SEP1 = REPEAT('-', 60)
-  character(60), parameter :: SEP2 = REPEAT('=', 60)
-  character(42), parameter :: SEP3 = REPEAT(' ', 8)//REPEAT('-', 36)
-  character(26), parameter :: AssertionError = '        Assertion Error : '
-  character(26), parameter :: LankMissMatchError = '   Lank MissMatch Error : '
-  character(26), parameter :: ErrorRateIs = '          Error rate is : '
-
-  integer(IK), parameter   :: DEF_MP = 10**4
+  character(*), parameter :: SEP1 = REPEAT('-', 60)
+  character(*), parameter :: SEP2 = REPEAT('=', 60)
+  character(*), parameter :: SEP3 = REPEAT(' ', 8)//REPEAT('-', 36)
+  character(*), parameter :: AssertionError = '        Assertion Error : '
+  character(*), parameter :: LankMissMatchError = '   Lank MissMatch Error : '
+  character(*), parameter :: ErrorRateIs = '          Error rate is : '
+  integer, parameter      :: DEF_MP = 10**4
 !
   type unittest
-    integer(IK)              :: num_test
-    integer(IK)              :: num_error
-    integer(IK)              :: start_time
-    real(RK)                 :: start_cpu_time
+    private
+    integer                   :: dev
+    integer                   :: num_test
+    integer                   :: num_error
+    integer                   :: start_time
+    real(RK)                  :: start_cpu_time
     character(:), allocatable :: script_name
-    logical                    :: error_detected = .false.
+    logical                   :: error_detected = .false.
   contains
     procedure         :: init => utest_init
-    include "unittest_assert.h"
+    include "assert.h"
     include "unittest_assert_equal.h"
     include "unittest_assert_compare.h"
     include "unittest_assert_almost_equal.h"
@@ -33,25 +34,10 @@ module mod_unittest
     final             :: utest_destroy
   end type unittest
 !
-  interface
-    module subroutine unittest_assert_bool_0(this, assertion, unitname)
-      implicit none
-      class(unittest), intent(inout) :: this
-      logical, intent(in)            :: assertion
-      character(*), intent(in)       :: unitname
-    end subroutine unittest_assert_bool_0
-
-    module subroutine unittest_assert_true_bool_0(this, assertion, unitname)
-      implicit none
-      class(unittest), intent(inout) :: this
-      logical, intent(in)            :: assertion
-      character(*), intent(in)       :: unitname
-    end subroutine unittest_assert_true_bool_0
-  end interface
-!
 contains
 !
-  include "unittest_assert.f90"
+  include "assert.f90"
+! include "unittest_assert.f90"
   include "unittest_assert_equal.f90"
   include "unittest_assert_compare.f90"
   include "unittest_assert_almost_equal.f90"
@@ -59,10 +45,10 @@ contains
 !=========================================================!
 !
   subroutine utest_init(this, section)
-    class(unittest), intent(inout)    :: this
+    class(unittest), intent(inout)     :: this
     character(*), intent(in), optional :: section
-    integer(IK)                        :: lna, ios
-    character(:), allocatable           :: tmp
+    integer                            :: lna, ios
+    character(:), allocatable          :: tmp
     call utest_destroy(this)
 !
     call CPU_TIME(this%start_cpu_time)
@@ -71,6 +57,7 @@ contains
     call GET_COMMAND_ARGUMENT(0, length=lna, status=ios)
     if (ios /= 0) return
 !
+    this%dev = STDERR
     allocate (character(lna) :: tmp)
     allocate (character(0) :: this%script_name)
     call GET_COMMAND_ARGUMENT(0, value=tmp, status=ios)
@@ -78,19 +65,19 @@ contains
     this%script_name = tmp(lna:)
     deallocate (tmp)
 !
-    write (STDOUT, '(A)', err=100) SEP2
-    write (STDOUT, '(A)', err=100) 'Test command :: '//this%script_name
-    if (PRESENT(section)) write (STDOUT, '(A)', err=100) '  Section ----> '//section
+    write (this%dev, '(A)', err=100) SEP2
+    write (this%dev, '(A)', err=100) 'Test command :: '//this%script_name
+    if (PRESENT(section)) write (this%dev, '(A)', err=100) '  Section ----> '//section
 !
 100 return
   end subroutine utest_init
 !
   subroutine utest_assert_lank_missmatch(this, size_a, size_b, unitname, err)
     class(unittest), intent(inout) :: this
-    integer(IK), intent(in)        :: size_a, size_b
+    integer, intent(in)            :: size_a, size_b
     character(*), intent(in)       :: unitname
-    logical, intent(inout)           :: err
-    integer(IK)                     :: ios
+    logical, intent(inout)         :: err
+    integer                        :: ios
 !
     err = size_a /= size_b
 !
@@ -107,10 +94,10 @@ contains
 !
   subroutine utest_assert_printer(this, ok, unitname, err)
     class(unittest), intent(inout) :: this
-    logical, intent(in)              :: ok
+    logical, intent(in)            :: ok
     character(*), intent(in)       :: unitname
-    logical, intent(inout)           :: err
-    integer(IK)                     :: ios
+    logical, intent(inout)         :: err
+    integer                        :: ios
     err = .false.
     if (.not. ALLOCATED(this%script_name)) return
     err = .not. ok
@@ -130,9 +117,9 @@ contains
   end subroutine utest_assert_printer
 !
   subroutine utest_error_rate_printer(ntest, nerror)
-    integer(IK), intent(in)        :: ntest, nerror
-    real(RK)                        :: error_rate
-    integer(IK)                     :: ios
+    integer, intent(in)        :: ntest, nerror
+    real(RK)                   :: error_rate
+    integer                    :: ios
     if (ntest < 1) return
     error_rate = real(nerror, RK) / real(ntest, RK)
     write (STDOUT, '(A)', IOSTAT=ios) SEP3
@@ -212,8 +199,8 @@ contains
 !
   subroutine utest_finish(this)
     class(unittest), intent(inout) :: this
-    integer(IK)                     :: finish_time, t_rate, t_max
-    real(RK)                        :: finish_cpu_time, time
+    integer                        :: finish_time, t_rate, t_max
+    real(RK)                       :: finish_cpu_time, time
 !
     if (.not. ALLOCATED(this%script_name)) return
 !
