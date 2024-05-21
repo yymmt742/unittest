@@ -2,13 +2,13 @@
 #:for routine, cond in zip(["assert", "assert_true", "assert_false"], ["assertion", "assertion", ".not.assertion"])
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
   subroutine ${routine_name(routine, post, 0)}$ (this, assertion, unitname)
-  class(unittest), intent(inout) :: this
-  ${type}$, intent(in)           :: assertion
-  character(*), intent(in)       :: unitname
-  logical                        :: err
-  integer                        :: ios
-  call utest_assert_printer(this, ${cond}$, unitname, err)
-  if (err) write (this%dev, '(2A)', IOSTAT=ios) AssertionError, ' xxx ASSERT ERROR'
+    class(unittest), intent(inout) :: this
+    ${type}$, intent(in)           :: assertion
+    character(*), intent(in)       :: unitname
+    logical                        :: err
+    integer                        :: ios
+    call utest_assert_printer(this, ${cond}$, unitname, err)
+    if (err) write (this%dev, '(2A)', IOSTAT=ios) AssertionError, ' xxx ASSERT ERROR'
   end subroutine ${routine_name(routine, post, 0)}$
 
 #:endfor
@@ -22,17 +22,17 @@
   character(*), intent(in)       :: unitname
   logical                        :: err
   integer                        :: ios, nerr
-  call utest_assert_printer(this, ${cond}$, unitname, err)
-  if (err) then
-    write (this%dev, '(2A)', IOSTAT=ios) AssertionError, 'ASSERT 1D'
-    nerr = 0
-!   do i = 1, SIZE(assertion)
-!     if (.not. assertion(i)) cycle; nerr = nerr + 1
-!     write (this%dev, '(6X,i8,A)', IOSTAT=ios) i, '  xxx error'
-!     if (ios > 0) exit
-!   end do
-!   call utest_error_rate_printer(SIZE(assertion), nerr)
-  end if
+    call utest_assert_printer(this, ${cond}$, unitname, err)
+    if (err) then
+      write (this%dev, '(2A)', IOSTAT=ios) AssertionError, 'ASSERT 1D'
+      nerr = 0
+!     do i = 1, SIZE(assertion)
+!       if (.not. assertion(i)) cycle; nerr = nerr + 1
+!       write (this%dev, '(6X,i8,A)', IOSTAT=ios) i, '  xxx error'
+!       if (ios > 0) exit
+!     end do
+!     call utest_error_rate_printer(SIZE(assertion), nerr)
+    end if
   end subroutine ${routine_name(routine, post, rank)}$
 
 #:endfor

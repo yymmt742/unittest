@@ -9,13 +9,17 @@
 #:set LOGICAL_TYPES = ["logical"]
 #:set LOGICAL_POSTFIX = ["logical"]
 
+#:set INTEGER_TYPES = [f"integer({k})" for k in INTEGER_KINDS]
 #:set REAL_TYPES = [f"real({k})" for k in REAL_KINDS]
 #:set COMPLEX_TYPES = [f"complex({k})" for k in REAL_KINDS]
 #:set LOGICAL_TYPES = [f"logical"]
-#
+
+#:set INTEGER_KIND_TYPE_POSTS = list(zip(INTEGER_KINDS, INTEGER_TYPES, INTEGER_POSTFIX))
 #:set REAL_KIND_TYPE_POSTS = list(zip(REAL_KINDS, REAL_TYPES, REAL_POSTFIX))
 #:set COMPLEX_KIND_TYPE_POSTS = list(zip(REAL_KINDS, COMPLEX_TYPES, COMPLEX_POSTFIX))
 #:set LOGICAL_KIND_TYPE_POSTS = list(zip(LOGICAL_KINDS, LOGICAL_TYPES, LOGICAL_POSTFIX))
+
+#:set COUNTER_VAR = ["i", "j", "k", "l", "m", "n"]
 
 #:def decimal_suffix(type)
 #{if 'REAL' in type}#.0#{endif}#
@@ -26,15 +30,19 @@ $:f"unittest_{g}_{post}_{rank1}" if rank2 is None else f"unittest_{g}_{post}_{ra
 #:enddef
 
 #:def rank_suffix(rank)
-#{if rank>0}#(${":" + ",:" * (rank - 1)}$)#{endif}#
+#{if rank>0}#(${",".join([":" for i in range(rank)])}$)#{endif}#
+#:enddef
+
+#:def counter_suffix(rank)
+#{if rank>0}#(${",".join(COUNTER_VAR[:rank])}$)#{endif}#
 #:enddef
 
 #:def generic_procedure(g, tup, rank1, rank2=None)
 #:for kind, type, post in tup
-  procedure, private :: ${routine_name(routine, post, rank1, rank2)}$
+  procedure, private :: ${routine_name(g, post, rank1, rank2)}$
 #:endfor
   generic            :: ${g}$  => &
-  ${", &\n".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup])}$
+  ${", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup])}$
 #:enddef
 
 #:endmute

@@ -1,0 +1,9 @@
+#:include "common.fypp"
+#:for routine in ["assert_equal", "assert_not_equal"]
+#:for rank1 in [0, 1]
+#:for rank2 in [0, 1]
+${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS, rank1, rank2)}$
+${generic_procedure(routine, LOGICAL_KIND_TYPE_POSTS, rank1, rank2)}$
+#:endfor
+#:endfor
+#:endfor

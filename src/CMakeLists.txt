@@ -3,7 +3,9 @@ if(NOT FYPP)
   message(FATAL_ERROR "FYPP not found.")
 endif()
 
-list(APPEND fyppFiles assert.fypp)
+list(APPEND fyppFiles
+  assert.fypp
+  equal.fypp)
 set(fyppFlags)
 
 foreach(fyppfile ${fyppFiles})
