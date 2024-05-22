@@ -12,7 +12,7 @@ module mod_unittest
   character(*), parameter :: AssertionError = '        Assertion Error : '
   character(*), parameter :: LankMissMatchError = '   Lank MissMatch Error : '
   character(*), parameter :: ErrorRateIs = '          Error rate is : '
-  integer, parameter      :: DEF_MP = 10**4
+  integer, parameter      :: DEF_MP = 10**7
 !
   type unittest
     private
@@ -34,18 +34,24 @@ module mod_unittest
     final             :: utest_destroy
   end type unittest
 !
+  interface unittest
+    module procedure :: utest_new
+  end interface unittest
+!
 contains
 !
   include "assert.f90"
   include "equal.f90"
   include "compare.f90"
   include "almost_equal.f90"
-! include "unittest_assert.f90"
-! include "unittest_assert_equal.f90"
-! include "unittest_assert_compare.f90"
-! include "unittest_assert_almost_equal.f90"
 !
 !=========================================================!
+!
+  function utest_new(section) result(res)
+    character(*), intent(in), optional :: section
+    type(unittest)                     :: res
+    call utest_init(res, section)
+  end function utest_new
 !
   subroutine utest_init(this, section)
     class(unittest), intent(inout)     :: this
@@ -89,9 +95,9 @@ contains
     this%num_test = this%num_test + 1
     this%num_error = this%num_error + 1
 !
-    write (STDOUT, '(I8,A)', IOSTAT=ios) this%num_test, ' '//unitname//' ... failed ( lank miss match )'
-    write (STDOUT, '(2A,I0,A,I0,A)', IOSTAT=ios) LankMissMatchError, '[', size_a, '] /= [', size_b, ']'
-    FLUSH (STDOUT)
+    write (this%dev, '(I8,A)', IOSTAT=ios) this%num_test, ' '//unitname//' ... failed ( lank miss match )'
+    write (this%dev, '(2A,I0,A,I0,A)', IOSTAT=ios) LankMissMatchError, '[', size_a, '] /= [', size_b, ']'
+    FLUSH (this%dev)
 !
   end subroutine utest_assert_lank_missmatch
 !
@@ -107,98 +113,29 @@ contains
 !
     this%num_test = this%num_test + 1
 !
-    write (STDOUT, '(I8,A)', ADVANCE='NO', IOSTAT=ios) this%num_test, ' '//unitname//' ... '
+    write (this%dev, '(I8,A)', ADVANCE='NO', IOSTAT=ios) this%num_test, ' '//unitname//' ... '
 !
     if (ok) then
-      write (STDOUT, '(A)', IOSTAT=ios) 'ok'
+      write (this%dev, '(A)', IOSTAT=ios) 'ok'
     else
-      write (STDOUT, '(A)', IOSTAT=ios) 'failed'
+      write (this%dev, '(A)', IOSTAT=ios) 'failed'
       this%num_error = this%num_error + 1
     end if
 !
-    FLUSH (STDOUT)
+    FLUSH (this%dev)
   end subroutine utest_assert_printer
 !
-  subroutine utest_error_rate_printer(ntest, nerror)
-    integer, intent(in)        :: ntest, nerror
-    real(RK)                   :: error_rate
-    integer                    :: ios
+  subroutine utest_error_rate_printer(this, ntest, nerror)
+    class(unittest), intent(in) :: this
+    integer, intent(in)         :: ntest, nerror
+    real(RK)                    :: error_rate
+    integer                     :: ios
     if (ntest < 1) return
     error_rate = real(nerror, RK) / real(ntest, RK)
-    write (STDOUT, '(A)', IOSTAT=ios) SEP3
-    write (STDOUT, '(A,f7.3,A)', IOSTAT=ios) ErrorRateIs, error_rate, ' %'
-    FLUSH (STDOUT)
+    write (this%dev, '(A)', IOSTAT=ios) SEP3
+    write (this%dev, '(A,f7.3,A)', IOSTAT=ios) ErrorRateIs, error_rate, ' %'
+    FLUSH (this%dev)
   end subroutine utest_error_rate_printer
-!
-! subroutine utest_assert_0( this, ok, unitname )
-! class( unittest ),intent( inout ) :: this
-! logical,intent( in )              :: ok
-! character( * ),intent( in )       :: unitname
-! logical                           :: err
-!   call utest_assert_printer( this, ok, unitname, err )
-! end subroutine utest_assert_0
-!
-! subroutine utest_assert_1( this, ok, unitname )
-! class( unittest ),intent( inout ) :: this
-! logical,intent( in )              :: ok(:)
-! character( * ),intent( in )       :: unitname
-! logical                           :: err
-!   call utest_assert_printer( this, ALL( ok ), unitname, err )
-!   if(err)then
-!     block
-!     real( RK )   :: error_rate
-!     integer( IK ) :: i
-!     write( STDOUT, '(A)', err=100 ) AssertionError
-!     error_rate = 0D0
-!     do i=1,size(ok)
-!       if( .not.ok(i) )then
-!         write( STDOUT, '(6X,i8)',err=100) i
-!         error_rate = error_rate + 1d2
-!       endif
-!     enddo
-!     error_rate = error_rate / dble(size(ok))
-!     write( STDOUT, '(A)',err=100) '        ----------------------------------'
-!     write( STDOUT, '(A,f7.3,A)',err=100) '         Error rate is :',error_rate,' %'
-!     end block
-!   endif
-!00 FLUSH( STDOUT )
-!   RETURN
-! end subroutine utest_assert_1
-!
-! subroutine utest_assert_false_0( this, ng, unitname )
-! class( unittest ),intent( inout ) :: this
-! logical,intent( in )              :: ng
-! character( * ),intent( in )       :: unitname
-! logical                           :: err
-!   call utest_assert_printer(this,.not.ng,unitname,err)
-! end subroutine utest_assert_false_0
-!
-! subroutine utest_assert_false_1( this, ok, unitname )
-! class( unittest ),intent( inout ) :: this
-! logical,intent( in )              :: ok(:)
-! character( * ),intent( in )       :: unitname
-! logical                           :: err
-!   call utest_assert_printer( this, .not.ANY( ok ), unitname, err )
-!   if(err)then
-!     block
-!     real( RK )    :: error_rate
-!     integer( IK ) :: i
-!     write( STDOUT, '(A)', err=100 ) '        AssertionError'
-!     error_rate = 0D0
-!     do i=1,size(ok)
-!       if(ok(i))then
-!         write( STDOUT, '(6X,i8)',err=100) i
-!         error_rate = error_rate + 1d2
-!       endif
-!     enddo
-!     error_rate = error_rate / dble(size(ok))
-!     write( STDOUT, '(A)',err=100) '        ----------------------------------'
-!     write( STDOUT, '(A,f7.3,A)',err=100) '         Error rate is :',error_rate,' %'
-!     end block
-!   endif
-!00 FLUSH( STDOUT )
-!   RETURN
-! end subroutine utest_assert_false_1
 !
   subroutine utest_finish(this)
     class(unittest), intent(inout) :: this
@@ -220,22 +157,22 @@ contains
     finish_cpu_time = finish_cpu_time - this%start_cpu_time
 !
     if (this%num_test > 0) then
-      write (STDOUT, '(A)', err=100) SEP1
-      write (STDOUT, '(A,I0,A,F9.3,A,F9.3,A)', advance='NO', err=100)    &
+      write (this%dev, '(A)', err=100) SEP1
+      write (this%dev, '(A,I0,A,F9.3,A,F9.3,A)', advance='NO', err=100)    &
    &  ' Run ', this%num_test, ' tests in ', time / DBLE(t_rate), ' / ', &
    &  finish_cpu_time, ' s (sys/cpu)----> '
       if (this%num_error < 1) then
-        write (STDOUT, '(A,I0,A,F9.3,A)', err=100) 'Passed'
+        write (this%dev, '(A,I0,A,F9.3,A)', err=100) 'Passed'
       else
         this%error_detected = .true.
-        write (STDOUT, '(A,/,I12,A)', err=100) 'Failed, ', this%num_error, ' error detected.'
+        write (this%dev, '(A,/,I12,A)', err=100) 'Failed, ', this%num_error, ' error detected.'
       end if
     else
-      write (STDOUT, '(A)', err=100) 'No Test executed'
+      write (this%dev, '(A)', err=100) 'No Test executed'
     end if
-    write (STDOUT, '(A)', err=100) SEP2
+    write (this%dev, '(A)', err=100) SEP2
 !
-100 FLUSH (STDOUT)
+100 FLUSH (this%dev)
     call utest_free(this)
   end subroutine utest_finish
 !

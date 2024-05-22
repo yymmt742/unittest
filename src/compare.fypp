@@ -36,7 +36,7 @@
             if (ios > 0) exit
           end if
         end do
-        call utest_error_rate_printer(${size}$, nerr)
+        call utest_error_rate_printer(this, ${size}$, nerr)
       end if
       end subroutine ${routine_name(routine, post, rank1, rank2)}$
 

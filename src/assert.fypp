@@ -31,7 +31,7 @@
 !       write (this%dev, '(6X,i8,A)', IOSTAT=ios) i, '  xxx error'
 !       if (ios > 0) exit
 !     end do
-!     call utest_error_rate_printer(SIZE(assertion), nerr)
+!     call utest_error_rate_printer(this, SIZE(assertion), nerr)
     end if
   end subroutine ${routine_name(routine, post, rank)}$
 
