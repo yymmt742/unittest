@@ -40,6 +40,7 @@ module mod_unittest
 !
   interface
     include "assert.inc"
+    include "equal.inc"
     include "compare.inc"
     include "almost_equal.inc"
   end interface
@@ -47,7 +48,7 @@ module mod_unittest
 contains
 !
 ! include "assert.f90"
-  include "equal.f90"
+! include "equal.f90"
 ! include "compare.f90"
 ! include "almost_equal.f90"
 !

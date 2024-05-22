@@ -19,8 +19,16 @@ set(fyppFlags)
 
 foreach(fyppfile ${fyppFiles})
   string(REGEX REPLACE "\\.fypp" ".f90" f90file ${fyppfile})
-  string(REGEX REPLACE "\\.fypp" ".h" incfile ${fyppfile})
-  string(REGEX REPLACE "\\.fypp" ".h.fypp" incsrc ${fyppfile})
+  string(REGEX REPLACE "\\.fypp" ".h" hfile ${fyppfile})
+  string(REGEX REPLACE "\\.fypp" ".h.fypp" hsrc ${fyppfile})
+  string(REGEX REPLACE "\\.fypp" ".inc" incfile ${fyppfile})
+  string(REGEX REPLACE "\\.fypp" ".i.fypp" incsrc ${fyppfile})
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${hfile}
+    COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/${hsrc}
+            ${CMAKE_CURRENT_BINARY_DIR}/${hfile}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${hsrc}
+            ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${incfile}
     COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/${incsrc}
@@ -31,42 +39,15 @@ foreach(fyppfile ${fyppFiles})
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${f90file}
     COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/${fyppfile}
             ${CMAKE_CURRENT_BINARY_DIR}/${f90file}
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${incfile}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${hfile}
+            ${CMAKE_CURRENT_BINARY_DIR}/${incfile}
             ${CMAKE_CURRENT_SOURCE_DIR}/${fyppfile}
             ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
   list(APPEND f90files ${CMAKE_CURRENT_BINARY_DIR}/${f90file})
 endforeach()
 
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.inc
-  COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/almost_equal.i.fypp
-          ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.inc
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/almost_equal.i.fypp
-          ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/assert.inc
-  COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/assert.i.fypp
-          ${CMAKE_CURRENT_BINARY_DIR}/assert.inc
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/assert.i.fypp
-          ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/compare.inc
-  COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/compare.i.fypp
-          ${CMAKE_CURRENT_BINARY_DIR}/compare.inc
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/compare.i.fypp
-          ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
-
-add_custom_target(custom_header DEPENDS ${f90files}
-  ${CMAKE_CURRENT_BINARY_DIR}/assert.inc
-  ${CMAKE_CURRENT_BINARY_DIR}/compare.inc
-  ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.inc
-  )
-
-set(unittest_src unittest.f90 unittest_printer.f90
-  ${CMAKE_CURRENT_BINARY_DIR}/assert.f90
-  ${CMAKE_CURRENT_BINARY_DIR}/compare.f90
-  ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.f90
-  )
+add_custom_target(custom_header DEPENDS ${f90files})
+set(unittest_src unittest.f90 unittest_printer.f90 ${f90files})
 add_library(${PROJECT_NAME} STATIC ${unittest_src})
 add_dependencies(${PROJECT_NAME} custom_header)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${LIB_MOD_DIR})
