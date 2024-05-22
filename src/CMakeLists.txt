@@ -49,10 +49,24 @@ add_custom_command(
           ${CMAKE_CURRENT_BINARY_DIR}/assert.inc
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/assert.i.fypp
           ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/compare.inc
+  COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/compare.i.fypp
+          ${CMAKE_CURRENT_BINARY_DIR}/compare.inc
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/compare.i.fypp
+          ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
 
-add_custom_target(custom_header DEPENDS ${f90files} ${CMAKE_CURRENT_BINARY_DIR}/assert.inc ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.inc)
+add_custom_target(custom_header DEPENDS ${f90files}
+  ${CMAKE_CURRENT_BINARY_DIR}/assert.inc
+  ${CMAKE_CURRENT_BINARY_DIR}/compare.inc
+  ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.inc
+  )
 
-set(unittest_src unittest.f90 unittest_printer.f90 ${CMAKE_CURRENT_BINARY_DIR}/assert.f90 ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.f90)
+set(unittest_src unittest.f90 unittest_printer.f90
+  ${CMAKE_CURRENT_BINARY_DIR}/assert.f90
+  ${CMAKE_CURRENT_BINARY_DIR}/compare.f90
+  ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.f90
+  )
 add_library(${PROJECT_NAME} STATIC ${unittest_src})
 add_dependencies(${PROJECT_NAME} custom_header)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${LIB_MOD_DIR})

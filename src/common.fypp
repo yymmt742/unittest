@@ -52,7 +52,7 @@ $:"call utest_assert_lank_missmatch(this, SIZE(a), SIZE(b), unitname, err); if (
 #:enddef
 
 #:def rank_check_(rank1, rank2)
-$:"call report_lank_missmatch(this%dev, SIZE(a), SIZE(b), unitname,  this%num_test, this%num_error, err); if (err) return" if rank1>0 and rank2>0 else ""
+$:"call report_lank_missmatch(this%dev, SIZE(a), SIZE(b), unitname,  this%num_test, this%num_error, err)\n      if (err) return" if rank1>0 and rank2>0 else ""
 #:enddef
 
 #:endmute
