@@ -67,7 +67,7 @@ foreach(fyppfile ${fyppFiles})
   list(APPEND f90files ${CMAKE_CURRENT_BINARY_DIR}/${f90file})
 endforeach()
 
-set(unittest_src unittest.f90 unittest_printer.f90 ${f90files})
+set(unittest_src mod_unittest.f90 unittest_printer.f90 ${f90files})
 add_library(${PROJECT_NAME} STATIC ${unittest_src})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
