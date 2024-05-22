@@ -68,29 +68,31 @@ contains
     type(expr_report), intent(in) :: expr(:)
     character(*), intent(in)      :: unitname
     real(RK)                      :: error_rate
-    integer                       :: i, nerror, ntest, ios
+    integer                       :: i, nerror, ntest, ios, npad
 !
-    write (dev, '(I8,A)', ADVANCE='NO', IOSTAT=ios) num_test, ' '//unitname//' ... '
+    npad = MAX(0, 40 - LEN_TRIM(unitname))
+    write (dev, '(I8,A)', ADVANCE='NO', IOSTAT=ios) num_test, ' '//TRIM(unitname)
     if (err) then
-      write (dev, '(A)', IOSTAT=ios) 'failed'
+      write (dev, '(A)', IOSTAT=ios) REPEAT(' ', npad)//'... failed'
     else
-      write (dev, '(A)', IOSTAT=ios) 'ok'
+      write (dev, '(A)', IOSTAT=ios) REPEAT(' ', npad)//'... OK'
       return
     end if
 !
     ntest = SIZE(expr)
 !
+    write (dev, '(A)', IOSTAT=ios) SEP3
     nerror = 0
     do i = 1, ntest
       if (expr(i)%ok) cycle
-      write (dev, '(6X,I8,A)', IOSTAT=ios) i, TRIM(expr(i)%msg)
+      write (dev, '(3X,I8,1X,A)', IOSTAT=ios) i, TRIM(expr(i)%msg)
       nerror = nerror + 1
     end do
 !
     if (ntest < 2) return
-    error_rate = real(nerror, RK) / real(ntest, RK)
+    error_rate = 100.0_RK * real(nerror, RK) / real(ntest, RK)
     write (dev, '(A)', IOSTAT=ios) SEP3
-    write (dev, '(A,f7.3,A)', IOSTAT=ios) ErrorRateIs, error_rate, ' %'
+    write (dev, '(A,f7.3,A,I8,A,I8,A)', IOSTAT=ios) ErrorRateIs, error_rate, ' %  (', nerror, ' /', ntest, ' )'
     FLUSH (dev)
   end subroutine report_result
 !

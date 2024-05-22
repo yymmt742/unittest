@@ -195,11 +195,13 @@ program main
   call u%assert_greater_equal(af, bf, 'assert_greater_equal real128 01 ')
   call u%assert_greater_equal(cf - af, af, 'assert_greater_equal real128 10 ')
   call u%assert_greater_equal(cf, bf, 'assert_greater_equal real128 11 ')
+! call u%assert_greater_equal(-cf, bf, 'assert_greater_equal real128 11 ')
 !
   call u%assert_almost_equal(x4, x4, 'assert_almost_equal  cmpx32  00 ')
   call u%assert_almost_equal(x4, y4, 'assert_almost_equal  cmpx32  01 ')
   call u%assert_almost_equal(y4, x4, 'assert_almost_equal  cmpx32  10 ')
   call u%assert_almost_equal(z4, z4, 'assert_almost_equal  cmpx32  11 ')
+! call u%assert_almost_equal(z4, -z4, 'assert_almost_equal  cmpx32  11 ')
 !
   call u%assert_almost_equal(x8, x8, 'assert_almost_equal  cmpx64  00 ')
   call u%assert_almost_equal(x8, y8, 'assert_almost_equal  cmpx64  01 ')
@@ -210,7 +212,7 @@ program main
   call u%assert_almost_equal(xf, yf, 'assert_almost_equal  cmpx128 01 ')
   call u%assert_almost_equal(yf, xf, 'assert_almost_equal  cmpx128 10 ')
   call u%assert_almost_equal(zf, zf, 'assert_almost_equal  cmpx128 11 ')
-  !call u%assert_almost_equal(zf, -zf, 'assert_almost_equal  cmpx128 11 ')
+! call u%assert_almost_equal(zf, -zf, 'assert_almost_equal  cmpx128 11 ')
 !
   call u%finish_and_terminate()
 !
