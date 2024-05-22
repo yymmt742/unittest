@@ -47,13 +47,6 @@ module mod_unittest
 !
 contains
 !
-! include "assert.f90"
-! include "equal.f90"
-! include "compare.f90"
-! include "almost_equal.f90"
-!
-!=========================================================!
-!
   function utest_new(section) result(res)
     character(*), intent(in), optional :: section
     type(unittest)                     :: res
@@ -87,62 +80,6 @@ contains
 !
 100 return
   end subroutine utest_init
-!
-  subroutine utest_assert_lank_missmatch(this, size_a, size_b, unitname, err)
-    class(unittest), intent(inout) :: this
-    integer, intent(in)            :: size_a, size_b
-    character(*), intent(in)       :: unitname
-    logical, intent(inout)         :: err
-    integer                        :: ios
-!
-    err = size_a /= size_b
-!
-    if (.not. ALLOCATED(this%script_name)) return
-    if (.not. err) return
-    this%num_test = this%num_test + 1
-    this%num_error = this%num_error + 1
-!
-    write (this%dev, '(I8,A)', IOSTAT=ios) this%num_test, ' '//unitname//' ... failed ( lank miss match )'
-    write (this%dev, '(2A,I0,A,I0,A)', IOSTAT=ios) LankMissMatchError, '[', size_a, '] /= [', size_b, ']'
-    FLUSH (this%dev)
-!
-  end subroutine utest_assert_lank_missmatch
-!
-  subroutine utest_assert_printer(this, ok, unitname, err)
-    class(unittest), intent(inout) :: this
-    logical, intent(in)            :: ok
-    character(*), intent(in)       :: unitname
-    logical, intent(inout)         :: err
-    integer                        :: ios
-    err = .false.
-    if (.not. ALLOCATED(this%script_name)) return
-    err = .not. ok
-!
-    this%num_test = this%num_test + 1
-!
-    write (this%dev, '(I8,A)', ADVANCE='NO', IOSTAT=ios) this%num_test, ' '//unitname//' ... '
-!
-    if (ok) then
-      write (this%dev, '(A)', IOSTAT=ios) 'ok'
-    else
-      write (this%dev, '(A)', IOSTAT=ios) 'failed'
-      this%num_error = this%num_error + 1
-    end if
-!
-    FLUSH (this%dev)
-  end subroutine utest_assert_printer
-!
-  subroutine utest_error_rate_printer(this, ntest, nerror)
-    class(unittest), intent(in) :: this
-    integer, intent(in)         :: ntest, nerror
-    real(RK)                    :: error_rate
-    integer                     :: ios
-    if (ntest < 1) return
-    error_rate = real(nerror, RK) / real(ntest, RK)
-    write (this%dev, '(A)', IOSTAT=ios) SEP3
-    write (this%dev, '(A,f7.3,A)', IOSTAT=ios) ErrorRateIs, error_rate, ' %'
-    FLUSH (this%dev)
-  end subroutine utest_error_rate_printer
 !
   subroutine utest_finish(this)
     class(unittest), intent(inout) :: this
