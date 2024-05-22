@@ -130,7 +130,7 @@ contains
   subroutine utest_finish_and_terminate(this)
     class(unittest), intent(inout) :: this
     call utest_destroy(this)
-    if (this%error_detected) ERROR stop 'TESTS WERE TERMINATED'
+    if (this%error_detected) call error_stop('TESTS WERE TERMINATED', 1)
   end subroutine utest_finish_and_terminate
 !
   pure subroutine utest_free(this)

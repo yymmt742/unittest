@@ -210,6 +210,7 @@ program main
   call u%assert_almost_equal(xf, yf, 'assert_almost_equal  cmpx128 01 ')
   call u%assert_almost_equal(yf, xf, 'assert_almost_equal  cmpx128 10 ')
   call u%assert_almost_equal(zf, zf, 'assert_almost_equal  cmpx128 11 ')
+  !call u%assert_almost_equal(zf, -zf, 'assert_almost_equal  cmpx128 11 ')
 !
   call u%finish_and_terminate()
 !

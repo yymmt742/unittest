@@ -18,15 +18,12 @@ contains
     integer, intent(inout)   :: num_test, num_error
     logical, intent(inout)   :: err
     integer                  :: ios
-!
     err = size_a /= size_b; if (.not. err) return
     num_test = num_test + 1
     num_error = num_error + 1
-!
     write (dev, '(I8,A)', IOSTAT=ios) num_test, ' '//unitname//' ... failed ( lank miss match )'
     write (dev, '(2A,I0,A,I0,A)', IOSTAT=ios) LankMissMatchError, '[', size_a, '] /= [', size_b, ']'
     FLUSH (dev)
-!
   end subroutine report_lank_missmatch
 !
   subroutine report_result(dev, expr_is_true, unitname, num_test, num_error, err)
@@ -36,19 +33,15 @@ contains
     integer, intent(inout)   :: num_test, num_error
     logical, intent(inout)   :: err
     integer                  :: ios
-!
     err = .not. expr_is_true
     num_test = num_test + 1
-!
     write (dev, '(I8,A)', ADVANCE='NO', IOSTAT=ios) num_test, ' '//unitname//' ... '
-!
     if (expr_is_true) then
       write (dev, '(A)', IOSTAT=ios) 'ok'
     else
       write (dev, '(A)', IOSTAT=ios) 'failed'
       num_error = num_error + 1
     end if
-!
     FLUSH (dev)
   end subroutine report_result
 !
