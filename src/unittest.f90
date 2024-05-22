@@ -1,4 +1,6 @@
 module mod_unittest
+  !! Fortran unit testing framework.
+  !  This module provides an interface class to the assert method.
   use, intrinsic :: ISO_FORTRAN_ENV, only: STDOUT => OUTPUT_UNIT, &
                   &                        STDERR => ERROR_UNIT, &
                   &                        RK => REAL64
@@ -39,6 +41,11 @@ module mod_unittest
   end interface unittest
 !
   interface
+    module subroutine error_stop(msg, code)
+      character(*), intent(in), optional :: msg
+      integer, intent(in), optional      :: code
+    end subroutine error_stop
+
     include "assert.inc"
     include "equal.inc"
     include "compare.inc"

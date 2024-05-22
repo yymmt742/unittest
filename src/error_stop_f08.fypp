@@ -1,0 +1,25 @@
+submodule(mod_unittest) error_stop_08
+  implicit none
+contains
+  module procedure error_stop
+  !! Aborts the program with an exit code.
+  !  #### Example
+  !
+  !  ```
+  !  call error_stop("Error mesage", 1)
+  !  ```
+    if (PRESENT(msg)) then
+      write (STDERR, '(A)') msg
+    else
+      write (STDERR, '(A)') 'ERROR STOP'
+    end if
+    if (PRESENT(code)) then
+      select case (code)
+#:for code in range(256)
+      case (${code}$); stop ${code}$
+#:endfor
+      end select
+    end if
+    error stop
+  end procedure error_stop
+end submodule error_stop_08

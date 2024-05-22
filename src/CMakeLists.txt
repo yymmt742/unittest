@@ -3,19 +3,40 @@ if(NOT FYPP)
   message(FATAL_ERROR "FYPP not found.")
 endif()
 
+enable_language(Fortran)
+include(CheckFortranSourceCompiles)
+include(CheckFortranSourceRuns)
+
+check_fortran_source_runs("i=0; error stop i; end" f18errorstop)
+check_fortran_source_runs(
+  "use, intrinsic :: iso_fortran_env, only : real128; real(real128) :: x; x = x+1; end"
+  f03real128)
+
 set(LIB_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/mod_files/)
 
 if(NOT EXISTS "${LIB_MOD_DIR}")
   make_directory("${LIB_MOD_DIR}")
 endif()
 
-list(APPEND fyppFiles
-  bool.fypp
-  equal.fypp
-  almost_equal.fypp
-  compare.fypp
-  )
+if(f18errorstop)
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
+    COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f18.fypp
+            ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f18.fypp
+    )
+else()
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
+    COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f08.fypp
+            ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f08.fypp
+    )
+endif()
+list(APPEND f90files ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90)
+
 set(fyppFlags)
+list(APPEND fyppFiles bool.fypp equal.fypp almost_equal.fypp compare.fypp)
 
 foreach(fyppfile ${fyppFiles})
   string(REGEX REPLACE "\\.fypp" ".f90" f90file ${fyppfile})
@@ -48,7 +69,9 @@ endforeach()
 
 set(unittest_src unittest.f90 unittest_printer.f90 ${f90files})
 add_library(${PROJECT_NAME} STATIC ${unittest_src})
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${LIB_MOD_DIR})
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                                                   ${LIB_MOD_DIR})
 
 set_target_properties(
   ${PROJECT_NAME} PROPERTIES CMAKE_POSITION_INDEPENDENT_CODE ON
@@ -87,6 +110,8 @@ target_compile_options(
     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-traceback>>)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  enable_testing()
+  include(CTest)
   add_executable(test_unittest test_unittest.f90)
   target_include_directories(test_unittest PRIVATE ${LIB_MOD_DIR})
   target_link_libraries(test_unittest PRIVATE unittest)
