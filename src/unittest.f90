@@ -27,7 +27,7 @@ module mod_unittest
     logical                   :: error_detected = .false.
   contains
     procedure         :: init => utest_init
-    include "assert.h"
+    include "bool.h"
     include "equal.h"
     include "compare.h"
     include "almost_equal.h"
@@ -46,7 +46,7 @@ module mod_unittest
       integer, intent(in), optional      :: code
     end subroutine error_stop
 
-    include "assert.inc"
+    include "bool.inc"
     include "equal.inc"
     include "compare.inc"
     include "almost_equal.inc"
