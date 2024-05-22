@@ -1,44 +1,74 @@
 #:include "common.fypp"
 submodule(mod_unittest) equal
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS
+  use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
+#:endfor
   use mod_unittest_printer
   implicit none
 contains
 #:set routines = ["assert_equal", "assert_not_equal"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS
-#:for routine, expr, neq in zip(routines, ["a==b", "a/=b"], ["/=", "=="])
+#:for routine, op, neq in zip(routines, ["==", "/="], ["/=", "=="])
 #:for rank2 in [0, 1]
 #:for rank1 in [0, 1]
   module procedure ${routine_name(routine, post, rank1, rank2)}$
     logical :: err
 ${rank_check(rank1, rank2)}$
-    call check_expr_all(this%dev, this%num_test, [${expr}$], unitname, this%num_error, err)
-    if (err) call report_summary(this%dev, [${expr}$], [${post}$_error_rate(a, b)])
+    call check_expr_all(this%dev, this%num_test, [${routine}$_${post}$(a, b)], &
+   &                    unitname, this%num_error, err)
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
 #:endfor
-#:endfor
-  pure elemental function ${post}$_error_rate(a, b) result(res)
-    use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
+  pure elemental function ${routine}$_${post}$(a, b) result(res)
     ${type}$, intent(in) :: a, b
-    real(RK)             :: res
-    res = ABS(a - b)
-  end function ${post}$_error_rate
+    type(expr_report)             :: res
+    res%ok = a ${op}$ b
+    if(res%ok)then
+      res%msg = ""
+      res%error_rate = REAL(a - b, RK)
+    else
+      write(res%msg, '(A,I14,A,I14,A)') "[", a, "  ]${neq}$[", b, "  ]"
+      res%error_rate = REAL(a - b, RK)
+    endif
+  end function ${routine}$_${post}$
+!
+#:endfor
 !---------------------------------------------------------------------
+!
 #:endfor
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
-#:for routine, expr, neq in zip(routines, ["a.eqv.b", "a.neqv.b"], [".neqv.", ".eqv."])
+#:for routine, op, neq in zip(routines, [".eqv.", ".neqv."], ["noteq", "equiv"])
 #:for rank2 in [0, 1]
 #:for rank1 in [0, 1]
   module procedure ${routine_name(routine, post, rank1, rank2)}$
     logical :: err
 ${rank_check(rank1, rank2)}$
-    call check_expr_all(this%dev, this%num_test, [${expr}$], unitname, this%num_error, err)
-    if (err) call report_summary(this%dev, [${expr}$], [MERGE(0.0_RK, 1.0_RK, ${expr}$)])
+    call check_expr_all(this%dev, this%num_test, [${routine}$_${post}$(a, b)], &
+   &                    unitname, this%num_error, err)
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
 #:endfor
+  pure elemental function ${routine}$_${post}$(a, b) result(res)
+    ${type}$, intent(in) :: a, b
+    type(expr_report)             :: res
+    res%ok = a ${op}$ b
+    if(res%ok)then
+      res%msg = ""
+      res%error_rate = 0.0_RK
+    else
+      write(res%msg, '(A,L14,A,L14,A)') "[", a, "  ]${neq}$[", b, "  ]"
+      if(a) then
+        res%error_rate = 1.0_RK
+      else
+        res%error_rate = -1.0_RK
+      endif
+    endif
+  end function ${routine}$_${post}$
+!
 #:endfor
+!---------------------------------------------------------------------
+!
 #:endfor
 end submodule equal

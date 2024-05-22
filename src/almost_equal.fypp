@@ -1,42 +1,46 @@
 #:include "common.fypp"
 submodule(mod_unittest) almost_equal
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS
+  use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
+#:endfor
   use mod_unittest_printer
   implicit none
 contains
-#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
-#:for routine, fun, neq in zip(["assert_almost_equal", "assert_not_almost_equal"], ["all", "not_any"], ["\~", "~"])
+#:set fmts = ["(A,I14,2X,A,I14,2X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.3,1X),A,2(ES9.3,1X),A)"]
+#:set ktps = [ INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+#:for ktp, fm in zip(ktps, fmts)
+#:for kind, type, post in ktp
+#:for routine, op, neq in zip(["assert_almost_equal", "assert_not_almost_equal"], ["<", ">="], ["\~", "~ "])
 #:for rank2 in [0, 1]
 #:for rank1 in [0, 1]
-#:set expr = post + "_almost_equal(a, b, place)"
   module procedure ${routine_name(routine, post, rank1, rank2)}$
-    logical                        :: err
+    logical err
 ${rank_check(rank1, rank2)}$
-    call check_expr_${fun}$(this%dev, this%num_test, [${expr}$], unitname, this%num_error, err)
-    if (err) call report_summary(this%dev, [${expr}$], [${post}$_error_rate(a, b)])
+    call check_expr_all(this%dev, this%num_test, [${routine}$_${post}$(a, b, place)], &
+   &                    unitname, this%num_error, err)
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
 #:endfor
-#:endfor
-  pure elemental function ${post}$_almost_equal(a, b, place) result(res)
-    use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
+  pure elemental function ${routine}$_${post}$(a, b, place) result(res)
     ${type}$, intent(in) :: a, b
     integer, intent(in), optional :: place
     real(RK)                      :: diff
-    logical                       :: res
+    type(expr_report)             :: res
     diff = ABS(a - b)
     if (PRESENT(place)) then; diff = diff * 10**place
     else; diff = diff * DEF_MP
     end if
-    res = INT(diff) < 1
-  end function ${post}$_almost_equal
+    res%ok = INT(diff) ${op}$ 1
+    if(res%ok)then
+      res%msg = ""
+    else
+      write(res%msg, '${fm}$') "[", a, "]${neq}$[", b, "]"
+    endif
+    res%error_rate = REAL(a - b, RK)
+  end function ${routine}$_${post}$
 !
-  pure elemental function ${post}$_error_rate(a, b) result(res)
-    use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
-    ${type}$, intent(in) :: a, b
-    real(RK)             :: res
-    res = ABS(a - b)
-  end function ${post}$_error_rate
-!---------------------------------------------------------------------
+#:endfor
+#:endfor
 #:endfor
 end submodule almost_equal
