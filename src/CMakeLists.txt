@@ -6,6 +6,7 @@ endif()
 list(APPEND fyppFiles
   assert.fypp
   equal.fypp
+  almost_equal.fypp
   compare.fypp
   )
 set(fyppFlags)

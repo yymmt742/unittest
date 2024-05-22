@@ -1,5 +1,5 @@
 #:include "common.fypp"
-#:for routine, cond, neq in zip(["assert_equal", "assert_not_equal"], ["a==b", "a/=b"], ["/=.", "=="])
+#:for routine, cond, neq in zip(["assert_equal", "assert_not_equal"], ["a==b", "a/=b"], ["/=", "=="])
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS
   subroutine ${routine_name(routine, post, 0, 0)}$ (this, a, b, unitname)
   use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
@@ -14,19 +14,20 @@
 
 #:endfor
 #:endfor
-#:for routine, cond in zip(["assert_equal", "assert_not_equal"], ["ALL(a==b)", "ALL(a/=b)"])
+#:for routine, cond, neq in zip(["assert_equal", "assert_not_equal"], ["ALL(a==b)", "ALL(a/=b)"], ["/=", "=="])
 #:for rank1, rank2, size in [(0, 1, "SIZE(b)"), (1, 0, "SIZE(a)"), (1, 1, "MIN(SIZE(a), SIZE(b))")]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS
   subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname)
-    use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
-    class(unittest), intent(inout) :: this
-    ${type}$, intent(in)     :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
-    character(*), intent(in)       :: unitname
-    logical                        :: err
-    integer                        :: i, ios, nerr
+  use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
+  class(unittest), intent(inout) :: this
+  ${type}$, intent(in)     :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
+  character(*), intent(in)       :: unitname
+  logical                        :: err
+  integer                        :: i, ios, nerr
+    ${rank_check(rank1, rank2)}$
     call utest_assert_printer(this, ${cond}$, unitname, err)
     if (err) then
-      write (this%dev, '(2A)', IOSTAT=ios) AssertionError, 'LHS == RHS'
+      write (this%dev, '(2A)', IOSTAT=ios) AssertionError, 'LHS ${neq}$ RHS'
       nerr = 0
       do i = 1, ${size}$
         if (a${counter_suffix(rank1)}$ ${neq}$ b${counter_suffix(rank2)}$)then
@@ -61,12 +62,13 @@
 #:for rank1, rank2, size in [(0, 1, "SIZE(b)"), (1, 0, "SIZE(a)"), (1, 1, "MIN(SIZE(a), SIZE(b))")]
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
   subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname)
-    use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
-    class(unittest), intent(inout) :: this
-    ${type}$, intent(in)     :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
-    character(*), intent(in)       :: unitname
-    logical                        :: err
-    integer                        :: i, ios, nerr
+  use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
+  class(unittest), intent(inout) :: this
+  ${type}$, intent(in)     :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
+  character(*), intent(in)       :: unitname
+  logical                        :: err
+  integer                        :: i, ios, nerr
+    ${rank_check(rank1, rank2)}$
     call utest_assert_printer(this, ${cond}$, unitname, err)
     if (err) then
       write (this%dev, '(2A)', IOSTAT=ios) AssertionError, 'LHS == RHS'

@@ -40,11 +40,15 @@ $:f"unittest_{g}_{post}_{rank1}" if rank2 is None else f"unittest_{g}_{post}_{ra
 #:def generic_procedure(g, tup, ranks)
 #:for rank1, rank2 in ranks
 #:for kind, type, post in tup
-  procedure, private :: ${routine_name(g, post, rank1, rank2)}$
+procedure, private :: ${routine_name(g, post, rank1, rank2)}$
 #:endfor
 #:endfor
-  generic            :: ${g}$  => &
-  ${", &\n  ".join([", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup]) for rank1, rank2 in ranks])}$
+generic            :: ${g}$ => &
+${", &\n  ".join([", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup]) for rank1, rank2 in ranks])}$
+#:enddef
+
+#:def rank_check(rank1, rank2)
+$:"call utest_assert_lank_missmatch(this, SIZE(a), SIZE(b), unitname, err); if (err) return" if rank1>0 and rank2>0 else ""
 #:enddef
 
 #:endmute
