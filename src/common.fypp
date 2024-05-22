@@ -21,8 +21,8 @@
 
 #:set COUNTER_VAR = ["i", "j", "k", "l", "m", "n"]
 
-#:def decimal_suffix(type)
-#{if 'REAL' in type}#.0#{endif}#
+#:def decimal_suffix(i, kind)
+$:f"{i}.0_" + kind if "REAL" in kind else f"{i}_" + kind
 #:enddef
 
 #:def routine_name(g, post, rank1, rank2=None)
@@ -47,12 +47,14 @@ generic            :: ${g}$ => &
 ${", &\n  ".join([", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup]) for rank1, rank2 in ranks])}$
 #:enddef
 
+#:set inc_ntest = "    this%num_test = this%num_test + 1"
+#:set rankcheck = "    call check_rank(this%dev, this%num_test, SIZE(a), SIZE(b), unitname, this%num_error, err)\n    if (err) return" 
 #:def rank_check(rank1, rank2)
-$:"call utest_assert_lank_missmatch(this, SIZE(a), SIZE(b), unitname, err); if (err) return" if rank1>0 and rank2>0 else ""
+$:inc_ntest+"\n"+rankcheck if rank1>0 and rank2>0 else inc_ntest
 #:enddef
 
-#:def rank_check_(rank1, rank2)
-$:"call report_lank_missmatch(this%dev, SIZE(a), SIZE(b), unitname,  this%num_test, this%num_error, err)\n      if (err) return" if rank1>0 and rank2>0 else ""
+#:def f(expr, fun, rank1, rank2)
+$:f"{fun}({expr})" if rank1 > 0 or rank2 > 0 else f"{expr}"
 #:enddef
 
 #:endmute
