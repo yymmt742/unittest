@@ -1,54 +1,51 @@
 #:include "common.fypp"
+submodule(mod_unittest) almost_equal
+  use mod_unittest_printer
+  implicit none
+contains
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
   pure elemental function ${post}$_almost_equal(a, b, place) result(res)
-  use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$, REAL64
-  ${type}$, intent(in) :: a, b
-  integer, intent(in), optional :: place
-  real(REAL64)                  :: diff
-  logical                       :: res
+    use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$, REAL64
+    ${type}$, intent(in) :: a, b
+    integer, intent(in), optional :: place
+    real(REAL64)                  :: diff
+    logical                       :: res
     diff = ABS(a - b)
     if (PRESENT(place)) then; diff = diff * 10**place
     else; diff = diff * DEF_MP
     end if
     res = INT(diff) < 1
   end function ${post}$_almost_equal
-
+!
 #:for routine, cond, neq in zip(["assert_almost_equal", "assert_not_almost_equal"], [post+"_almost_equal(a, b, place)", ".not."+post+"_almost_equal(a, b, place)"], ["\~", "~"])
-  subroutine ${routine_name(routine, post, 0, 0)}$ (this, a, b, unitname, place)
-  use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
-  class(unittest), intent(inout) :: this
-  ${type}$, intent(in)     :: a, b
-  character(*), intent(in)       :: unitname
-  integer, intent(in), optional  :: place
-  logical                        :: err
-  integer                        :: ios
-    call utest_assert_printer(this, ${cond}$, unitname, err)
+  module procedure ${routine_name(routine, post, 0, 0)}$
+    logical                        :: err
+    integer                        :: ios
+    call report_result(this%dev, ${cond}$, unitname, this%num_test, this%num_error, err)
     if (err) write (this%dev, '(2A)', IOSTAT=ios) AssertionError, 'LHS ${neq}$ RHS'
-  end subroutine ${routine_name(routine, post, 0, 0)}$
-
+  end procedure ${routine_name(routine, post, 0, 0)}$
+!
 #:endfor
 #:for routine, cond, neq in zip(["assert_almost_equal", "assert_not_almost_equal"], ["ALL("+post+"_almost_equal(a, b, place))", ".not.ANY("+post+"_almost_equal(a, b, place))"], ["\~", "~"])
 #:for rank1, rank2, size in [(0, 1, "SIZE(b)"), (1, 0, "SIZE(a)"), (1, 1, "MIN(SIZE(a), SIZE(b))")]
-  subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, place)
-  use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
-  class(unittest), intent(inout) :: this
-  ${type}$, intent(in)     :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
-  character(*), intent(in)       :: unitname
-  integer, intent(in), optional  :: place
-  logical                        :: err
-  integer                        :: i, ios, nerr
-    ${rank_check(rank1, rank2)}$
-    call utest_assert_printer(this, ${cond}$, unitname, err)
+  module procedure ${routine_name(routine, post, rank1, rank2)}$
+    logical                        :: err
+    integer                        :: i, ios, nerr
+    ${rank_check_(rank1, rank2)}$
+    call report_result(this%dev, ${cond}$, unitname, this%num_test, this%num_error, err)
     if (err) then
       write (this%dev, '(2A)', IOSTAT=ios) AssertionError, 'LHS ${neq}$ RHS'
       nerr = 0
       do i = 1, ${size}$
         nerr = nerr + 1
       end do
-      call utest_error_rate_printer(this, ${size}$, nerr)
+      call report_error_rate(this%dev, ${size}$, nerr)
     end if
-  end subroutine ${routine_name(routine, post, rank1, rank2)}$
-
+  end procedure ${routine_name(routine, post, rank1, rank2)}$
+!
 #:endfor
 #:endfor
+!---------------------------------------------------------------------
+!
 #:endfor
+end submodule almost_equal

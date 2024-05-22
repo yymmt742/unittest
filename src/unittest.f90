@@ -38,12 +38,16 @@ module mod_unittest
     module procedure :: utest_new
   end interface unittest
 !
+  interface
+    include "almost_equal.inc"
+  end interface
+!
 contains
 !
   include "assert.f90"
   include "equal.f90"
   include "compare.f90"
-  include "almost_equal.f90"
+! include "almost_equal.f90"
 !
 !=========================================================!
 !

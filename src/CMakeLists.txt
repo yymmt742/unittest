@@ -3,6 +3,12 @@ if(NOT FYPP)
   message(FATAL_ERROR "FYPP not found.")
 endif()
 
+set(LIB_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/mod_files/)
+
+if(NOT EXISTS "${LIB_MOD_DIR}")
+  make_directory("${LIB_MOD_DIR}")
+endif()
+
 list(APPEND fyppFiles
   assert.fypp
   equal.fypp
@@ -31,21 +37,23 @@ foreach(fyppfile ${fyppFiles})
   list(APPEND f90files ${CMAKE_CURRENT_BINARY_DIR}/${f90file})
 endforeach()
 
-add_custom_target(custom_header DEPENDS ${f90files})
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.inc
+  COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/almost_equal.i.fypp
+          ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.inc
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/almost_equal.i.fypp
+          ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
 
-set(unittest_src unittest.f90)
+add_custom_target(custom_header DEPENDS ${f90files} ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.inc)
+
+set(unittest_src unittest.f90 unittest_printer.f90 ${CMAKE_CURRENT_BINARY_DIR}/almost_equal.f90)
 add_library(${PROJECT_NAME} STATIC ${unittest_src})
 add_dependencies(${PROJECT_NAME} custom_header)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${LIB_MOD_DIR})
+
 set_target_properties(
   ${PROJECT_NAME} PROPERTIES CMAKE_POSITION_INDEPENDENT_CODE ON
                              WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
-set(LIB_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/mod_files/)
-
-if(NOT EXISTS "${LIB_MOD_DIR}")
-  make_directory("${LIB_MOD_DIR}")
-endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES Fortran_MODULE_DIRECTORY
                                                  ${LIB_MOD_DIR})
