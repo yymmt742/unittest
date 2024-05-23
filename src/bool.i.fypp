@@ -1,10 +1,10 @@
 #:include "common.fypp"
 #:for routine, cond in zip(["assert", "assert_true", "assert_false"], ["ALL(expr)", "ALL(expr)", ".not.ANY(expr)"])
-#:for rank in [0, 1]
+#:for rank in range(4)
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
   module subroutine ${routine_name(routine, post, rank)}$ (this, expr, unitname)
     class(unittest), intent(inout) :: this
-    ${type}$, intent(in)           :: expr${rank_suffix(rank)}$
+    ${type}$, intent(in)            :: expr${rank_suffix(rank)}$
     character(*), intent(in)       :: unitname
   end subroutine ${routine_name(routine, post, rank)}$
 

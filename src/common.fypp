@@ -54,7 +54,7 @@ $:inc_ntest+"\n"+rankcheck if rank1>0 and rank2>0 else inc_ntest
 #:enddef
 
 #:def flatten(expr, rank1, rank2=None)
-$:f"[{expr}]" if rank1 == 0 and (rank2 is None or rank2 == 0) else f"{expr}"
+$:f"{expr}" if rank1 == 1 and (rank2 is None or rank2 == 1) else f"[{expr}]"
 #:enddef
 
 #:endmute
