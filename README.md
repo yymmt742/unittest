@@ -1,19 +1,11 @@
 <a name="readme-top"></a>
 
-[![fypp][fypp]][fypp-url]
-[![cmake][cmake]][cmake-url]
-[![fortran][fortran-shield]][fortran-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![MIT License][license-shield]][license-url]
-[![Issues][issues-shield]][issues-url]
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
 <h3 align="center">unittest</h3>
   <p align="center">
-    Simple unittest for Fortran
+    Fortran unittest
   </p>
 </div>
 
@@ -44,9 +36,7 @@
 [![Product Name Screen Shot][product-screenshot]](https://yymmt742.github.io/unittest)
  -->
 
-Provides simple unit tests for fortran code.
-
-Intended to be used in conjunction with ctest.
+Provides simple unittest utils for fortran.
 
 <!--
 [api-reference](https://yymmt742.github.io/unittest)
@@ -59,6 +49,11 @@ Intended to be used in conjunction with ctest.
 ## Getting Started
 ### Prerequisites
 
+[![fypp][fypp]][fypp-url]
+[![cmake][cmake]][cmake-url]
+[![fortran][fortran-shield]][fortran-url]
+
+* fypp
 * gcc >= 9.4.0
 * gfortran >= 9.4.0
 * cmake >= 3.9
@@ -82,16 +77,6 @@ Intended to be used in conjunction with ctest.
 ## Usage
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- ROADMAP -->
-## Roadmap
-
-- [ ] Multi compiler support
-
-See the [open issues](https://github.com/yymmt742/unittest/issues) for a full list of proposed features (and known issues).
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 <!-- LICENSE -->
 ## License
