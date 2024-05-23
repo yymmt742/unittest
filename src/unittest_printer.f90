@@ -1,4 +1,5 @@
 module mod_unittest_printer
+!! Module for unittest output
   use, intrinsic :: ISO_FORTRAN_ENV, only: RK => REAL64
   implicit none
   private
@@ -6,13 +7,14 @@ module mod_unittest_printer
   public  :: check_rank
   public  :: check_expr_all
   public  :: check_expr_not_any
-!
+!<&
   integer, parameter      :: L_MSG = 52
-  character(*), parameter :: WSPC = REPEAT(' ', 8)
-  character(*), parameter :: SEP3 = WSPC//REPEAT('-', L_MSG)
-  character(*), parameter :: rankMissMatchError = '   rank MissMatch Error : '
-  character(*), parameter :: ErrorRateIs = '          Error rate is : '
-!
+  integer, parameter      :: L_WDH = 40
+  character(*), parameter :: WSPC  = REPEAT(' ', 8)
+  character(*), parameter :: SEP3  = WSPC//REPEAT('-', L_MSG)
+  character(*), parameter :: rankMissMatchError = WSPC//'  Rank MissMatch : '
+  character(*), parameter :: ErrorRateIs        = WSPC//'  Error rate is  : '
+!&>
   type expr_report
     sequence
     logical          :: ok
@@ -22,6 +24,7 @@ module mod_unittest_printer
 !
 contains
   subroutine check_rank(dev, num_test, size_a, size_b, unitname, num_error, err)
+    !!
     integer, intent(in)      :: dev
     integer, intent(in)      :: num_test
     integer, intent(in)      :: size_a
@@ -32,8 +35,10 @@ contains
     integer                  :: ios
     err = size_a /= size_b; if (.not. err) return
     num_error = num_error + 1
-    write (dev, '(I8,A)', IOSTAT=ios) num_test, ' '//unitname//' ... failed ( rank miss match )'
+    write (dev, '(I8,A)', IOSTAT=ios) num_test, padd_string(unitname, '... failed', L_WDH)
+    write (dev, '(A)', IOSTAT=ios) SEP3
     write (dev, '(2A,I0,A,I0,A)', IOSTAT=ios) rankMissMatchError, '[', size_a, '] /= [', size_b, ']'
+    write (dev, '(A)', IOSTAT=ios) SEP3
     FLUSH (dev)
   end subroutine check_rank
 !
@@ -68,14 +73,11 @@ contains
     type(expr_report), intent(in) :: expr(:)
     character(*), intent(in)      :: unitname
     real(RK)                      :: error_rate
-    integer                       :: i, nerror, ntest, ios, npad
-!
-    npad = MAX(0, 40 - LEN_TRIM(unitname))
-    write (dev, '(I8,A)', ADVANCE='NO', IOSTAT=ios) num_test, ' '//TRIM(unitname)
+    integer                       :: i, nerror, ntest, ios
     if (err) then
-      write (dev, '(A)', IOSTAT=ios) REPEAT(' ', npad)//'... failed'
+      write (dev, '(I8,A)', IOSTAT=ios) num_test, padd_string(unitname, '... failed', L_WDH)
     else
-      write (dev, '(A)', IOSTAT=ios) REPEAT(' ', npad)//'... OK'
+      write (dev, '(I8,A)', IOSTAT=ios) num_test, padd_string(unitname, '... OK', L_WDH)
       return
     end if
 !
@@ -96,5 +98,14 @@ contains
     FLUSH (dev)
   end subroutine report_result
 !
+  pure function padd_string(s, post, nline) result(res)
+    character(*), intent(in)  :: s
+    character(*), intent(in)  :: post
+    integer, intent(in)       :: nline
+    character(:), allocatable :: res
+    integer                   :: npad
+    npad = MAX(0, nline - LEN_TRIM(s))
+    res = ' '//TRIM(s)//REPEAT(' ', npad)//post
+  end function padd_string
 end module mod_unittest_printer
 
