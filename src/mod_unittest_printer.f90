@@ -42,7 +42,7 @@ contains
     num_error = num_error + 1
     write (dev, '(I8,A)', IOSTAT=ios) num_test, padd_string(unitname, '... failed', L_WDH)
     write (dev, '(A)', IOSTAT=ios) SEP3
-    write (dev, '(2A,I0,A,I0,A)', IOSTAT=ios) rankMissMatchError, '[', size_a, '] /= [', size_b, ']'
+    write (dev, '(2A,I0,A,I0,A)', IOSTAT=ios) rankMissMatch, '[', size_a, '] /= [', size_b, ']'
     write (dev, '(A)', IOSTAT=ios) SEP3
     FLUSH (dev)
   end subroutine check_rank
