@@ -22,7 +22,7 @@ $:"MERGE(1.0_RK,-1.0_RK,a)" if "logical" in type else "REAL(a - b, RK)"
   module procedure ${routine_name(routine, post, rank1, rank2)}$
     logical :: err
 ${rank_check(rank1, rank2)}$
-    call check_expr_all(this%dev, this%num_test, [${routine}$_${post}$(a, b)], &
+    call check_expr_all(this%dev, this%num_test, ${flatten(routine+"_"+post+"(a,b)", rank1, rank2)}$, &
    &                    unitname, this%num_error, err)
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
@@ -43,6 +43,5 @@ ${rank_check(rank1, rank2)}$
 !
 #:endfor
 #:endfor
-!---------------------------------------------------------------------
 #:endfor
 end submodule equal
