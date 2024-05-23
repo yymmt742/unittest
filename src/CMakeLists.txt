@@ -23,15 +23,13 @@ if(f18errorstop)
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
     COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f18.fypp
             ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f18.fypp
-    )
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f18.fypp)
 else()
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
     COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f08.fypp
             ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f08.fypp
-    )
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f08.fypp)
 endif()
 list(APPEND f90files ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90)
 
@@ -67,7 +65,7 @@ foreach(fyppfile ${fyppFiles})
   list(APPEND f90files ${CMAKE_CURRENT_BINARY_DIR}/${f90file})
 endforeach()
 
-set(unittest_src mod_unittest.f90 unittest_printer.f90 ${f90files})
+set(unittest_src ${f90files} mod_unittest_printer.f90 mod_unittest.f90)
 add_library(${PROJECT_NAME} STATIC ${unittest_src})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
