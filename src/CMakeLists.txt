@@ -3,17 +3,15 @@ if(NOT FYPP)
   message(FATAL_ERROR "FYPP not found.")
 endif()
 
-enable_language(Fortran)
-include(CheckFortranSourceCompiles)
-include(CheckFortranSourceRuns)
-
-check_fortran_source_runs("i=0; error stop i; end" f18errorstop)
 check_fortran_source_runs(
-  "use, intrinsic :: iso_fortran_env, only : real128; real(real128) :: x; x = x+1; end"
-  f03real128)
-
+  "i=0; error stop i; end"
+  f18errorstop
+  )
+check_fortran_source_runs(
+  "use, intrinsic :: iso_fortran_env, only : REAL128; real(REAL128) :: x; x = x+1; end"
+  f03real128
+  )
 set(LIB_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/mod_files/)
-
 if(NOT EXISTS "${LIB_MOD_DIR}")
   make_directory("${LIB_MOD_DIR}")
 endif()
@@ -65,26 +63,36 @@ foreach(fyppfile ${fyppFiles})
   list(APPEND f90files ${CMAKE_CURRENT_BINARY_DIR}/${f90file})
 endforeach()
 
-set(unittest_src ${f90files} mod_unittest_printer.f90 mod_unittest.f90)
-add_library(${PROJECT_NAME} STATIC ${unittest_src})
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-                                                   ${LIB_MOD_DIR})
-
-set_target_properties(
-  ${PROJECT_NAME} PROPERTIES CMAKE_POSITION_INDEPENDENT_CODE ON
-                             WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES Fortran_MODULE_DIRECTORY
-                                                 ${LIB_MOD_DIR})
+add_library(
+  ${PROJECT_NAME} STATIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/mod_unittest_printer.f90
+  ${f90files}
+  ${CMAKE_CURRENT_SOURCE_DIR}/mod_unittest.f90
+  )
 target_include_directories(
-  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${LIB_MOD_DIR}>
-                         $<INSTALL_INTERFACE:${CMAKE_INSTALL_MODULEDIR}>)
+  ${PROJECT_NAME} PRIVATE
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${LIB_MOD_DIR}
+  )
+set_target_properties(
+  ${PROJECT_NAME} PROPERTIES
+  CMAKE_POSITION_INDEPENDENT_CODE ON
+  WINDOWS_EXPORT_ALL_SYMBOLS ON
+  )
+set_target_properties(
+  ${PROJECT_NAME} PROPERTIES
+  Fortran_MODULE_DIRECTORY
+  ${LIB_MOD_DIR}
+  )
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${LIB_MOD_DIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_MODULEDIR}>
+  )
 target_compile_options(
   ${PROJECT_NAME}
   PRIVATE
     $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-O2>
-    $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-g>
     $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-cpp>
     $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-std=f2008>
     $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-fimplicit-none>
@@ -108,20 +116,18 @@ target_compile_options(
     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-traceback>>
     )
 
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  add_subdirectory(test)
-endif()
-
 install(
   TARGETS unittest
   EXPORT unittest-export
   ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
-  LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
-
-install(DIRECTORY ${LIB_MOD_DIR}
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake/${PROJECT_NAME}/mod_files/")
-
+  LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+  )
+install(
+  DIRECTORY ${LIB_MOD_DIR}
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake/${PROJECT_NAME}/mod_files/"
+  )
 install(
   EXPORT ${PROJECT_NAME}-export
   FILE unittest-config.cmake
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake/${PROJECT_NAME}")
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake/${PROJECT_NAME}"
+  )

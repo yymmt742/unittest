@@ -7,9 +7,9 @@ contains
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
 #:for rank in [0, 1]
   module procedure ${routine_name(routine, post, rank)}$
-    logical                        :: err
+    logical :: err
     this%num_test = this%num_test + 1
-    call check_expr_all(this%dev, this%num_test, [${routine}$_${post}$(expr)], &
+    call check_expr_all(this%dev, this%num_test, ${flatten(routine+"_"+post+"(expr)", rank)}$, &
    &                    unitname, this%num_error, err)
   end procedure ${routine_name(routine, post, rank)}$
 !

@@ -1,6 +1,6 @@
 program main
   use, intrinsic :: ISO_FORTRAN_ENV, only: INT8, INT16, INT32, INT64, &
-    &                                      REAL32, REAL64, REAL128
+    &                                      REAL32, REAL64, REAL128, ERROR_UNIT
   use mod_unittest
   implicit none
   type(unittest)              :: u

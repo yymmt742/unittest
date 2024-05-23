@@ -12,8 +12,13 @@ module mod_unittest_printer
   integer, parameter      :: L_WDH = 40
   character(*), parameter :: WSPC  = REPEAT(' ', 8)
   character(*), parameter :: SEP3  = WSPC//REPEAT('-', L_MSG)
-  character(*), parameter :: rankMissMatchError = WSPC//'  Rank MissMatch : '
-  character(*), parameter :: ErrorRateIs        = WSPC//'  Error rate is  : '
+  character(*), parameter :: rankMissMatch = WSPC//'  Rank MissMatch : '
+  character(*), parameter :: ErrorRateIs   = WSPC//'  Error rate is  : '
+!
+  character(*), parameter :: ESCAPE        = ACHAR(z'1b')
+  character(*), parameter :: RED           = Escape//'[91m'
+  character(*), parameter :: BLUE          = Escape//'[94m'
+  character(*), parameter :: RESET         = Escape//'[0m'
 !&>
   type expr_report
     sequence
