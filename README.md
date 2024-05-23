@@ -1,19 +1,11 @@
 <a name="readme-top"></a>
 
-[![fypp][fypp]][fypp-url]
-[![cmake][cmake]][cmake-url]
-[![fortran][fortran-shield]][fortran-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![MIT License][license-shield]][license-url]
-[![Issues][issues-shield]][issues-url]
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
 <h3 align="center">unittest</h3>
   <p align="center">
-    Simple unittest for Fortran
+    Fortran unittest
   </p>
 </div>
 
@@ -32,7 +24,6 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
@@ -44,9 +35,7 @@
 [![Product Name Screen Shot][product-screenshot]](https://yymmt742.github.io/unittest)
  -->
 
-Provides simple unit tests for fortran code.
-
-Intended to be used in conjunction with ctest.
+unittest provides simple unit tests for fortran.
 
 <!--
 [api-reference](https://yymmt742.github.io/unittest)
@@ -59,6 +48,7 @@ Intended to be used in conjunction with ctest.
 ## Getting Started
 ### Prerequisites
 
+* fypp
 * gcc >= 9.4.0
 * gfortran >= 9.4.0
 * cmake >= 3.9
@@ -83,16 +73,6 @@ Intended to be used in conjunction with ctest.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- ROADMAP -->
-## Roadmap
-
-- [ ] Multi compiler support
-
-See the [open issues](https://github.com/yymmt742/unittest/issues) for a full list of proposed features (and known issues).
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 <!-- LICENSE -->
 ## License
 
@@ -113,17 +93,7 @@ YYMMT742 - yymmt@kuchem.kyoto-u.ac.jp
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/yymmt742/unittest.svg?style=for-the-badge
-[contributors-url]: https://github.com/yymmt742/unittest/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/yymmt742/unittest.svg?style=for-the-badge
-[forks-url]: https://github.com/yymmt742/unittest/network/members
-[stars-shield]: https://img.shields.io/github/stars/yymmt742/unittest.svg?style=for-the-badge
-[stars-url]: https://github.com/yymmt742/unittest/stargazers
-[issues-shield]: https://img.shields.io/github/issues/yymmt742/unittest.svg?style=for-the-badge
-[issues-url]: https://github.com/yymmt742/unittest/issues
-[license-shield]: https://img.shields.io/github/license/yymmt742/unittest.svg?style=for-the-badge
-[license-url]: https://github.com/yymmt742/unittest/blob/master/LICENSE.txt
-[fypp]: https://img.shields.io/badge/fypp-064F8C?style=for-the-badge&logo=cmake&logoColor=EEEEEE
+[fypp]: https://img.shields.io/badge/fypp-064F8C?style=for-the-badge
 [fypp-url]: https://fypp.readthedocs.io/en/stable/index.html
 [cmake]: https://img.shields.io/badge/Cmake-064F8C?style=for-the-badge&logo=cmake&logoColor=EEEEEE
 [cmake-url]: https://cmake.org/
