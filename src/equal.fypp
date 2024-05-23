@@ -6,9 +6,17 @@ submodule(mod_unittest) equal
   use mod_unittest_printer
   implicit none
 contains
+#:def error_rate(type)
+$:"MERGE(1.0_RK,-1.0_RK,a)" if "logical" in type else "REAL(a - b, RK)"
+#:enddef
 #:set routines = ["assert_equal", "assert_not_equal"]
-#:for kind, type, post in INTEGER_KIND_TYPE_POSTS
-#:for routine, op, neq in zip(routines, ["==", "/="], ["/=", "=="])
+#:set ktps = [INTEGER_KIND_TYPE_POSTS, LOGICAL_KIND_TYPE_POSTS]
+#:set oplists = [["==", "/="], [".eqv.", ".neqv."]]
+#:set neqlists = [["/=", "=="], ["noteq", "equiv"]]
+#:set fmts = ["(A,I14,2X,A,I14,2X,A)", "(A,L9,7X,A,L9,7X,A)"]
+#:for ktp, oplist, neqlist, fm in zip(ktps, oplists, neqlists, fmts)
+#:for kind, type, post in ktp
+#:for routine, op, neq in zip(routines, oplist, neqlist)
 #:for rank2 in [0, 1]
 #:for rank1 in [0, 1]
   module procedure ${routine_name(routine, post, rank1, rank2)}$
@@ -22,53 +30,19 @@ ${rank_check(rank1, rank2)}$
 #:endfor
   pure elemental function ${routine}$_${post}$(a, b) result(res)
     ${type}$, intent(in) :: a, b
-    type(expr_report)             :: res
-    res%ok = a ${op}$ b
-    if(res%ok)then
-      res%msg = ""
-      res%error_rate = REAL(a - b, RK)
-    else
-      write(res%msg, '(A,I14,A,I14,A)') "[", a, "  ]${neq}$[", b, "  ]"
-      res%error_rate = REAL(a - b, RK)
-    endif
-  end function ${routine}$_${post}$
-!
-#:endfor
-!---------------------------------------------------------------------
-!
-#:endfor
-#:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
-#:for routine, op, neq in zip(routines, [".eqv.", ".neqv."], ["noteq", "equiv"])
-#:for rank2 in [0, 1]
-#:for rank1 in [0, 1]
-  module procedure ${routine_name(routine, post, rank1, rank2)}$
-    logical :: err
-${rank_check(rank1, rank2)}$
-    call check_expr_all(this%dev, this%num_test, [${routine}$_${post}$(a, b)], &
-   &                    unitname, this%num_error, err)
-  end procedure ${routine_name(routine, post, rank1, rank2)}$
-!
-#:endfor
-#:endfor
-  pure elemental function ${routine}$_${post}$(a, b) result(res)
-    ${type}$, intent(in) :: a, b
-    type(expr_report)             :: res
+    type(expr_report) :: res
     res%ok = a ${op}$ b
     if(res%ok)then
       res%msg = ""
       res%error_rate = 0.0_RK
     else
-      write(res%msg, '(A,L14,A,L14,A)') "[", a, "  ]${neq}$[", b, "  ]"
-      if(a) then
-        res%error_rate = 1.0_RK
-      else
-        res%error_rate = -1.0_RK
-      endif
+      write(res%msg, '${fm}$') "[", a, "]${neq}$[", b, "]"
+      res%error_rate = ${error_rate(type)}$
     endif
   end function ${routine}$_${post}$
 !
 #:endfor
+#:endfor
 !---------------------------------------------------------------------
-!
 #:endfor
 end submodule equal

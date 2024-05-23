@@ -105,15 +105,11 @@ target_compile_options(
     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:all>>
     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-check>>
     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:bounds>>
-    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-traceback>>)
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-traceback>>
+    )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  enable_testing()
-  include(CTest)
-  add_executable(test_unittest test_unittest.f90)
-  target_include_directories(test_unittest PRIVATE ${LIB_MOD_DIR})
-  target_link_libraries(test_unittest PRIVATE unittest)
-  add_test(NAME test_unittest COMMAND test_unittest)
+  add_subdirectory(test)
 endif()
 
 install(
