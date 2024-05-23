@@ -53,8 +53,8 @@ ${", &\n  ".join([", &\n  ".join(["                      " + routine_name(g, pos
 $:inc_ntest+"\n"+rankcheck if rank1>0 and rank2>0 else inc_ntest
 #:enddef
 
-#:def f(expr, fun, rank1, rank2)
-$:f"{fun}({expr})" if rank1 > 0 or rank2 > 0 else f"{expr}"
+#:def flatten(expr, rank1, rank2)
+$:f"[{expr}]" if rank1 == 0 and rank2 == 0 else f"{expr}"
 #:enddef
 
 #:endmute
