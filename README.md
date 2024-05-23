@@ -1,5 +1,6 @@
 <a name="readme-top"></a>
 
+[![fypp][fypp]][fypp-url]
 [![cmake][cmake]][cmake-url]
 [![fortran][fortran-shield]][fortran-url]
 [![Forks][forks-shield]][forks-url]
@@ -122,7 +123,8 @@ YYMMT742 - yymmt@kuchem.kyoto-u.ac.jp
 [issues-url]: https://github.com/yymmt742/unittest/issues
 [license-shield]: https://img.shields.io/github/license/yymmt742/unittest.svg?style=for-the-badge
 [license-url]: https://github.com/yymmt742/unittest/blob/master/LICENSE.txt
-<!-- [product-screenshot]: images/screenshot.png -->
+[fypp]: https://img.shields.io/badge/fypp-064F8C?style=for-the-badge&logo=cmake&logoColor=EEEEEE
+[fypp-url]: https://fypp.readthedocs.io/en/stable/index.html
 [cmake]: https://img.shields.io/badge/Cmake-064F8C?style=for-the-badge&logo=cmake&logoColor=EEEEEE
 [cmake-url]: https://cmake.org/
 [fortran-shield]: https://img.shields.io/badge/Fortran-734F96?style=for-the-badge&logo=fortran&logoColor=FFFFFF
