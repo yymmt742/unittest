@@ -35,7 +35,7 @@
 [![Product Name Screen Shot][product-screenshot]](https://yymmt742.github.io/unittest)
  -->
 
-unittest provides simple unit tests for fortran.
+Provides simple unittest utils for fortran.
 
 <!--
 [api-reference](https://yymmt742.github.io/unittest)
@@ -47,6 +47,10 @@ unittest provides simple unit tests for fortran.
 <!-- GETTING STARTED -->
 ## Getting Started
 ### Prerequisites
+
+[![fypp][fypp]][fypp-url]
+[![cmake][cmake]][cmake-url]
+[![fortran][fortran-shield]][fortran-url]
 
 * fypp
 * gcc >= 9.4.0
