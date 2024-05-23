@@ -8,13 +8,8 @@ module mod_unittest
   private
   public  :: unittest
 !
-  character(*), parameter :: SEP1 = REPEAT('-', 60)
-  character(*), parameter :: SEP2 = REPEAT('=', 60)
-  character(*), parameter :: SEP3 = REPEAT(' ', 8)//REPEAT('-', 36)
-  character(*), parameter :: AssertionError = '        Assertion Error : '
-  character(*), parameter :: LankMissMatchError = '   Lank MissMatch Error : '
-  character(*), parameter :: ErrorRateIs = '          Error rate is : '
-  integer, parameter      :: DEF_MP = 10**7
+  character(*), parameter :: SEP1 = REPEAT('-', 64)
+  character(*), parameter :: SEP2 = REPEAT('=', 64)
 !
   type unittest
     private
@@ -24,7 +19,7 @@ module mod_unittest
     integer                   :: start_time
     real(RK)                  :: start_cpu_time
     character(:), allocatable :: script_name
-    logical                   :: error_detected = .false.
+    logical                   :: terminate_with_error_code = .true.
   contains
     procedure         :: init => utest_init
     include "bool.h"
@@ -54,15 +49,17 @@ module mod_unittest
 !
 contains
 !
-  function utest_new(section) result(res)
+  function utest_new(section, terminate_with_error_code) result(res)
     character(*), intent(in), optional :: section
+    logical, intent(in), optional      :: terminate_with_error_code
     type(unittest)                     :: res
-    call utest_init(res, section)
+    call utest_init(res, section, terminate_with_error_code)
   end function utest_new
 !
-  subroutine utest_init(this, section)
+  subroutine utest_init(this, section, terminate_with_error_code)
     class(unittest), intent(inout)     :: this
     character(*), intent(in), optional :: section
+    logical, intent(in), optional      :: terminate_with_error_code
     integer                            :: lna, ios
     character(:), allocatable          :: tmp
     call utest_destroy(this)
@@ -115,7 +112,6 @@ contains
       if (this%num_error < 1) then
         write (this%dev, '(A,I0,A,F9.3,A)', err=100) 'Passed'
       else
-        this%error_detected = .true.
         write (this%dev, '(A,/,I12,A)', err=100) 'Failed, ', this%num_error, ' error detected.'
       end if
     else
@@ -130,7 +126,8 @@ contains
   subroutine utest_finish_and_terminate(this)
     class(unittest), intent(inout) :: this
     call utest_destroy(this)
-    if (this%error_detected) call error_stop('TESTS WERE TERMINATED', 1)
+    if (.not. this%terminate_with_error_code) return
+    if (this%num_error > 0) call error_stop('TESTS WERE TERMINATED', 1)
   end subroutine utest_finish_and_terminate
 !
   pure subroutine utest_free(this)
@@ -138,6 +135,7 @@ contains
     if (ALLOCATED(this%script_name)) deallocate (this%script_name)
     this%num_test = 0
     this%num_error = 0
+    this%terminate_with_error_code = .true.
   end subroutine utest_free
 !
   subroutine utest_destroy(this)
