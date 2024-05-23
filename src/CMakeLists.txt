@@ -1,74 +1,68 @@
-find_program(FYPP fypp)
-if(NOT FYPP)
-  message(FATAL_ERROR "FYPP not found.")
+set(LIB_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/mod_files/)
+if(NOT EXISTS "${LIB_MOD_DIR}")
+  make_directory("${LIB_MOD_DIR}")
 endif()
 
 check_fortran_source_runs(
   "i=0; error stop i; end"
   f18errorstop
   )
-check_fortran_source_runs(
-  "use, intrinsic :: iso_fortran_env, only : REAL128; real(REAL128) :: x; x = x+1; end"
-  f03real128
-  )
-set(LIB_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/mod_files/)
-if(NOT EXISTS "${LIB_MOD_DIR}")
-  make_directory("${LIB_MOD_DIR}")
-endif()
+
+function(fypp_generate src target opts list newlist)
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}
+    COMMAND fypp ${opts}
+            ${CMAKE_CURRENT_SOURCE_DIR}/${src}
+            ${CMAKE_CURRENT_BINARY_DIR}/${target}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${src}
+            ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp
+    )
+  set(list_)
+  foreach(t IN LISTS list)
+    list(APPEND list_ ${t})
+  endforeach()
+  list(APPEND list_ ${CMAKE_CURRENT_BINARY_DIR}/${target})
+  set(${newlist} ${list_} PARENT_SCOPE)
+endfunction()
+
+set(f90files)
+set(incfiles)
 
 if(f18errorstop)
-  add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
-    COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f18.fypp
-            ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f18.fypp)
+  fypp_generate("error_stop_f18.fypp" "error_stop.f90" "${fyppFlags}" "${f90files}" f90files)
 else()
-  add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
-    COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f08.fypp
-            ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/error_stop_f08.fypp)
+  fypp_generate("error_stop_f08.fypp" "error_stop.f90" "${fyppFlags}" "${f90files}" f90files)
 endif()
-list(APPEND f90files ${CMAKE_CURRENT_BINARY_DIR}/error_stop.f90)
 
-set(fyppFlags)
-list(APPEND fyppFiles bool.fypp equal.fypp almost_equal.fypp compare.fypp)
+fypp_generate("mod_kinds.fypp" "mod_kinds.f90" "${fyppFlags}" "${f90files}" f90files)
 
-foreach(fyppfile ${fyppFiles})
-  string(REGEX REPLACE "\\.fypp" ".f90" f90file ${fyppfile})
-  string(REGEX REPLACE "\\.fypp" ".h" hfile ${fyppfile})
-  string(REGEX REPLACE "\\.fypp" ".h.fypp" hsrc ${fyppfile})
-  string(REGEX REPLACE "\\.fypp" ".inc" incfile ${fyppfile})
-  string(REGEX REPLACE "\\.fypp" ".i.fypp" incsrc ${fyppfile})
-  add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${hfile}
-    COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/${hsrc}
-            ${CMAKE_CURRENT_BINARY_DIR}/${hfile}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${hsrc}
-            ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
-  add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${incfile}
-    COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/${incsrc}
-            ${CMAKE_CURRENT_BINARY_DIR}/${incfile}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${incsrc}
-            ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
-  add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${f90file}
-    COMMAND fypp "${fyppFlags}" ${CMAKE_CURRENT_SOURCE_DIR}/${fyppfile}
-            ${CMAKE_CURRENT_BINARY_DIR}/${f90file}
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${hfile}
-            ${CMAKE_CURRENT_BINARY_DIR}/${incfile}
-            ${CMAKE_CURRENT_SOURCE_DIR}/${fyppfile}
-            ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp)
-  list(APPEND f90files ${CMAKE_CURRENT_BINARY_DIR}/${f90file})
+list(APPEND fyppFiles
+   bool.fypp
+   equal.fypp
+   almost_equal.fypp
+   compare.fypp
+   )
+
+foreach(fyppFile ${fyppFiles})
+  string(REGEX REPLACE "\\.fypp" ".f90" f90Target ${fyppFile})
+  string(REGEX REPLACE "\\.fypp" ".h.fypp" hFile ${fyppFile})
+  string(REGEX REPLACE "\\.fypp" ".h" hTarget ${fyppFile})
+  string(REGEX REPLACE "\\.fypp" ".i.fypp" incFile ${fyppFile})
+  string(REGEX REPLACE "\\.fypp" ".inc" incTarget ${fyppFile})
+  fypp_generate("${hFile}" "${hTarget}" "${fyppFlags}" "${incfiles}" incfiles)
+  fypp_generate("${incFile}" "${incTarget}" "${fyppFlags}" "${incfiles}" incfiles)
+  fypp_generate("${fyppFile}" "${f90Target}" "${fyppFlags}" "${f90files}" f90files)
 endforeach()
+
+add_custom_target(custom_header SOURCES ${incfiles})
 
 add_library(
   ${PROJECT_NAME} STATIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/mod_unittest_printer.f90
   ${f90files}
+  ${CMAKE_CURRENT_SOURCE_DIR}/mod_unittest_printer.f90
   ${CMAKE_CURRENT_SOURCE_DIR}/mod_unittest.f90
   )
+add_dependencies(${PROJECT_NAME} custom_header)
 target_include_directories(
   ${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}

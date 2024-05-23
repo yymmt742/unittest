@@ -1,8 +1,5 @@
 #:include "common.fypp"
 submodule(mod_unittest) equal
-#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS
-  use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
-#:endfor
   use mod_unittest_printer
   implicit none
 contains

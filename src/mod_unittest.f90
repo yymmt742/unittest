@@ -4,6 +4,7 @@ module mod_unittest
   use, intrinsic :: ISO_FORTRAN_ENV, only: STDOUT => OUTPUT_UNIT, &
                   &                        STDERR => ERROR_UNIT, &
                   &                        RK => REAL64
+  use mod_kinds
   implicit none
   private
   public  :: unittest

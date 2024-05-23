@@ -4,7 +4,6 @@
 #:for rank2 in [0, 1]
 #:for rank1 in [0, 1]
   module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, place)
-    use, intrinsic :: ISO_FORTRAN_ENV, only: ${kind}$
     class(unittest), intent(inout) :: this
     ${type}$, intent(in)     :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
     character(*), intent(in)       :: unitname

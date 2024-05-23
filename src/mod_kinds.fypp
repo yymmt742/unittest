@@ -1,0 +1,29 @@
+#:include "common.fypp"
+module mod_kinds
+  !! Defines the available integer and floating-point precision.
+  use, intrinsic :: ISO_FORTRAN_ENV, only: INT8, INT16, INT32, INT64
+  implicit none
+  private
+  public :: INT8, INT16, INT32, INT64
+  public :: SP, DP
+#:if XDP_SUPPORT
+  public :: XDP
+#:endif
+#:if QP_SUPPORT
+  public :: QP
+#:endif
+#:if HP_SUPPORT
+  public :: HP
+#:endif
+  integer, parameter :: SP = SELECTED_REAL_KIND(6)
+  integer, parameter :: DP = SELECTED_REAL_KIND(15)
+#:if XDP_SUPPORT
+  integer, parameter :: XDP = SELECTED_REAL_KIND(18)
+#:endif
+#:if QP_SUPPORT
+  integer, parameter :: QP = SELECTED_REAL_KIND(33)
+#:endif
+#:if HP_SUPPORT
+  integer, parameter :: HP = SELECTED_REAL_KIND(3)
+#:endif
+end module mod_kinds

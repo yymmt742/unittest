@@ -1,10 +1,37 @@
 #:mute
 
+#:if not defined("XDP_SUPPORT")
+#:set XDP_SUPPORT = False
+#:endif
+
+#:if not defined("QP_SUPPORT")
+#:set QP_SUPPORT = False
+#:endif
+
+#:if not defined("HP_SUPPORT")
+#:set HP_SUPPORT = False
+#:endif
+
 #:set INTEGER_KINDS = ["INT8", "INT16", "INT32", "INT64"]
 #:set INTEGER_POSTFIX = ["i8", "i16", "i32", "i64"]
-#:set REAL_KINDS = ["REAL32", "REAL64", "REAL128"]
-#:set REAL_POSTFIX = ["r32", "r64", "r128"]
-#:set COMPLEX_POSTFIX = ["c32", "c64", "c128"]
+#:set REAL_KINDS = ["sp", "dp"]
+#:set REAL_POSTFIX = ["r32", "r64"]
+#:set COMPLEX_POSTFIX = ["c32", "c64"]
+#:if XDP_SUPPORT
+#:set REAL_KINDS = REAL_KINDS + ["xdp"]
+#:set REAL_POSTFIX = REAL_POSTFIX + ["r80"]
+#:set COMPLEX_POSTFIX = COMPLEX_POSTFIX + ["c80"]
+#:endif
+#:if QP_SUPPORT
+#:set REAL_KINDS = REAL_KINDS + ["qp"]
+#:set REAL_POSTFIX = REAL_POSTFIX + ["r128"]
+#:set COMPLEX_POSTFIX = COMPLEX_POSTFIX + ["c128"]
+#:endif
+#:if HP_SUPPORT
+#:set REAL_KINDS = ["hp"] + REAL_KINDS
+#:set REAL_POSTFIX = ["r16"] + REAL_POSTFIX
+#:set COMPLEX_POSTFIX = ["c16"] + COMPLEX_POSTFIX
+#:endif
 #:set LOGICAL_KINDS = [""]
 #:set LOGICAL_TYPES = ["logical"]
 #:set LOGICAL_POSTFIX = ["logical"]
