@@ -13,8 +13,7 @@
 #:endfor
 #:for routine in ["assert_equal", "assert_not_equal"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS
-#:for rank2 in [0, 1]
-#:for rank1 in [0, 1]
+#:for rank1, rank2 in [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (0, 1), (0, 2), (0, 3), (0, 4), (1, 0), (2, 0), (3, 0), (4, 0)]
   module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname)
     class(unittest), intent(inout) :: this
     ${type}$, intent(in)           :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
@@ -24,11 +23,9 @@
 #:endfor
 #:endfor
 #:endfor
-#:endfor
 #:for routine in ["assert_almost_equal", "assert_not_almost_equal"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
-#:for rank2 in [0, 1]
-#:for rank1 in [0, 1]
+#:for rank1, rank2 in [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (0, 1), (0, 2), (0, 3), (0, 4), (1, 0), (2, 0), (3, 0), (4, 0)]
   module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, place)
     class(unittest), intent(inout) :: this
     ${type}$, intent(in)           :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
@@ -36,7 +33,6 @@
     integer, intent(in), optional  :: place
   end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
-#:endfor
 #:endfor
 #:endfor
 #:endfor
@@ -75,6 +71,21 @@
     character(*), intent(in)       :: unitname
     integer, intent(in), optional  :: place
   end subroutine ${routine_name(routine, post, rank)}$
+!
+#:endfor
+#:endfor
+#:endfor
+#:for routine in ["assert_allclose", "assert_not_allclose"]
+#:for kind, type, post in REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
+#:for rank1, rank2 in [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (0, 1), (0, 2), (0, 3), (0, 4), (1, 0), (2, 0), (3, 0), (4, 0)]
+  module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, rtol, atol)
+    class(unittest), intent(inout) :: this
+    ${type}$, intent(in)           :: a${rank_suffix(rank1)}$
+    ${type}$, intent(in)           :: b${rank_suffix(rank2)}$
+    character(*), intent(in)       :: unitname
+    real(${kind}$), intent(in), optional  :: rtol
+    real(${kind}$), intent(in), optional  :: atol
+  end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
 #:endfor

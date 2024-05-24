@@ -45,6 +45,7 @@ list(APPEND fyppFiles
    compare.fypp
    is_eye.fypp
    is_zero.fypp
+   allclose.fypp
    )
 
 foreach(fyppFile ${fyppFiles})
