@@ -16,6 +16,9 @@ program main
   complex(REAL32), parameter  :: x4 = 1, y4(3) = [1, 1, 1], z4(3) = [2, 3, 4]
   complex(REAL64), parameter  :: x8 = 1, y8(3) = [1, 1, 1], z8(3) = [2, 3, 4]
   complex(REAL128), parameter :: xf = 1, yf(3) = [1, 1, 1], zf(3) = [2, 3, 4]
+  real(REAL128)               :: rn(50, 50)
+  complex(REAL128)            :: xe(50, 50)
+  integer                     :: i, j
 !
   call u%init('test_unittest', terminate_with_error_code=.false.)
 !<&
@@ -212,8 +215,17 @@ program main
   call u%assert_almost_equal(xf, yf,       'assert_almost_equal  cmpx128 01 ')
   call u%assert_almost_equal(yf, xf,       'assert_almost_equal  cmpx128 10 ')
   call u%assert_almost_equal(zf, zf,       'assert_almost_equal  cmpx128 11 ')
-  call u%assert_almost_equal(zf, -zf,      'assert_almost_equal  cmpx128 11 ')
+  call u%assert_almost_equal([-zf, zf], [zf,-zf],      'assert_almost_equal  cmpx128 11 ')
   call u%assert_almost_equal([zf, zf], -zf, 'assert_almost_equal  cmpx128 11 ')
+  do concurrent(i=1:SIZE(xe, 1), j=1:SIZE(xe, 2))
+    xe(i, j) = MERGE(1, 0, i==j)
+  enddo
+  call u%assert_is_eye(xe,                 'assert_is_eye        cmpx128')
+  call random_number(rn)
+  xe = rn
+  call random_number(rn)
+  xe = xe + CMPLX(0.0, rn)
+  call u%assert_is_eye(xe,             'assert_is_eye        cmpx128')
 !&>
 !
   call u%finish_and_terminate()
