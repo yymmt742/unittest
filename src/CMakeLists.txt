@@ -44,16 +44,11 @@ list(APPEND fyppFiles
    almost_equal.fypp
    compare.fypp
    is_eye.fypp
+   is_zero.fypp
    )
 
 foreach(fyppFile ${fyppFiles})
   string(REGEX REPLACE "\\.fypp" ".f90" f90Target ${fyppFile})
-  #string(REGEX REPLACE "\\.fypp" ".h.fypp" hFile ${fyppFile})
-  #string(REGEX REPLACE "\\.fypp" ".h" hTarget ${fyppFile})
-  #string(REGEX REPLACE "\\.fypp" ".i.fypp" incFile ${fyppFile})
-  #string(REGEX REPLACE "\\.fypp" ".inc" incTarget ${fyppFile})
-  #fypp_generate("${hFile}" "${hTarget}" "${fyppFlags}" "${incfiles}" incfiles)
-  #fypp_generate("${incFile}" "${incTarget}" "${fyppFlags}" "${incfiles}" incfiles)
   fypp_generate("${fyppFile}" "${f90Target}" "${fyppFlags}" "${f90files}" f90files)
 endforeach()
 

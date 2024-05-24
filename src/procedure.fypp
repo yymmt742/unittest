@@ -14,3 +14,6 @@ ${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS, [(0
 #:for routine in ["assert_is_eye", "assert_isnot_eye"]
 ${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, [(2, None)])}$
 #:endfor
+#:for routine in ["assert_is_zero", "assert_isnot_zero"]
+${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, [(rank, None) for rank in range(4)])}$
+#:endfor

@@ -66,3 +66,16 @@
 !
 #:endfor
 #:endfor
+#:for routine in ["assert_is_zero", "assert_isnot_zero"]
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
+#:for rank in range(4)
+  module subroutine ${routine_name(routine, post, rank)}$ (this, a, unitname, place)
+    class(unittest), intent(inout) :: this
+    ${type}$, intent(in)           :: a${rank_suffix(rank)}$
+    character(*), intent(in)       :: unitname
+    integer, intent(in), optional  :: place
+  end subroutine ${routine_name(routine, post, rank)}$
+!
+#:endfor
+#:endfor
+#:endfor
