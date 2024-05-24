@@ -1,4 +1,0 @@
-#:include "common.fypp"
-#:for routine in ["assert_almost_equal", "assert_not_almost_equal"]
-${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, [(0, 0), (0, 1), (1, 0), (1, 1)])}$
-#:endfor
