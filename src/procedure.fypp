@@ -1,0 +1,16 @@
+#:include "common.fypp"
+#:for routine in ["assert", "assert_true", "assert_false"]
+${generic_procedure(routine, LOGICAL_KIND_TYPE_POSTS, [(rank, None) for rank in range(4)])}$
+#:endfor
+#:for routine in ["assert_equal", "assert_not_equal"]
+${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS, [(0, 0), (0, 1), (1, 0), (1, 1)])}$
+#:endfor
+#:for routine in ["assert_almost_equal", "assert_not_almost_equal"]
+${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, [(0, 0), (0, 1), (1, 0), (1, 1)])}$
+#:endfor
+#:for routine in ["assert_less", "assert_less_equal", "assert_greater", "assert_greater_equal"]
+${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS, [(0, 0), (0, 1), (1, 0), (1, 1)])}$
+#:endfor
+#:for routine in ["assert_is_eye", "assert_isnot_eye"]
+${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, [(2, None)])}$
+#:endfor

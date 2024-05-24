@@ -1,0 +1,4 @@
+#:include "common.fypp"
+#:for routine in ["assert_is_eye", "assert_isnot_eye"]
+${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, [(2, None)])}$
+#:endfor

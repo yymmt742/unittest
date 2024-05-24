@@ -23,10 +23,7 @@ module mod_unittest
     logical                   :: terminate_with_error_code = .true.
   contains
     procedure         :: init => utest_init
-    include "bool.h"
-    include "equal.h"
-    include "compare.h"
-    include "almost_equal.h"
+    include "procedure.h"
     procedure         :: finish => utest_finish
     procedure         :: finish_and_terminate => utest_finish_and_terminate
     final             :: utest_destroy
@@ -42,10 +39,7 @@ module mod_unittest
       integer, intent(in), optional      :: code
     end subroutine error_stop
 
-    include "bool.inc"
-    include "equal.inc"
-    include "compare.inc"
-    include "almost_equal.inc"
+    include "interface.f90"
   end interface
 !
 contains

@@ -10,15 +10,21 @@ module mod_unittest_printer
 !<&
   integer, parameter      :: L_MSG = 52
   integer, parameter      :: L_WDH = 40
-  character(*), parameter :: WSPC  = REPEAT(' ', 8)
-  character(*), parameter :: SEP3  = WSPC//REPEAT('-', L_MSG)
+  character(*), parameter :: ESCAPE        = ACHAR(z'1b')
+  character(*), parameter :: BAR1          = Escape//'[95;40m█'
+  character(*), parameter :: BAR2          = Escape//'[95;40m▓'
+  character(*), parameter :: BAR3          = Escape//'[95;40m▒'
+  character(*), parameter :: BAR4          = Escape//'[95;40m░'
+  character(*), parameter :: BAR5          = Escape//'[0;30m█'
+  character(*), parameter :: BAR6          = Escape//'[92;40m░'
+  character(*), parameter :: BAR7          = Escape//'[92;40m▒'
+  character(*), parameter :: BAR8          = Escape//'[92;40m▓'
+  character(*), parameter :: BAR9          = Escape//'[92;40m█'
+  character(*), parameter :: RESET         = Escape//'[m'
+  character(*), parameter :: WSPC          = REPEAT(' ', 8)
+  character(*), parameter :: SEP3          = WSPC//REPEAT('-', L_MSG)
   character(*), parameter :: rankMissMatch = WSPC//'  Rank MissMatch : '
   character(*), parameter :: ErrorRateIs   = WSPC//'  Error rate is  : '
-!
-  character(*), parameter :: ESCAPE        = ACHAR(z'1b')
-  character(*), parameter :: RED           = Escape//'[91m'
-  character(*), parameter :: BLUE          = Escape//'[94m'
-  character(*), parameter :: RESET         = Escape//'[0m'
 !&>
   type expr_report
     sequence
@@ -96,10 +102,13 @@ contains
       nerror = nerror + 1
     end do
 !
+    call report_as_image(dev, 50, expr%error_rate)
+!
     if (ntest < 2) return
     error_rate = 100.0_RK * real(nerror, RK) / real(ntest, RK)
     write (dev, '(A)', IOSTAT=ios) SEP3
     write (dev, '(A,f7.3,A,I8,A,I8,A)', IOSTAT=ios) ErrorRateIs, error_rate, ' %  (', nerror, ' /', ntest, ' )'
+!
     FLUSH (dev)
   end subroutine report_result
 !
@@ -112,5 +121,47 @@ contains
     npad = MAX(0, nline - LEN_TRIM(s))
     res = ' '//TRIM(s)//REPEAT(' ', npad)//post
   end function padd_string
+!
+  subroutine report_as_image(dev, nbreak, error_rate)
+    integer, intent(in)  :: dev
+    integer, intent(in)  :: nbreak
+    real(RK), intent(in) :: error_rate(:)
+    real(RK)             :: mmax, m1, m2, m3, m4
+    integer              :: i, j, ios, nmap
+    nmap = SIZE(error_rate)
+    mmax = MAXVAL(error_rate)
+    m1 = 0.2_RK * mmax
+    m2 = 0.4_RK * mmax
+    m3 = 0.6_RK * mmax
+    m4 = 0.8_RK * mmax
+    write (dev, '(16X,G12.3,A,G12.3)', IOSTAT=ios) &
+   & -mmax, BAR1//BAR2//BAR3//BAR4//BAR5//BAR6//BAR7//BAR8//BAR9//RESET, mmax
+    do i = 1, nmap, nbreak
+      write (dev, '(I12,1X)', ADVANCE="NO", IOSTAT=ios) i
+      do j = i, MIN(i + nbreak - 1, nmap)
+        if (error_rate(j) < -m4) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR1
+        elseif (error_rate(j) < -m3) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR2
+        elseif (error_rate(j) < -m2) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR3
+        elseif (error_rate(j) < -m1) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR4
+        elseif (error_rate(j) < m1) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR5
+        elseif (error_rate(j) < m2) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR6
+        elseif (error_rate(j) < m3) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR7
+        elseif (error_rate(j) < m4) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR8
+        else
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR9
+        end if
+      end do
+      write (dev, '(A)', IOSTAT=ios) RESET
+    end do
+  end subroutine report_as_image
+!
 end module mod_unittest_printer
 

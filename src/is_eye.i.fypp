@@ -1,0 +1,12 @@
+#:include "common.fypp"
+#:for routine in ["assert_is_eye", "assert_isnot_eye"]
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
+  module subroutine ${routine_name(routine, post, 2)}$ (this, a, unitname, place)
+    class(unittest), intent(inout) :: this
+    ${type}$, intent(in)     :: a${rank_suffix(2)}$
+    character(*), intent(in)       :: unitname
+    integer, intent(in), optional  :: place
+  end subroutine ${routine_name(routine, post, 2)}$
+
+#:endfor
+#:endfor
