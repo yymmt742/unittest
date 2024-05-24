@@ -222,10 +222,13 @@ program main
   enddo
   call u%assert_is_eye(xe,                 'assert_is_eye        cmpx128')
   call random_number(rn)
-  xe = rn
+  xe = rn - 0.5
   call random_number(rn)
-  xe = xe + CMPLX(0.0, rn)
+  xe = xe + CMPLX(0.0, rn - 0.5)
   call u%assert_is_eye(xe,             'assert_is_eye        cmpx128')
+  call u%assert_is_zero(xe,            'assert_is_zero       cmpx128')
+  xe = 0.0
+  call u%assert_is_zero(xe,            'assert_is_zero       cmpx128')
 !&>
 !
   call u%finish_and_terminate()
