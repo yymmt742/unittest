@@ -8,18 +8,30 @@ module mod_unittest_printer
   public  :: check_expr_all
   public  :: check_expr_not_any
 !<&
-  integer, parameter      :: L_MSG = 52
-  integer, parameter      :: L_WDH = 40
+  integer, parameter      :: L_MSG = 56
+  integer, parameter      :: L_WDH = L_MSG - 12
   character(*), parameter :: ESCAPE        = ACHAR(z'1b')
   character(*), parameter :: BAR1          = Escape//'[95;40m█'
-  character(*), parameter :: BAR2          = Escape//'[95;40m▓'
-  character(*), parameter :: BAR3          = Escape//'[95;40m▒'
-  character(*), parameter :: BAR4          = Escape//'[95;40m░'
-  character(*), parameter :: BAR5          = Escape//'[0;30m█'
-  character(*), parameter :: BAR6          = Escape//'[92;40m░'
-  character(*), parameter :: BAR7          = Escape//'[92;40m▒'
-  character(*), parameter :: BAR8          = Escape//'[92;40m▓'
-  character(*), parameter :: BAR9          = Escape//'[92;40m█'
+  character(*), parameter :: BAR2          = Escape//'[91;40m█'
+  character(*), parameter :: BAR3          = Escape//'[91;40m▓'
+  character(*), parameter :: BAR4          = Escape//'[91;40m▒'
+  character(*), parameter :: BAR5          = Escape//'[91;40m░'
+  character(*), parameter :: BAR6          = Escape//'[35;40m░'
+  character(*), parameter :: BAR7          = Escape//'[35;40m░'
+  character(*), parameter :: BAR8          = Escape//'[31;40m░'
+  character(*), parameter :: BAR9          = Escape//'[31;40m░'
+  character(*), parameter :: BAR10         = Escape//'[31;40m░'
+  character(*), parameter :: BAR11         = Escape//'[0;30m█'
+  character(*), parameter :: BAR12         = Escape//'[34;40m░'
+  character(*), parameter :: BAR13         = Escape//'[34;40m░'
+  character(*), parameter :: BAR14         = Escape//'[34;40m░'
+  character(*), parameter :: BAR15         = Escape//'[34;40m░'
+  character(*), parameter :: BAR16         = Escape//'[94;40m░'
+  character(*), parameter :: BAR17         = Escape//'[96;40m░'
+  character(*), parameter :: BAR18         = Escape//'[96;40m▒'
+  character(*), parameter :: BAR19         = Escape//'[96;40m▓'
+  character(*), parameter :: BAR20         = Escape//'[96;40m█'
+  character(*), parameter :: BAR21         = Escape//'[97;40m█'
   character(*), parameter :: RESET         = Escape//'[m'
   character(*), parameter :: WSPC          = REPEAT(' ', 8)
   character(*), parameter :: SEP3          = WSPC//REPEAT('-', L_MSG)
@@ -95,14 +107,16 @@ contains
     ntest = SIZE(expr)
 !
     write (dev, '(A)', IOSTAT=ios) SEP3
-    nerror = 0
-    do i = 1, ntest
-      if (expr(i)%ok) cycle
-      write (dev, '(3X,I8,1X,A)', IOSTAT=ios) i, TRIM(expr(i)%msg)
-      nerror = nerror + 1
-    end do
+    nerror = COUNT(.not.expr%ok)
 !
-    call report_as_image(dev, 50, expr%error_rate)
+    if (ntest > 49) then
+      call report_as_image(dev, 50, expr%error_rate)
+    else
+      do i = 1, ntest
+        if (expr(i)%ok) cycle
+        write (dev, '(3X,I8,1X,A)', IOSTAT=ios) i, TRIM(expr(i)%msg)
+      end do
+    end if
 !
     if (ntest < 2) return
     error_rate = 100.0_RK * real(nerror, RK) / real(ntest, RK)
@@ -126,37 +140,69 @@ contains
     integer, intent(in)  :: dev
     integer, intent(in)  :: nbreak
     real(RK), intent(in) :: error_rate(:)
-    real(RK)             :: mmax, m1, m2, m3, m4
+    real(RK)             :: mmax, m1, m2, m3, m4, m5, m6, m7, m8, m9, m0
     integer              :: i, j, ios, nmap
     nmap = SIZE(error_rate)
-    mmax = MAXVAL(error_rate)
-    m1 = 0.2_RK * mmax
-    m2 = 0.4_RK * mmax
-    m3 = 0.6_RK * mmax
-    m4 = 0.8_RK * mmax
-    write (dev, '(16X,G12.3,A,G12.3)', IOSTAT=ios) &
-   & -mmax, BAR1//BAR2//BAR3//BAR4//BAR5//BAR6//BAR7//BAR8//BAR9//RESET, mmax
+    mmax = MAXVAL(ABS(error_rate))
+    m1 = 0.05_RK * mmax
+    m2 = 0.15_RK * mmax
+    m3 = 0.25_RK * mmax
+    m4 = 0.35_RK * mmax
+    m5 = 0.45_RK * mmax
+    m6 = 0.55_RK * mmax
+    m7 = 0.65_RK * mmax
+    m8 = 0.75_RK * mmax
+    m9 = 0.85_RK * mmax
+    m0 = 0.95_RK * mmax
+    write (dev, '(14X,G12.3,A,G12.3)', IOSTAT=ios) &
+   & -mmax, BAR1//BAR2//BAR3//BAR4//BAR5//BAR6//BAR7//BAR8//BAR9//BAR10//&
+   & BAR11//BAR12//BAR13//BAR14//BAR15//BAR16//BAR17//BAR18//BAR19//BAR20//&
+   & BAR21//RESET, mmax
     do i = 1, nmap, nbreak
       write (dev, '(I12,1X)', ADVANCE="NO", IOSTAT=ios) i
       do j = i, MIN(i + nbreak - 1, nmap)
-        if (error_rate(j) < -m4) then
+        if (error_rate(j) < -m0) then
           write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR1
-        elseif (error_rate(j) < -m3) then
+        elseif (error_rate(j) < -m9) then
           write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR2
-        elseif (error_rate(j) < -m2) then
+        elseif (error_rate(j) < -m8) then
           write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR3
-        elseif (error_rate(j) < -m1) then
+        elseif (error_rate(j) < -m7) then
           write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR4
-        elseif (error_rate(j) < m1) then
+        elseif (error_rate(j) < -m6) then
           write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR5
-        elseif (error_rate(j) < m2) then
+        elseif (error_rate(j) < -m5) then
           write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR6
-        elseif (error_rate(j) < m3) then
+        elseif (error_rate(j) < -m4) then
           write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR7
-        elseif (error_rate(j) < m4) then
+        elseif (error_rate(j) < -m3) then
           write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR8
-        else
+        elseif (error_rate(j) < -m2) then
           write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR9
+        elseif (error_rate(j) < -m1) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR10
+        elseif (error_rate(j) < m1) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR11
+        elseif (error_rate(j) < m2) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR12
+        elseif (error_rate(j) < m3) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR13
+        elseif (error_rate(j) < m4) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR14
+        elseif (error_rate(j) < m5) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR15
+        elseif (error_rate(j) < m6) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR16
+        elseif (error_rate(j) < m7) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR17
+        elseif (error_rate(j) < m8) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR18
+        elseif (error_rate(j) < m9) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR19
+        elseif (error_rate(j) < m0) then
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR20
+        else
+          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR21
         end if
       end do
       write (dev, '(A)', IOSTAT=ios) RESET
