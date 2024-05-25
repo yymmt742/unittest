@@ -10,29 +10,30 @@ module mod_unittest_printer
 !<&
   integer, parameter      :: L_MSG = 56
   integer, parameter      :: L_WDH = L_MSG - 12
-  character(*), parameter :: ESCAPE        = ACHAR(z'1b')
-  character(*), parameter :: BAR1          = Escape//'[91;40m█'
-  character(*), parameter :: BAR2          = Escape//'[91;40m▓'
-  character(*), parameter :: BAR3          = Escape//'[91;40m▒'
-  character(*), parameter :: BAR4          = Escape//'[91;40m░'
-  character(*), parameter :: BAR5          = Escape//'[31;40m░'
-  character(*), parameter :: BAR6          = Escape//'[31;40m░'
-  character(*), parameter :: BAR7          = Escape//'[31;40m░'
-  character(*), parameter :: BAR8          = Escape//'[31;40m░'
-  character(*), parameter :: BAR9          = Escape//'[35;40m░'
-  character(*), parameter :: BAR10         = Escape//'[35;40m░'
-  character(*), parameter :: BAR11         = Escape//'[0;30m█'
-  character(*), parameter :: BAR12         = Escape//'[34;40m░'
-  character(*), parameter :: BAR13         = Escape//'[34;40m░'
-  character(*), parameter :: BAR14         = Escape//'[34;40m░'
-  character(*), parameter :: BAR15         = Escape//'[34;40m░'
-  character(*), parameter :: BAR16         = Escape//'[34;40m░'
-  character(*), parameter :: BAR17         = Escape//'[34;40m░'
-  character(*), parameter :: BAR18         = Escape//'[96;40m░'
-  character(*), parameter :: BAR19         = Escape//'[96;40m▒'
-  character(*), parameter :: BAR20         = Escape//'[96;40m▓'
-  character(*), parameter :: BAR21         = Escape//'[96;40m█'
-  character(*), parameter :: RESET         = Escape//'[m'
+  character(*), parameter :: ESC   = ACHAR(z'1b')//"["
+!
+  integer, parameter      :: NCMAP = 21
+  character(*), parameter :: CDIV(NCMAP)   = ["164", "129", "093", "092", "056", &
+                           &                  "055", "054", "236", "234", "232", &
+                           &                  "000", "232", "234", "022", "023", &
+                           &                  "031", "037", "036", "041", "046", &
+                           &                  "118"]
+! character(*), parameter :: CDIV(NCMAP)   = ["165", "129", "093", "057", "021", &
+!                          &                  "020", "019", "018", "017", "016", &
+!                          &                  "000", "052", "088", "124", "160", &
+!                          &                  "196", "202", "208", "214", "220", &
+!                          &                  "226"]
+  character(*), parameter :: CSEQ(NCMAP)   = ["232", "233", "234", "235", "236", &
+                           &                  "237", "238", "239", "240", "241", &
+                           &                  "242", "243", "244", "245", "246", &
+                           &                  "247", "248", "249", "251", "253", &
+                           &                  "255"]
+  character(*), parameter :: CSEQ_R(NCMAP) = ["255", "253", "251", "249", "248", &
+                           &                  "247", "246", "245", "244", "243", &
+                           &                  "242", "241", "240", "239", "238", &
+                           &                  "237", "236", "235", "234", "233", &
+                           &                  "232"]
+  character(*), parameter :: RESET         = Esc//'m'
   character(*), parameter :: WSPC          = REPEAT(' ', 8)
   character(*), parameter :: SEP3          = WSPC//REPEAT('-', L_MSG)
   character(*), parameter :: rankMissMatch = WSPC//'  Rank MissMatch : '
@@ -109,19 +110,21 @@ contains
     write (dev, '(A)', IOSTAT=ios) SEP3
     nerror = COUNT(.not.expr%ok)
 !
-    if (ntest > 49) then
-      call report_as_image(dev, 50, expr%error_rate)
-    else
+    if (ntest < 100) then
       do i = 1, ntest
         if (expr(i)%ok) cycle
         write (dev, '(3X,I8,1X,A)', IOSTAT=ios) i, TRIM(expr(i)%msg)
       end do
+    else
+      call report_as_image(dev, ntest, expr%error_rate)
     end if
 !
-    if (ntest < 2) return
-    error_rate = 100.0_RK * real(nerror, RK) / real(ntest, RK)
-    write (dev, '(A)', IOSTAT=ios) SEP3
-    write (dev, '(A,f7.3,A,I8,A,I8,A)', IOSTAT=ios) ErrorRateIs, error_rate, ' %  (', nerror, ' /', ntest, ' )'
+    if (ntest > 1) then
+      error_rate = 100.0_RK * real(nerror, RK) / real(ntest, RK)
+      write (dev, '(A)', IOSTAT=ios) SEP3
+      write (dev, '(A,f7.3,A,I0,A,I0,A)', IOSTAT=ios) &
+     &  ErrorRateIs, error_rate, ' %  ( ', nerror, ' / ', ntest, ' )'
+    end if
 !
     FLUSH (dev)
   end subroutine report_result
@@ -136,78 +139,72 @@ contains
     res = ' '//TRIM(s)//REPEAT(' ', npad)//post
   end function padd_string
 !
-  subroutine report_as_image(dev, nbreak, error_rate)
-    integer, intent(in)  :: dev
-    integer, intent(in)  :: nbreak
-    real(RK), intent(in) :: error_rate(:)
-    real(RK)             :: mmax, m1, m2, m3, m4, m5, m6, m7, m8, m9, m0
-    integer              :: i, j, ios, nmap
+  subroutine report_as_image(dev, ndat, error_rate)
+    integer, intent(in)  :: dev, ndat
+    real(RK), intent(in) :: error_rate(ndat)
+    real(RK)             :: mmax
+    integer              :: nmap
     nmap = SIZE(error_rate)
     mmax = MAXVAL(ABS(error_rate))
-    m1 = 0.05_RK * mmax
-    m2 = 0.15_RK * mmax
-    m3 = 0.25_RK * mmax
-    m4 = 0.35_RK * mmax
-    m5 = 0.45_RK * mmax
-    m6 = 0.55_RK * mmax
-    m7 = 0.65_RK * mmax
-    m8 = 0.75_RK * mmax
-    m9 = 0.85_RK * mmax
-    m0 = 0.95_RK * mmax
-    write (dev, '(14X,G12.3,A,G12.3)', IOSTAT=ios) &
-   & -mmax, BAR1//BAR2//BAR3//BAR4//BAR5//BAR6//BAR7//BAR8//BAR9//BAR10//&
-   & BAR11//BAR12//BAR13//BAR14//BAR15//BAR16//BAR17//BAR18//BAR19//BAR20//&
-   & BAR21//RESET, mmax
-    do i = 1, nmap, nbreak
-      write (dev, '(I12,1X)', ADVANCE="NO", IOSTAT=ios) i
-      do j = i, MIN(i + nbreak - 1, nmap)
-        if (error_rate(j) < -m0) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR1
-        elseif (error_rate(j) < -m9) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR2
-        elseif (error_rate(j) < -m8) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR3
-        elseif (error_rate(j) < -m7) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR4
-        elseif (error_rate(j) < -m6) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR5
-        elseif (error_rate(j) < -m5) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR6
-        elseif (error_rate(j) < -m4) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR7
-        elseif (error_rate(j) < -m3) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR8
-        elseif (error_rate(j) < -m2) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR9
-        elseif (error_rate(j) < -m1) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR10
-        elseif (error_rate(j) < m1) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR11
-        elseif (error_rate(j) < m2) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR12
-        elseif (error_rate(j) < m3) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR13
-        elseif (error_rate(j) < m4) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR14
-        elseif (error_rate(j) < m5) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR15
-        elseif (error_rate(j) < m6) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR16
-        elseif (error_rate(j) < m7) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR17
-        elseif (error_rate(j) < m8) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR18
-        elseif (error_rate(j) < m9) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR19
-        elseif (error_rate(j) < m0) then
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR20
-        else
-          write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) BAR21
-        end if
+    if (ALL(error_rate >= 0.0_RK)) then
+      call dump_image(dev, ndat, SIZE(CSEQ), 100, error_rate, 0.0_RK, mmax, CSEQ)
+    elseif (ALL(error_rate <= 0.0_RK)) then
+      call dump_image(dev, ndat, SIZE(CSEQ_R), 100, error_rate, -mmax, 0.0_RK, CSEQ_R)
+    else
+      call dump_image(dev, ndat, SIZE(CDIV), 100, error_rate, -mmax, mmax, CDIV)
+    end if
+  end subroutine report_as_image
+!
+  subroutine dump_image(dev, ndat, nmap, nbreak, dat, mmin, mmax, cmap)
+    integer, intent(in)       :: dev, ndat, nmap, nbreak
+    real(RK), intent(in)      :: dat(ndat), mmin, mmax
+    character(*), intent(in)  :: cmap(:)
+    real(RK)                  :: norm
+    integer                   :: i, j, k1, k2, n, ios
+    norm = (nmap - 1) / (mmax - mmin)
+    write (dev, '(14X,G12.3,A,G12.3)', IOSTAT=ios) mmin, cbar(cmap), mmax
+    do i = 1, ndat, nbreak
+      n = MIN(i + nbreak - 1, ndat)
+      write (dev, '(I6,A,I6, 1X)', ADVANCE="NO", IOSTAT=ios) i, "-", n
+      do j = i + 1, n, 2
+        k1 = NINT(norm * (dat(j - 1) - mmin)) + 1
+        k2 = NINT(norm * (dat(j - 0) - mmin)) + 1
+        write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) cset(cmap(k1), cmap(k2))//"▌"
       end do
+      if (MODULO(n, 2) == 1) then
+        k1 = NINT(norm * (dat(n) - mmin)) + 1
+        write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) cset(cmap(k1))//"▌"
+      end if
       write (dev, '(A)', IOSTAT=ios) RESET
     end do
-  end subroutine report_as_image
+  end subroutine dump_image
+!
+  pure function cset(C1, C2) result(res)
+    character(*), intent(in)           :: C1
+    character(*), intent(in), optional :: C2
+    integer, parameter                 :: LCSET = LEN(ESC//"38;5;000;48;5;000m")
+    character(LCSET)                   :: res
+    if (PRESENT(C2)) then
+      res = ESC//"38;5;"//C1//";48;5;"//C2//"m"
+    else
+      res = ESC//"38;5;"//C1//";48;5;000m"
+    end if
+  end function cset
+!
+  pure function cbar(cmap) result(res)
+    character(*), intent(in)  :: cmap(:)
+    character(:), allocatable :: res
+    integer                   :: i, n
+    res = ""
+    n = SIZE(cmap)
+    do i = 2, n, 2
+      res = res//cset(cmap(i-1), cmap(i))//"▌"
+    end do
+    if(MODULO(n, 2)==1)then
+      res = res//cset(cmap(n), "000")//"▌"
+    endif
+    res = res//RESET
+  end function cbar
 !
 end module mod_unittest_printer
 
