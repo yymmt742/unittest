@@ -37,9 +37,7 @@
 
 Provides simple unittest utils for fortran.
 
-<!--
 [api-reference](https://yymmt742.github.io/unittest)
- -->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
