@@ -35,8 +35,8 @@ else()
 endif()
 
 fypp_generate("mod_kinds.fypp" "mod_kinds.f90" "${fyppFlags}" "${f90files}" f90files)
-fypp_generate("procedure.fypp" "procedure.h" "${fyppFlags}" "${incfiles}" incfiles)
-fypp_generate("interface.fypp" "interface.f90" "${fyppFlags}" "${incfiles}" incfiles)
+#fypp_generate("procedure.fypp" "procedure.h" "${fyppFlags}" "${incfiles}" incfiles)
+#fypp_generate("interface.fypp" "interface.f90" "${fyppFlags}" "${incfiles}" incfiles)
 
 list(APPEND fyppFiles
    bool.fypp
@@ -46,6 +46,7 @@ list(APPEND fyppFiles
    is_eye.fypp
    is_zero.fypp
    allclose.fypp
+   mod_unittest.fypp
    )
 
 foreach(fyppFile ${fyppFiles})
@@ -53,15 +54,11 @@ foreach(fyppFile ${fyppFiles})
   fypp_generate("${fyppFile}" "${f90Target}" "${fyppFlags}" "${f90files}" f90files)
 endforeach()
 
-add_custom_target(custom_header SOURCES ${incfiles})
-
 add_library(
   ${PROJECT_NAME} STATIC
-  ${f90files}
   ${CMAKE_CURRENT_SOURCE_DIR}/mod_unittest_printer.f90
-  ${CMAKE_CURRENT_SOURCE_DIR}/mod_unittest.f90
+  ${f90files}
   )
-add_dependencies(${PROJECT_NAME} custom_header)
 target_include_directories(
   ${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}
