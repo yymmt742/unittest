@@ -15,7 +15,7 @@ function(fypp_generate src target opts list newlist)
             ${CMAKE_CURRENT_SOURCE_DIR}/${src}
             ${CMAKE_CURRENT_BINARY_DIR}/${target}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${src}
-            ${CMAKE_CURRENT_SOURCE_DIR}/common.fypp
+            ${CMAKE_CURRENT_SOURCE_DIR}/../include/common.fypp
     )
   set(list_)
   foreach(t IN LISTS list)

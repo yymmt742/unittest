@@ -38,6 +38,7 @@ list(
   "-DHP_SUPPORT=$<BOOL:${HP_SUPPORT}>"
   "-DXDP_SUPPORT=$<BOOL:${XDP_SUPPORT}>"
   "-DQP_SUPPORT=$<BOOL:${QP_SUPPORT}>"
+  "-I${PROJECT_SOURCE_DIR}/include"
   )
 add_subdirectory(src)
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
