@@ -1,0 +1,44 @@
+#:include "common.fypp"
+submodule(mod_unittest) is_zero
+  use mod_unittest_printer
+  implicit none
+  integer, parameter :: DEF_MP = 10**7
+contains
+#:set fmts = ["(A,I14,2X,A,I14,2X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
+#:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+#:for ktp, fm in zip(ktps, fmts)
+#:for kind, type, post in ktp
+#:for routine, op, neq in zip(["assert_is_zero", "assert_isnot_zero"], ["<", ">="], ["\~", "~ "])
+#:for rank in range(4)
+  module procedure ${routine_name(routine, post, rank)}$
+    logical  :: err
+    ${type}$ :: b
+    this%num_test = this%num_test + 1
+    b = 0
+    call check_expr_all(this%dev, this%num_test, ${flatten(routine+"_"+post+"(a, b, place)", rank)}$, &
+   &                    unitname, this%num_error, err)
+  end procedure ${routine_name(routine, post, rank)}$
+!
+#:endfor
+  pure elemental function ${routine}$_${post}$ (a, b, place) result(res)
+    ${type}$, intent(in) :: a, b
+    integer, intent(in), optional :: place
+    real(RK)                      :: diff
+    type(expr_report)             :: res
+    diff = ABS(a - b)
+    if (PRESENT(place)) then; diff = diff * 10**place
+    else; diff = diff * DEF_MP
+    end if
+    res%ok = INT(diff) ${op}$1
+    if (res%ok) then
+      res%msg = ""
+    else
+      write (res%msg, '${fm}$') "[", a, "]${neq}$[", b, "]"
+    end if
+    res%error_rate = real(a - b, RK)
+  end function ${routine}$_${post}$
+!
+#:endfor
+#:endfor
+#:endfor
+end submodule is_zero

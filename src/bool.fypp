@@ -1,0 +1,32 @@
+#:include "common.fypp"
+submodule(mod_unittest) bool
+  use mod_unittest_printer
+  implicit none
+contains
+#:for routine, op in zip(["assert", "assert_true", "assert_false"], ["", "", ".not."])
+#:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
+#:for rank in [0, 1, 2, 3]
+  module procedure ${routine_name(routine, post, rank)}$
+    logical :: err
+    this%num_test = this%num_test + 1
+    call check_expr_all(this%dev, this%num_test, ${flatten(routine+"_"+post+"(expr)", rank)}$, &
+   &                    unitname, this%num_error, err)
+  end procedure ${routine_name(routine, post, rank)}$
+!
+#:endfor
+#:endfor
+  pure elemental function ${routine}$_${post}$(expr) result(res)
+    ${type}$, intent(in) :: expr
+    type(expr_report)    :: res
+    res%ok = ${op}$expr
+    if(res%ok) then
+      res%msg = ""
+      res%error_rate = 0.0_RK
+    else
+      res%msg = "  xxx"
+      res%error_rate = 1.0_RK
+    end if
+  end function ${routine}$_${post}$
+!
+#:endfor
+end submodule bool

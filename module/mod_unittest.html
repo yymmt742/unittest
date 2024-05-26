@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta name="description" content="Fortran unittest.">
+    <meta name="author" content="yymmt742" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>mod_unittest &ndash; unittest</title>
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <link href="../css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/local.css" rel="stylesheet">
+    <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <script src="../js/jquery-2.1.3.min.js"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
+
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">unittest </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="dropdown hidden-xs visible-sm visible-md hidden-lg">
+              <a href="#" class="dropdown-toggle"
+              data-toggle="dropdown" role="button"
+              aria-haspopup="true"
+     aria-expanded="false">Contents <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+            <li><a href="../lists/files.html">Source Files</a></li>
+            <li><a href="../lists/modules.html">Modules</a></li>
+            <li><a href="../lists/procedures.html">Procedures</a></li>
+                   <li><a href="../lists/types.html">Derived Types</a></li>
+       
+            </ul>
+        
+            </li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../lists/files.html">Source Files</a></li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../lists/modules.html">Modules</a></li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../lists/procedures.html">Procedures</a></li>
+                             <li class="visible-xs hidden-sm visible-lg"><a href="../lists/types.html">Derived Types</a></li>
+          </ul>
+        <form action="../search.html" class="navbar-form navbar-right" role="search">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+        </div>
+<!--
+        <button type="submit" class="btn btn-default">Submit</button>
+-->
+        </form>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+  <div class="row">
+    <h1>mod_unittest 
+    <small>Module</small>
+    </h1>
+    <div class="row">
+  <div class="col-lg-12">
+<div class="well well-sm">
+  <ul class="list-inline" style="margin-bottom:0px;display:inline">
+    <li><i class="fa fa-legal"></i> <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a></li> 
+     <li><i class="fa fa-list-ol"></i>
+       <a data-toggle="tooltip"
+    data-placement="bottom" data-html="true"
+    title="37.7% of total for modules and submodules.">4602 statements</a>
+     </li> 
+    <li><i class="fa fa-code"></i><a href="../src/mod_unittest.fypp"> Source File</a></li>
+  </ul>
+  <ol class="breadcrumb in-well text-right">
+     <li><a href='../sourcefile/mod_unittest.fypp.html'>mod_unittest.fypp</a></li>
+     <li class="active">mod_unittest</li>
+  </ol>
+</div>
+</div>
+</div>
+<script>
+  $(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+  })
+</script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+    <div id="sidebar">
+  <h3>Contents</h3>
+ 
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#inters-0">Interfaces</a></h3></div>
+  <div id="inters-0" class="panel-collapse collapse">
+    <div class="list-group">
+      <a class="list-group-item" href="../module/mod_unittest.html#interface-unittest">unittest</a>
+    </div>
+  </div>
+</div>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#types-0">Derived Types</a></h3></div>
+  <div id="types-0" class="panel-collapse collapse">
+    <div class="list-group">
+      <a class="list-group-item" href="../module/mod_unittest.html#type-unittest">unittest</a>
+    </div>
+  </div>
+</div>
+
+</div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <p>Fortran unit testing framework.</p>
+<br>        <div class="panel panel-default">
+      <div class="panel-heading">
+  <h3 class="panel-title">Uses</h3>
+      </div>
+      <ul class="list-group">
+      <li class="list-group-item">
+  <ul class="list-inline">
+    <li><a href='../module/mod_kinds.html'>mod_kinds</a></li>
+    <li><a href="http://fortranwiki.org/fortran/show/iso_fortran_env">iso_fortran_env</a></li>
+  </ul>
+      </li>
+      <li class="list-group-item">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.43.0 (0)
+ -->
+<!-- Title: module~~mod_unittest~~UsesGraph Pages: 1 -->
+<svg id="modulemod_unittestUsesGraph" width="326pt" height="52pt"
+ viewBox="0.00 0.00 326.00 52.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~mod_unittest~~UsesGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 48)">
+<title>module~~mod_unittest~~UsesGraph</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-48 322,-48 322,4 -4,4"/>
+<!-- module~mod_unittest -->
+<g id="module~~mod_unittest~~UsesGraph_node1" class="node">
+<title>module~mod_unittest</title>
+<polygon fill="none" stroke="black" points="318,-24 236,-24 236,0 318,0 318,-24"/>
+<text text-anchor="middle" x="277" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50">mod_unittest</text>
+</g>
+<!-- module~mod_kinds -->
+<g id="module~~mod_unittest~~UsesGraph_node2" class="node">
+<title>module~mod_kinds</title>
+<g id="a_module~~mod_unittest~~UsesGraph_node2"><a xlink:href=".././module/mod_kinds.html" xlink:title="mod_kinds">
+<polygon fill="#337ab7" stroke="#337ab7" points="200,-44 130,-44 130,-20 200,-20 200,-44"/>
+<text text-anchor="middle" x="165" y="-29.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_kinds</text>
+</a>
+</g>
+</g>
+<!-- module~mod_unittest&#45;&gt;module~mod_kinds -->
+<g id="module~~mod_unittest~~UsesGraph_edge1" class="edge">
+<title>module~mod_unittest&#45;&gt;module~mod_kinds</title>
+<path fill="none" stroke="#ff0000" stroke-dasharray="5,2" d="M235.98,-19.28C227.5,-20.82 218.51,-22.45 209.9,-24.02"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="209.23,-20.58 200.01,-25.82 210.48,-27.47 209.23,-20.58"/>
+</g>
+<!-- iso_fortran_env -->
+<g id="module~~mod_unittest~~UsesGraph_node3" class="node">
+<title>iso_fortran_env</title>
+<g id="a_module~~mod_unittest~~UsesGraph_node3"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
+<polygon fill="#337ab7" stroke="#337ab7" points="94,-24 0,-24 0,0 94,0 94,-24"/>
+<text text-anchor="middle" x="47" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+</a>
+</g>
+</g>
+<!-- module~mod_unittest&#45;&gt;iso_fortran_env -->
+<g id="module~~mod_unittest~~UsesGraph_edge2" class="edge">
+<title>module~mod_unittest&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#ff0000" stroke-dasharray="5,2" d="M235.77,-11.37C224.22,-11.22 211.61,-11.08 200,-11 168.89,-10.8 161.11,-10.81 130,-11 121.8,-11.05 113.14,-11.13 104.64,-11.22"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="104.36,-7.72 94.4,-11.34 104.44,-14.72 104.36,-7.72"/>
+</g>
+<!-- module~mod_kinds&#45;&gt;iso_fortran_env -->
+<g id="module~~mod_unittest~~UsesGraph_edge3" class="edge">
+<title>module~mod_kinds&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#ff0000" stroke-dasharray="5,2" d="M129.82,-26.11C121.85,-24.73 113.15,-23.23 104.49,-21.74"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="104.85,-18.25 94.4,-20 103.66,-25.15 104.85,-18.25"/>
+</g>
+</g>
+</svg>
+</div><div><a type="button" class="graph-help" data-toggle="modal" href="#graph-help-text">Help</a></div><div class="modal fade" id="graph-help-text" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg" role="document"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button><h4 class="modal-title" id="-graph-help-label">Graph Key</h4></div><div class="modal-body">
+    <p>Nodes of different colours represent the following: </p>
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.43.0 (0)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="518pt" height="32pt"
+ viewBox="0.00 0.00 517.50 32.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 28)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-28 513.5,-28 513.5,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-24 0,-24 0,0 54,0 54,-24"/>
+<text text-anchor="middle" x="27" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="145.5,-24 72.5,-24 72.5,0 145.5,0 145.5,-24"/>
+<text text-anchor="middle" x="109" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="234,-24 164,-24 164,0 234,0 234,-24"/>
+<text text-anchor="middle" x="199" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="310,-24 252,-24 252,0 310,0 310,-24"/>
+<text text-anchor="middle" x="281" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="386,-24 328,-24 328,0 386,0 386,-24"/>
+<text text-anchor="middle" x="357" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="509.5,-24 404.5,-24 404.5,0 509.5,0 509.5,-24"/>
+<text text-anchor="middle" x="457" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+    
+    <p>Solid arrows point from a submodule to the (sub)module which it is
+    descended from. Dashed arrows point from a module or program unit to 
+    modules which it uses. Where possible, edges connecting nodes are given different colours to make them easier to distinguish in large graphs.
+    </p>
+    </div></div></div></div>
+      </li>
+      </ul>
+    </div>
+
+        <div class="panel panel-default">
+      <div class="panel-heading">
+  <h3 class="panel-title">Used by</h3>
+      </div>
+      <ul class="list-group">
+  <li class="list-group-item">  
+    <ul class="list-inline">
+      <li><h5>Descendants:</h5></li>
+      <li><a href='../module/allclose.html'>allclose</a></li>
+      <li><a href='../module/almost_equal.html'>almost_equal</a></li>
+      <li><a href='../module/bool.html'>bool</a></li>
+      <li><a href='../module/compare.html'>compare</a></li>
+      <li><a href='../module/equal.html'>equal</a></li>
+      <li><a href='../module/error_stop_08.html'>error_stop_08</a></li>
+      <li><a href='../module/error_stop_f18.html'>error_stop_f18</a></li>
+      <li><a href='../module/is_eye.html'>is_eye</a></li>
+      <li><a href='../module/is_zero.html'>is_zero</a></li>
+    </ul>
+  </li>
+  <li class="list-group-item">
+    <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.43.0 (0)
+ -->
+<!-- Title: module~~mod_unittest~~UsedByGraph Pages: 1 -->
+<svg id="modulemod_unittestUsedByGraph" width="215pt" height="368pt"
+ viewBox="0.00 0.00 215.00 368.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~mod_unittest~~UsedByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 364)">
+<title>module~~mod_unittest~~UsedByGraph</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-364 211,-364 211,4 -4,4"/>
+<!-- module~mod_unittest -->
+<g id="module~~mod_unittest~~UsedByGraph_node1" class="node">
+<title>module~mod_unittest</title>
+<polygon fill="none" stroke="black" points="82,-192 0,-192 0,-168 82,-168 82,-192"/>
+<text text-anchor="middle" x="41" y="-177.6" font-family="Helvetica,sans-Serif" font-size="10.50">mod_unittest</text>
+</g>
+<!-- module~is_eye -->
+<g id="module~~mod_unittest~~UsedByGraph_node2" class="node">
+<title>module~is_eye</title>
+<g id="a_module~~mod_unittest~~UsedByGraph_node2"><a xlink:href=".././module/is_eye.html" xlink:title="is_eye">
+<polygon fill="#5bc0de" stroke="#5bc0de" points="189.5,-360 135.5,-360 135.5,-336 189.5,-336 189.5,-360"/>
+<text text-anchor="middle" x="162.5" y="-345.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">is_eye</text>
+</a>
+</g>
+</g>
+<!-- module~is_eye&#45;&gt;module~mod_unittest -->
+<g id="module~~mod_unittest~~UsedByGraph_edge1" class="edge">
+<title>module~is_eye&#45;&gt;module~mod_unittest</title>
+<path fill="none" stroke="#ff0000" d="M135.36,-338.73C129.16,-335.67 122.93,-331.8 118,-327 81.16,-291.16 58.69,-233.62 48.5,-202.21"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="51.72,-200.78 45.41,-192.27 45.04,-202.86 51.72,-200.78"/>
+</g>
+<!-- module~bool -->
+<g id="module~~mod_unittest~~UsedByGraph_node3" class="node">
+<title>module~bool</title>
+<g id="a_module~~mod_unittest~~UsedByGraph_node3"><a xlink:href=".././module/bool.html" xlink:title="bool">
+<polygon fill="#5bc0de" stroke="#5bc0de" points="189.5,-318 135.5,-318 135.5,-294 189.5,-294 189.5,-318"/>
+<text text-anchor="middle" x="162.5" y="-303.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bool</text>
+</a>
+</g>
+</g>
+<!-- module~bool&#45;&gt;module~mod_unittest -->
+<g id="module~~mod_unittest~~UsedByGraph_edge2" class="edge">
+<title>module~bool&#45;&gt;module~mod_unittest</title>
+<path fill="none" stroke="#ff0000" d="M135.38,-295.98C129.32,-292.97 123.14,-289.31 118,-285 89.47,-261.11 66.08,-224.27 53.1,-201.18"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="56.06,-199.29 48.19,-192.2 49.92,-202.65 56.06,-199.29"/>
+</g>
+<!-- module~almost_equal -->
+<g id="module~~mod_unittest~~UsedByGraph_node4" class="node">
+<title>module~almost_equal</title>
+<g id="a_module~~mod_unittest~~UsedByGraph_node4"><a xlink:href=".././module/almost_equal.html" xlink:title="almost_equal">
+<polygon fill="#5bc0de" stroke="#5bc0de" points="204.5,-276 120.5,-276 120.5,-252 204.5,-252 204.5,-276"/>
+<text text-anchor="middle" x="162.5" y="-261.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">almost_equal</text>
+</a>
+</g>
+</g>
+<!-- module~almost_equal&#45;&gt;module~mod_unittest -->
+<g id="module~~mod_unittest~~UsedByGraph_edge3" class="edge">
+<title>module~almost_equal&#45;&gt;module~mod_unittest</title>
+<path fill="none" stroke="#ff0000" d="M133.8,-251.88C128.43,-249.18 122.94,-246.17 118,-243 97.8,-230.03 76.96,-212.39 62.22,-199.08"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="64.44,-196.36 54.7,-192.18 59.7,-201.52 64.44,-196.36"/>
+</g>
+<!-- module~error_stop_08 -->
+<g id="module~~mod_unittest~~UsedByGraph_node5" class="node">
+<title>module~error_stop_08</title>
+<g id="a_module~~mod_unittest~~UsedByGraph_node5"><a xlink:href=".././module/error_stop_08.html" xlink:title="error_stop_08">
+<polygon fill="#5bc0de" stroke="#5bc0de" points="205,-234 120,-234 120,-210 205,-210 205,-234"/>
+<text text-anchor="middle" x="162.5" y="-219.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">error_stop_08</text>
+</a>
+</g>
+</g>
+<!-- module~error_stop_08&#45;&gt;module~mod_unittest -->
+<g id="module~~mod_unittest~~UsedByGraph_edge5" class="edge">
+<title>module~error_stop_08&#45;&gt;module~mod_unittest</title>
+<path fill="none" stroke="#ff0000" d="M127.26,-209.96C114.38,-205.44 99.56,-200.23 85.92,-195.44"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="86.84,-192.05 76.25,-192.04 84.52,-198.66 86.84,-192.05"/>
+</g>
+<!-- module~is_zero -->
+<g id="module~~mod_unittest~~UsedByGraph_node6" class="node">
+<title>module~is_zero</title>
+<g id="a_module~~mod_unittest~~UsedByGraph_node6"><a xlink:href=".././module/is_zero.html" xlink:title="is_zero">
+<polygon fill="#5bc0de" stroke="#5bc0de" points="189.5,-192 135.5,-192 135.5,-168 189.5,-168 189.5,-192"/>
+<text text-anchor="middle" x="162.5" y="-177.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">is_zero</text>
+</a>
+</g>
+</g>
+<!-- module~is_zero&#45;&gt;module~mod_unittest -->
+<g id="module~~mod_unittest~~UsedByGraph_edge4" class="edge">
+<title>module~is_zero&#45;&gt;module~mod_unittest</title>
+<path fill="none" stroke="#ff0000" d="M135.28,-180C122.66,-180 107.1,-180 92.32,-180"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="92.26,-176.5 82.26,-180 92.26,-183.5 92.26,-176.5"/>
+</g>
+<!-- module~allclose -->
+<g id="module~~mod_unittest~~UsedByGraph_node7" class="node">
+<title>module~allclose</title>
+<g id="a_module~~mod_unittest~~UsedByGraph_node7"><a xlink:href=".././module/allclose.html" xlink:title="allclose">
+<polygon fill="#5bc0de" stroke="#5bc0de" points="189.5,-150 135.5,-150 135.5,-126 189.5,-126 189.5,-150"/>
+<text text-anchor="middle" x="162.5" y="-135.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">allclose</text>
+</a>
+</g>
+</g>
+<!-- module~allclose&#45;&gt;module~mod_unittest -->
+<g id="module~~mod_unittest~~UsedByGraph_edge6" class="edge">
+<title>module~allclose&#45;&gt;module~mod_unittest</title>
+<path fill="none" stroke="#ff0000" d="M135.28,-147.22C120.8,-152.3 102.45,-158.75 85.86,-164.59"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="84.61,-161.31 76.34,-167.93 86.93,-167.92 84.61,-161.31"/>
+</g>
+<!-- module~compare -->
+<g id="module~~mod_unittest~~UsedByGraph_node8" class="node">
+<title>module~compare</title>
+<g id="a_module~~mod_unittest~~UsedByGraph_node8"><a xlink:href=".././module/compare.html" xlink:title="compare">
+<polygon fill="#5bc0de" stroke="#5bc0de" points="192.5,-108 132.5,-108 132.5,-84 192.5,-84 192.5,-108"/>
+<text text-anchor="middle" x="162.5" y="-93.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">compare</text>
+</a>
+</g>
+</g>
+<!-- module~compare&#45;&gt;module~mod_unittest -->
+<g id="module~~mod_unittest~~UsedByGraph_edge7" class="edge">
+<title>module~compare&#45;&gt;module~mod_unittest</title>
+<path fill="none" stroke="#ff0000" d="M133.8,-108.12C128.43,-110.82 122.94,-113.83 118,-117 97.8,-129.97 76.96,-147.61 62.22,-160.92"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="59.7,-158.48 54.7,-167.82 64.44,-163.64 59.7,-158.48"/>
+</g>
+<!-- module~equal -->
+<g id="module~~mod_unittest~~UsedByGraph_node9" class="node">
+<title>module~equal</title>
+<g id="a_module~~mod_unittest~~UsedByGraph_node9"><a xlink:href=".././module/equal.html" xlink:title="equal">
+<polygon fill="#5bc0de" stroke="#5bc0de" points="189.5,-66 135.5,-66 135.5,-42 189.5,-42 189.5,-66"/>
+<text text-anchor="middle" x="162.5" y="-51.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">equal</text>
+</a>
+</g>
+</g>
+<!-- module~equal&#45;&gt;module~mod_unittest -->
+<g id="module~~mod_unittest~~UsedByGraph_edge8" class="edge">
+<title>module~equal&#45;&gt;module~mod_unittest</title>
+<path fill="none" stroke="#ff0000" d="M135.38,-64.02C129.32,-67.03 123.14,-70.69 118,-75 89.47,-98.89 66.08,-135.73 53.1,-158.82"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="49.92,-157.35 48.19,-167.8 56.06,-160.71 49.92,-157.35"/>
+</g>
+<!-- module~error_stop_f18 -->
+<g id="module~~mod_unittest~~UsedByGraph_node10" class="node">
+<title>module~error_stop_f18</title>
+<g id="a_module~~mod_unittest~~UsedByGraph_node10"><a xlink:href=".././module/error_stop_f18.html" xlink:title="error_stop_f18">
+<polygon fill="#5bc0de" stroke="#5bc0de" points="207,-24 118,-24 118,0 207,0 207,-24"/>
+<text text-anchor="middle" x="162.5" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">error_stop_f18</text>
+</a>
+</g>
+</g>
+<!-- module~error_stop_f18&#45;&gt;module~mod_unittest -->
+<g id="module~~mod_unittest~~UsedByGraph_edge9" class="edge">
+<title>module~error_stop_f18&#45;&gt;module~mod_unittest</title>
+<path fill="none" stroke="#ff0000" d="M129.94,-24.17C125.63,-26.68 121.49,-29.61 118,-33 81.16,-68.84 58.69,-126.38 48.5,-157.79"/>
+<polygon fill="#ff0000" stroke="#ff0000" points="45.04,-157.14 45.41,-167.73 51.72,-159.22 45.04,-157.14"/>
+</g>
+</g>
+</svg>
+</div><div><a type="button" class="graph-help" data-toggle="modal" href="#graph-help-text">Help</a></div><div class="modal fade" id="graph-help-text" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg" role="document"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button><h4 class="modal-title" id="-graph-help-label">Graph Key</h4></div><div class="modal-body">
+    <p>Nodes of different colours represent the following: </p>
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 2.43.0 (0)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="518pt" height="32pt"
+ viewBox="0.00 0.00 517.50 32.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 28)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-28 513.5,-28 513.5,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-24 0,-24 0,0 54,0 54,-24"/>
+<text text-anchor="middle" x="27" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="145.5,-24 72.5,-24 72.5,0 145.5,0 145.5,-24"/>
+<text text-anchor="middle" x="109" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="234,-24 164,-24 164,0 234,0 234,-24"/>
+<text text-anchor="middle" x="199" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="310,-24 252,-24 252,0 310,0 310,-24"/>
+<text text-anchor="middle" x="281" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="386,-24 328,-24 328,0 386,0 386,-24"/>
+<text text-anchor="middle" x="357" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="509.5,-24 404.5,-24 404.5,0 509.5,0 509.5,-24"/>
+<text text-anchor="middle" x="457" y="-9.6" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+    
+    <p>Solid arrows point from a submodule to the (sub)module which it is
+    descended from. Dashed arrows point from a module or program unit to 
+    modules which it uses. Where possible, edges connecting nodes are given different colours to make them easier to distinguish in large graphs.
+    </p>
+    </div></div></div></div>
+  </li>
+      </ul>
+    </div>
+
+    <br>
+
+    <section class="visible-xs visible-sm hidden-md">
+      <h3>Contents</h3>
+ 
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#inters-1">Interfaces</a></h3></div>
+  <div id="inters-1" class="panel-collapse collapse">
+    <div class="list-group">
+      <a class="list-group-item" href="../module/mod_unittest.html#interface-unittest">unittest</a>
+    </div>
+  </div>
+</div>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#types-1">Derived Types</a></h3></div>
+  <div id="types-1" class="panel-collapse collapse">
+    <div class="list-group">
+      <a class="list-group-item" href="../module/mod_unittest.html#type-unittest">unittest</a>
+    </div>
+  </div>
+</div>
+
+    </section>
+    <br class="visible-xs visible-sm hidden-md">
+
+
+    
+    
+    <section>
+   <h2>Interfaces</h2>
+     <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="interface-unittest"></span><h3>public interface <a href='../interface/unittest.html'>unittest</a>  </h3></div>
+  <ul class="list-group">
+    <li class="list-group-item">
+    <h3>private function utest_new(section, terminate_with_error_code) result(res)</h3>    
+<h4>Arguments</h4>      <table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
+<tbody>
+<tr>
+  <td><span class="anchor" ></span>character,</td>
+<td>intent(in),</td>
+  <td>optional</td>  <td></td><td>::</td>
+  <td><strong>section</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>logical,</td>
+<td>intent(in),</td>
+  <td>optional</td>  <td></td><td>::</td>
+  <td><strong>terminate_with_error_code</strong></td><td></td>
+</tr>
+</tbody>
+</table>
+
+<h4>Return Value <small>type(<a href='../type/unittest.html'>unittest</a>)</small></h4>  
+
+    </li>
+  </ul>
+</div>
+
+    </section>
+  <br>
+
+    
+    <section>
+     <h2>Derived Types</h2>
+     <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="type-unittest"></span><h3>type, public :: <a href='../type/unittest.html'>unittest</a>  </h3></div>
+  <div class="panel-body">
+     <h4>Constructor</h4>
+         
+       <table class="table table-striped varlist">
+      <tbody>
+             <tr><td>private  function <strong>utest_new</strong>(section, terminate_with_error_code)</td><td></td></tr>
+       </tbody>
+       </table>
+     <h4>Finalizations Procedures</h4>
+      <table class="table table-striped varlist">
+      <tbody>
+       <tr><td>final :: <strong>utest_destroy</strong></h3></td><td></td></tr>
+       </tbody>
+       </table>  
+     
+     <h4>Type-Bound Procedures</h4>
+      <table class="table table-striped varlist">
+      <tbody>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert'>assert</a></strong>  => unittest_assert_logical_0, unittest_assert_logical_1, unittest_assert_logical_2, unittest_assert_logical_3 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_allclose'>assert_allclose</a></strong>  => unittest_assert_allclose_r32_00, unittest_assert_allclose_r64_00, unittest_assert_allclose_c32_00, unittest_assert_allclose_c64_00, unittest_assert_allclose_r32_11, unittest_assert_allclose_r64_11, unittest_assert_allclose_c32_11, unittest_assert_allclose_c64_11, unittest_assert_allclose_r32_22, unittest_assert_allclose_r64_22, unittest_assert_allclose_c32_22, unittest_assert_allclose_c64_22, unittest_assert_allclose_r32_33, unittest_assert_allclose_r64_33, unittest_assert_allclose_c32_33, unittest_assert_allclose_c64_33, unittest_assert_allclose_r32_44, unittest_assert_allclose_r64_44, unittest_assert_allclose_c32_44, unittest_assert_allclose_c64_44, unittest_assert_allclose_r32_01, unittest_assert_allclose_r64_01, unittest_assert_allclose_c32_01, unittest_assert_allclose_c64_01, unittest_assert_allclose_r32_02, unittest_assert_allclose_r64_02, unittest_assert_allclose_c32_02, unittest_assert_allclose_c64_02, unittest_assert_allclose_r32_03, unittest_assert_allclose_r64_03, unittest_assert_allclose_c32_03, unittest_assert_allclose_c64_03, unittest_assert_allclose_r32_04, unittest_assert_allclose_r64_04, unittest_assert_allclose_c32_04, unittest_assert_allclose_c64_04, unittest_assert_allclose_r32_10, unittest_assert_allclose_r64_10, unittest_assert_allclose_c32_10, unittest_assert_allclose_c64_10, unittest_assert_allclose_r32_20, unittest_assert_allclose_r64_20, unittest_assert_allclose_c32_20, unittest_assert_allclose_c64_20, unittest_assert_allclose_r32_30, unittest_assert_allclose_r64_30, unittest_assert_allclose_c32_30, unittest_assert_allclose_c64_30, unittest_assert_allclose_r32_40, unittest_assert_allclose_r64_40, unittest_assert_allclose_c32_40, unittest_assert_allclose_c64_40 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_almost_equal'>assert_almost_equal</a></strong>  => unittest_assert_almost_equal_i8_00, unittest_assert_almost_equal_i16_00, unittest_assert_almost_equal_i32_00, unittest_assert_almost_equal_i64_00, unittest_assert_almost_equal_r32_00, unittest_assert_almost_equal_r64_00, unittest_assert_almost_equal_c32_00, unittest_assert_almost_equal_c64_00, unittest_assert_almost_equal_i8_11, unittest_assert_almost_equal_i16_11, unittest_assert_almost_equal_i32_11, unittest_assert_almost_equal_i64_11, unittest_assert_almost_equal_r32_11, unittest_assert_almost_equal_r64_11, unittest_assert_almost_equal_c32_11, unittest_assert_almost_equal_c64_11, unittest_assert_almost_equal_i8_22, unittest_assert_almost_equal_i16_22, unittest_assert_almost_equal_i32_22, unittest_assert_almost_equal_i64_22, unittest_assert_almost_equal_r32_22, unittest_assert_almost_equal_r64_22, unittest_assert_almost_equal_c32_22, unittest_assert_almost_equal_c64_22, unittest_assert_almost_equal_i8_33, unittest_assert_almost_equal_i16_33, unittest_assert_almost_equal_i32_33, unittest_assert_almost_equal_i64_33, unittest_assert_almost_equal_r32_33, unittest_assert_almost_equal_r64_33, unittest_assert_almost_equal_c32_33, unittest_assert_almost_equal_c64_33, unittest_assert_almost_equal_i8_44, unittest_assert_almost_equal_i16_44, unittest_assert_almost_equal_i32_44, unittest_assert_almost_equal_i64_44, unittest_assert_almost_equal_r32_44, unittest_assert_almost_equal_r64_44, unittest_assert_almost_equal_c32_44, unittest_assert_almost_equal_c64_44, unittest_assert_almost_equal_i8_01, unittest_assert_almost_equal_i16_01, unittest_assert_almost_equal_i32_01, unittest_assert_almost_equal_i64_01, unittest_assert_almost_equal_r32_01, unittest_assert_almost_equal_r64_01, unittest_assert_almost_equal_c32_01, unittest_assert_almost_equal_c64_01, unittest_assert_almost_equal_i8_02, unittest_assert_almost_equal_i16_02, unittest_assert_almost_equal_i32_02, unittest_assert_almost_equal_i64_02, unittest_assert_almost_equal_r32_02, unittest_assert_almost_equal_r64_02, unittest_assert_almost_equal_c32_02, unittest_assert_almost_equal_c64_02, unittest_assert_almost_equal_i8_03, unittest_assert_almost_equal_i16_03, unittest_assert_almost_equal_i32_03, unittest_assert_almost_equal_i64_03, unittest_assert_almost_equal_r32_03, unittest_assert_almost_equal_r64_03, unittest_assert_almost_equal_c32_03, unittest_assert_almost_equal_c64_03, unittest_assert_almost_equal_i8_04, unittest_assert_almost_equal_i16_04, unittest_assert_almost_equal_i32_04, unittest_assert_almost_equal_i64_04, unittest_assert_almost_equal_r32_04, unittest_assert_almost_equal_r64_04, unittest_assert_almost_equal_c32_04, unittest_assert_almost_equal_c64_04, unittest_assert_almost_equal_i8_10, unittest_assert_almost_equal_i16_10, unittest_assert_almost_equal_i32_10, unittest_assert_almost_equal_i64_10, unittest_assert_almost_equal_r32_10, unittest_assert_almost_equal_r64_10, unittest_assert_almost_equal_c32_10, unittest_assert_almost_equal_c64_10, unittest_assert_almost_equal_i8_20, unittest_assert_almost_equal_i16_20, unittest_assert_almost_equal_i32_20, unittest_assert_almost_equal_i64_20, unittest_assert_almost_equal_r32_20, unittest_assert_almost_equal_r64_20, unittest_assert_almost_equal_c32_20, unittest_assert_almost_equal_c64_20, unittest_assert_almost_equal_i8_30, unittest_assert_almost_equal_i16_30, unittest_assert_almost_equal_i32_30, unittest_assert_almost_equal_i64_30, unittest_assert_almost_equal_r32_30, unittest_assert_almost_equal_r64_30, unittest_assert_almost_equal_c32_30, unittest_assert_almost_equal_c64_30, unittest_assert_almost_equal_i8_40, unittest_assert_almost_equal_i16_40, unittest_assert_almost_equal_i32_40, unittest_assert_almost_equal_i64_40, unittest_assert_almost_equal_r32_40, unittest_assert_almost_equal_r64_40, unittest_assert_almost_equal_c32_40, unittest_assert_almost_equal_c64_40 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_equal'>assert_equal</a></strong>  => unittest_assert_equal_i8_00, unittest_assert_equal_i16_00, unittest_assert_equal_i32_00, unittest_assert_equal_i64_00, unittest_assert_equal_logical_00, unittest_assert_equal_i8_11, unittest_assert_equal_i16_11, unittest_assert_equal_i32_11, unittest_assert_equal_i64_11, unittest_assert_equal_logical_11, unittest_assert_equal_i8_22, unittest_assert_equal_i16_22, unittest_assert_equal_i32_22, unittest_assert_equal_i64_22, unittest_assert_equal_logical_22, unittest_assert_equal_i8_33, unittest_assert_equal_i16_33, unittest_assert_equal_i32_33, unittest_assert_equal_i64_33, unittest_assert_equal_logical_33, unittest_assert_equal_i8_44, unittest_assert_equal_i16_44, unittest_assert_equal_i32_44, unittest_assert_equal_i64_44, unittest_assert_equal_logical_44, unittest_assert_equal_i8_01, unittest_assert_equal_i16_01, unittest_assert_equal_i32_01, unittest_assert_equal_i64_01, unittest_assert_equal_logical_01, unittest_assert_equal_i8_02, unittest_assert_equal_i16_02, unittest_assert_equal_i32_02, unittest_assert_equal_i64_02, unittest_assert_equal_logical_02, unittest_assert_equal_i8_03, unittest_assert_equal_i16_03, unittest_assert_equal_i32_03, unittest_assert_equal_i64_03, unittest_assert_equal_logical_03, unittest_assert_equal_i8_04, unittest_assert_equal_i16_04, unittest_assert_equal_i32_04, unittest_assert_equal_i64_04, unittest_assert_equal_logical_04, unittest_assert_equal_i8_10, unittest_assert_equal_i16_10, unittest_assert_equal_i32_10, unittest_assert_equal_i64_10, unittest_assert_equal_logical_10, unittest_assert_equal_i8_20, unittest_assert_equal_i16_20, unittest_assert_equal_i32_20, unittest_assert_equal_i64_20, unittest_assert_equal_logical_20, unittest_assert_equal_i8_30, unittest_assert_equal_i16_30, unittest_assert_equal_i32_30, unittest_assert_equal_i64_30, unittest_assert_equal_logical_30, unittest_assert_equal_i8_40, unittest_assert_equal_i16_40, unittest_assert_equal_i32_40, unittest_assert_equal_i64_40, unittest_assert_equal_logical_40 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_false'>assert_false</a></strong>  => unittest_assert_false_logical_0, unittest_assert_false_logical_1, unittest_assert_false_logical_2, unittest_assert_false_logical_3 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_greater'>assert_greater</a></strong>  => unittest_assert_greater_i8_00, unittest_assert_greater_i16_00, unittest_assert_greater_i32_00, unittest_assert_greater_i64_00, unittest_assert_greater_r32_00, unittest_assert_greater_r64_00, unittest_assert_greater_i8_01, unittest_assert_greater_i16_01, unittest_assert_greater_i32_01, unittest_assert_greater_i64_01, unittest_assert_greater_r32_01, unittest_assert_greater_r64_01, unittest_assert_greater_i8_10, unittest_assert_greater_i16_10, unittest_assert_greater_i32_10, unittest_assert_greater_i64_10, unittest_assert_greater_r32_10, unittest_assert_greater_r64_10, unittest_assert_greater_i8_11, unittest_assert_greater_i16_11, unittest_assert_greater_i32_11, unittest_assert_greater_i64_11, unittest_assert_greater_r32_11, unittest_assert_greater_r64_11 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_greater_equal'>assert_greater_equal</a></strong>  => unittest_assert_greater_equal_i8_00, unittest_assert_greater_equal_i16_00, unittest_assert_greater_equal_i32_00, unittest_assert_greater_equal_i64_00, unittest_assert_greater_equal_r32_00, unittest_assert_greater_equal_r64_00, unittest_assert_greater_equal_i8_01, unittest_assert_greater_equal_i16_01, unittest_assert_greater_equal_i32_01, unittest_assert_greater_equal_i64_01, unittest_assert_greater_equal_r32_01, unittest_assert_greater_equal_r64_01, unittest_assert_greater_equal_i8_10, unittest_assert_greater_equal_i16_10, unittest_assert_greater_equal_i32_10, unittest_assert_greater_equal_i64_10, unittest_assert_greater_equal_r32_10, unittest_assert_greater_equal_r64_10, unittest_assert_greater_equal_i8_11, unittest_assert_greater_equal_i16_11, unittest_assert_greater_equal_i32_11, unittest_assert_greater_equal_i64_11, unittest_assert_greater_equal_r32_11, unittest_assert_greater_equal_r64_11 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_is_eye'>assert_is_eye</a></strong>  => unittest_assert_is_eye_i8_2, unittest_assert_is_eye_i16_2, unittest_assert_is_eye_i32_2, unittest_assert_is_eye_i64_2, unittest_assert_is_eye_r32_2, unittest_assert_is_eye_r64_2, unittest_assert_is_eye_c32_2, unittest_assert_is_eye_c64_2 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_is_zero'>assert_is_zero</a></strong>  => unittest_assert_is_zero_i8_0, unittest_assert_is_zero_i16_0, unittest_assert_is_zero_i32_0, unittest_assert_is_zero_i64_0, unittest_assert_is_zero_r32_0, unittest_assert_is_zero_r64_0, unittest_assert_is_zero_c32_0, unittest_assert_is_zero_c64_0, unittest_assert_is_zero_i8_1, unittest_assert_is_zero_i16_1, unittest_assert_is_zero_i32_1, unittest_assert_is_zero_i64_1, unittest_assert_is_zero_r32_1, unittest_assert_is_zero_r64_1, unittest_assert_is_zero_c32_1, unittest_assert_is_zero_c64_1, unittest_assert_is_zero_i8_2, unittest_assert_is_zero_i16_2, unittest_assert_is_zero_i32_2, unittest_assert_is_zero_i64_2, unittest_assert_is_zero_r32_2, unittest_assert_is_zero_r64_2, unittest_assert_is_zero_c32_2, unittest_assert_is_zero_c64_2, unittest_assert_is_zero_i8_3, unittest_assert_is_zero_i16_3, unittest_assert_is_zero_i32_3, unittest_assert_is_zero_i64_3, unittest_assert_is_zero_r32_3, unittest_assert_is_zero_r64_3, unittest_assert_is_zero_c32_3, unittest_assert_is_zero_c64_3 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_isnot_eye'>assert_isnot_eye</a></strong>  => unittest_assert_isnot_eye_i8_2, unittest_assert_isnot_eye_i16_2, unittest_assert_isnot_eye_i32_2, unittest_assert_isnot_eye_i64_2, unittest_assert_isnot_eye_r32_2, unittest_assert_isnot_eye_r64_2, unittest_assert_isnot_eye_c32_2, unittest_assert_isnot_eye_c64_2 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_isnot_zero'>assert_isnot_zero</a></strong>  => unittest_assert_isnot_zero_i8_0, unittest_assert_isnot_zero_i16_0, unittest_assert_isnot_zero_i32_0, unittest_assert_isnot_zero_i64_0, unittest_assert_isnot_zero_r32_0, unittest_assert_isnot_zero_r64_0, unittest_assert_isnot_zero_c32_0, unittest_assert_isnot_zero_c64_0, unittest_assert_isnot_zero_i8_1, unittest_assert_isnot_zero_i16_1, unittest_assert_isnot_zero_i32_1, unittest_assert_isnot_zero_i64_1, unittest_assert_isnot_zero_r32_1, unittest_assert_isnot_zero_r64_1, unittest_assert_isnot_zero_c32_1, unittest_assert_isnot_zero_c64_1, unittest_assert_isnot_zero_i8_2, unittest_assert_isnot_zero_i16_2, unittest_assert_isnot_zero_i32_2, unittest_assert_isnot_zero_i64_2, unittest_assert_isnot_zero_r32_2, unittest_assert_isnot_zero_r64_2, unittest_assert_isnot_zero_c32_2, unittest_assert_isnot_zero_c64_2, unittest_assert_isnot_zero_i8_3, unittest_assert_isnot_zero_i16_3, unittest_assert_isnot_zero_i32_3, unittest_assert_isnot_zero_i64_3, unittest_assert_isnot_zero_r32_3, unittest_assert_isnot_zero_r64_3, unittest_assert_isnot_zero_c32_3, unittest_assert_isnot_zero_c64_3 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_less'>assert_less</a></strong>  => unittest_assert_less_i8_00, unittest_assert_less_i16_00, unittest_assert_less_i32_00, unittest_assert_less_i64_00, unittest_assert_less_r32_00, unittest_assert_less_r64_00, unittest_assert_less_i8_01, unittest_assert_less_i16_01, unittest_assert_less_i32_01, unittest_assert_less_i64_01, unittest_assert_less_r32_01, unittest_assert_less_r64_01, unittest_assert_less_i8_10, unittest_assert_less_i16_10, unittest_assert_less_i32_10, unittest_assert_less_i64_10, unittest_assert_less_r32_10, unittest_assert_less_r64_10, unittest_assert_less_i8_11, unittest_assert_less_i16_11, unittest_assert_less_i32_11, unittest_assert_less_i64_11, unittest_assert_less_r32_11, unittest_assert_less_r64_11 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_less_equal'>assert_less_equal</a></strong>  => unittest_assert_less_equal_i8_00, unittest_assert_less_equal_i16_00, unittest_assert_less_equal_i32_00, unittest_assert_less_equal_i64_00, unittest_assert_less_equal_r32_00, unittest_assert_less_equal_r64_00, unittest_assert_less_equal_i8_01, unittest_assert_less_equal_i16_01, unittest_assert_less_equal_i32_01, unittest_assert_less_equal_i64_01, unittest_assert_less_equal_r32_01, unittest_assert_less_equal_r64_01, unittest_assert_less_equal_i8_10, unittest_assert_less_equal_i16_10, unittest_assert_less_equal_i32_10, unittest_assert_less_equal_i64_10, unittest_assert_less_equal_r32_10, unittest_assert_less_equal_r64_10, unittest_assert_less_equal_i8_11, unittest_assert_less_equal_i16_11, unittest_assert_less_equal_i32_11, unittest_assert_less_equal_i64_11, unittest_assert_less_equal_r32_11, unittest_assert_less_equal_r64_11 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_not_allclose'>assert_not_allclose</a></strong>  => unittest_assert_not_allclose_r32_00, unittest_assert_not_allclose_r64_00, unittest_assert_not_allclose_c32_00, unittest_assert_not_allclose_c64_00, unittest_assert_not_allclose_r32_11, unittest_assert_not_allclose_r64_11, unittest_assert_not_allclose_c32_11, unittest_assert_not_allclose_c64_11, unittest_assert_not_allclose_r32_22, unittest_assert_not_allclose_r64_22, unittest_assert_not_allclose_c32_22, unittest_assert_not_allclose_c64_22, unittest_assert_not_allclose_r32_33, unittest_assert_not_allclose_r64_33, unittest_assert_not_allclose_c32_33, unittest_assert_not_allclose_c64_33, unittest_assert_not_allclose_r32_44, unittest_assert_not_allclose_r64_44, unittest_assert_not_allclose_c32_44, unittest_assert_not_allclose_c64_44, unittest_assert_not_allclose_r32_01, unittest_assert_not_allclose_r64_01, unittest_assert_not_allclose_c32_01, unittest_assert_not_allclose_c64_01, unittest_assert_not_allclose_r32_02, unittest_assert_not_allclose_r64_02, unittest_assert_not_allclose_c32_02, unittest_assert_not_allclose_c64_02, unittest_assert_not_allclose_r32_03, unittest_assert_not_allclose_r64_03, unittest_assert_not_allclose_c32_03, unittest_assert_not_allclose_c64_03, unittest_assert_not_allclose_r32_04, unittest_assert_not_allclose_r64_04, unittest_assert_not_allclose_c32_04, unittest_assert_not_allclose_c64_04, unittest_assert_not_allclose_r32_10, unittest_assert_not_allclose_r64_10, unittest_assert_not_allclose_c32_10, unittest_assert_not_allclose_c64_10, unittest_assert_not_allclose_r32_20, unittest_assert_not_allclose_r64_20, unittest_assert_not_allclose_c32_20, unittest_assert_not_allclose_c64_20, unittest_assert_not_allclose_r32_30, unittest_assert_not_allclose_r64_30, unittest_assert_not_allclose_c32_30, unittest_assert_not_allclose_c64_30, unittest_assert_not_allclose_r32_40, unittest_assert_not_allclose_r64_40, unittest_assert_not_allclose_c32_40, unittest_assert_not_allclose_c64_40 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_not_almost_equal'>assert_not_almost_equal</a></strong>  => unittest_assert_not_almost_equal_i8_00, unittest_assert_not_almost_equal_i16_00, unittest_assert_not_almost_equal_i32_00, unittest_assert_not_almost_equal_i64_00, unittest_assert_not_almost_equal_r32_00, unittest_assert_not_almost_equal_r64_00, unittest_assert_not_almost_equal_c32_00, unittest_assert_not_almost_equal_c64_00, unittest_assert_not_almost_equal_i8_11, unittest_assert_not_almost_equal_i16_11, unittest_assert_not_almost_equal_i32_11, unittest_assert_not_almost_equal_i64_11, unittest_assert_not_almost_equal_r32_11, unittest_assert_not_almost_equal_r64_11, unittest_assert_not_almost_equal_c32_11, unittest_assert_not_almost_equal_c64_11, unittest_assert_not_almost_equal_i8_22, unittest_assert_not_almost_equal_i16_22, unittest_assert_not_almost_equal_i32_22, unittest_assert_not_almost_equal_i64_22, unittest_assert_not_almost_equal_r32_22, unittest_assert_not_almost_equal_r64_22, unittest_assert_not_almost_equal_c32_22, unittest_assert_not_almost_equal_c64_22, unittest_assert_not_almost_equal_i8_33, unittest_assert_not_almost_equal_i16_33, unittest_assert_not_almost_equal_i32_33, unittest_assert_not_almost_equal_i64_33, unittest_assert_not_almost_equal_r32_33, unittest_assert_not_almost_equal_r64_33, unittest_assert_not_almost_equal_c32_33, unittest_assert_not_almost_equal_c64_33, unittest_assert_not_almost_equal_i8_44, unittest_assert_not_almost_equal_i16_44, unittest_assert_not_almost_equal_i32_44, unittest_assert_not_almost_equal_i64_44, unittest_assert_not_almost_equal_r32_44, unittest_assert_not_almost_equal_r64_44, unittest_assert_not_almost_equal_c32_44, unittest_assert_not_almost_equal_c64_44, unittest_assert_not_almost_equal_i8_01, unittest_assert_not_almost_equal_i16_01, unittest_assert_not_almost_equal_i32_01, unittest_assert_not_almost_equal_i64_01, unittest_assert_not_almost_equal_r32_01, unittest_assert_not_almost_equal_r64_01, unittest_assert_not_almost_equal_c32_01, unittest_assert_not_almost_equal_c64_01, unittest_assert_not_almost_equal_i8_02, unittest_assert_not_almost_equal_i16_02, unittest_assert_not_almost_equal_i32_02, unittest_assert_not_almost_equal_i64_02, unittest_assert_not_almost_equal_r32_02, unittest_assert_not_almost_equal_r64_02, unittest_assert_not_almost_equal_c32_02, unittest_assert_not_almost_equal_c64_02, unittest_assert_not_almost_equal_i8_03, unittest_assert_not_almost_equal_i16_03, unittest_assert_not_almost_equal_i32_03, unittest_assert_not_almost_equal_i64_03, unittest_assert_not_almost_equal_r32_03, unittest_assert_not_almost_equal_r64_03, unittest_assert_not_almost_equal_c32_03, unittest_assert_not_almost_equal_c64_03, unittest_assert_not_almost_equal_i8_04, unittest_assert_not_almost_equal_i16_04, unittest_assert_not_almost_equal_i32_04, unittest_assert_not_almost_equal_i64_04, unittest_assert_not_almost_equal_r32_04, unittest_assert_not_almost_equal_r64_04, unittest_assert_not_almost_equal_c32_04, unittest_assert_not_almost_equal_c64_04, unittest_assert_not_almost_equal_i8_10, unittest_assert_not_almost_equal_i16_10, unittest_assert_not_almost_equal_i32_10, unittest_assert_not_almost_equal_i64_10, unittest_assert_not_almost_equal_r32_10, unittest_assert_not_almost_equal_r64_10, unittest_assert_not_almost_equal_c32_10, unittest_assert_not_almost_equal_c64_10, unittest_assert_not_almost_equal_i8_20, unittest_assert_not_almost_equal_i16_20, unittest_assert_not_almost_equal_i32_20, unittest_assert_not_almost_equal_i64_20, unittest_assert_not_almost_equal_r32_20, unittest_assert_not_almost_equal_r64_20, unittest_assert_not_almost_equal_c32_20, unittest_assert_not_almost_equal_c64_20, unittest_assert_not_almost_equal_i8_30, unittest_assert_not_almost_equal_i16_30, unittest_assert_not_almost_equal_i32_30, unittest_assert_not_almost_equal_i64_30, unittest_assert_not_almost_equal_r32_30, unittest_assert_not_almost_equal_r64_30, unittest_assert_not_almost_equal_c32_30, unittest_assert_not_almost_equal_c64_30, unittest_assert_not_almost_equal_i8_40, unittest_assert_not_almost_equal_i16_40, unittest_assert_not_almost_equal_i32_40, unittest_assert_not_almost_equal_i64_40, unittest_assert_not_almost_equal_r32_40, unittest_assert_not_almost_equal_r64_40, unittest_assert_not_almost_equal_c32_40, unittest_assert_not_almost_equal_c64_40 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_not_equal'>assert_not_equal</a></strong>  => unittest_assert_not_equal_i8_00, unittest_assert_not_equal_i16_00, unittest_assert_not_equal_i32_00, unittest_assert_not_equal_i64_00, unittest_assert_not_equal_logical_00, unittest_assert_not_equal_i8_11, unittest_assert_not_equal_i16_11, unittest_assert_not_equal_i32_11, unittest_assert_not_equal_i64_11, unittest_assert_not_equal_logical_11, unittest_assert_not_equal_i8_22, unittest_assert_not_equal_i16_22, unittest_assert_not_equal_i32_22, unittest_assert_not_equal_i64_22, unittest_assert_not_equal_logical_22, unittest_assert_not_equal_i8_33, unittest_assert_not_equal_i16_33, unittest_assert_not_equal_i32_33, unittest_assert_not_equal_i64_33, unittest_assert_not_equal_logical_33, unittest_assert_not_equal_i8_44, unittest_assert_not_equal_i16_44, unittest_assert_not_equal_i32_44, unittest_assert_not_equal_i64_44, unittest_assert_not_equal_logical_44, unittest_assert_not_equal_i8_01, unittest_assert_not_equal_i16_01, unittest_assert_not_equal_i32_01, unittest_assert_not_equal_i64_01, unittest_assert_not_equal_logical_01, unittest_assert_not_equal_i8_02, unittest_assert_not_equal_i16_02, unittest_assert_not_equal_i32_02, unittest_assert_not_equal_i64_02, unittest_assert_not_equal_logical_02, unittest_assert_not_equal_i8_03, unittest_assert_not_equal_i16_03, unittest_assert_not_equal_i32_03, unittest_assert_not_equal_i64_03, unittest_assert_not_equal_logical_03, unittest_assert_not_equal_i8_04, unittest_assert_not_equal_i16_04, unittest_assert_not_equal_i32_04, unittest_assert_not_equal_i64_04, unittest_assert_not_equal_logical_04, unittest_assert_not_equal_i8_10, unittest_assert_not_equal_i16_10, unittest_assert_not_equal_i32_10, unittest_assert_not_equal_i64_10, unittest_assert_not_equal_logical_10, unittest_assert_not_equal_i8_20, unittest_assert_not_equal_i16_20, unittest_assert_not_equal_i32_20, unittest_assert_not_equal_i64_20, unittest_assert_not_equal_logical_20, unittest_assert_not_equal_i8_30, unittest_assert_not_equal_i16_30, unittest_assert_not_equal_i32_30, unittest_assert_not_equal_i64_30, unittest_assert_not_equal_logical_30, unittest_assert_not_equal_i8_40, unittest_assert_not_equal_i16_40, unittest_assert_not_equal_i32_40, unittest_assert_not_equal_i64_40, unittest_assert_not_equal_logical_40 </td>
+       <td></td></tr>
+       <tr><td>generic, public :: <strong><a href='../type/unittest.html#boundprocedure-assert_true'>assert_true</a></strong>  => unittest_assert_true_logical_0, unittest_assert_true_logical_1, unittest_assert_true_logical_2, unittest_assert_true_logical_3 </td>
+       <td></td></tr>
+       <tr><td>procedure, public :: <strong><a href='../type/unittest.html#boundprocedure-finish'>finish</a></strong>  => utest_finish </td>
+       <td></td></tr>
+       <tr><td>procedure, public :: <strong><a href='../type/unittest.html#boundprocedure-finish_and_terminate'>finish_and_terminate</a></strong>  => utest_finish_and_terminate </td>
+       <td></td></tr>
+       <tr><td>procedure, public :: <strong><a href='../type/unittest.html#boundprocedure-init'>init</a></strong>  => utest_init </td>
+       <td></td></tr>
+       </tbody>
+       </table>
+  </div>
+</div>
+
+    </section>
+  <br>
+    
+
+    
+    </div>
+  </div>
+
+    <hr>    
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+      <div class="row">
+        <div class="col-xs-6 col-md-6"><p>unittest was developed by yymmt742<br>&copy; 2024 <a rel="license" href="https://opensource.org/licenses/MIT">MIT</a>
+</p>
+        </div>
+        <div class="col-xs-6 col-md-6">
+          <p class="text-right">
+            Documentation generated by 
+            <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+          </p>
+        </div>
+      </div>
+      <br>
+      </div> <!-- /container -->    
+    </footer>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+<!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../js/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- MathJax JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } },
+        jax: ['input/TeX','input/MathML','output/HTML-CSS'],
+        extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']
+      });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script src="../tipuesearch/tipuesearch_content.js"></script>
+    <script src="../tipuesearch/tipuesearch_set.js"></script>
+    <script src="../tipuesearch/tipuesearch.js"></script>
+    
+  </body>
+</html>

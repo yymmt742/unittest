@@ -1,0 +1,26 @@
+submodule(mod_unittest) error_stop_f18
+  implicit none
+contains
+  module procedure error_stop
+  !! Aborts the program with an exit code. <br>
+  !  msg : Error message. <br>
+  !  code : exit status (if fortran compiler supports).
+  !         Specify an integer between 0 and 255.
+  !         Otherwise, or if not specified, the default value of error stop is used. <br>
+  !  #### Example
+  !  ```
+  !  call error_stop("Error mesage", 1)
+  !  ```
+    if (PRESENT(msg)) then
+      write (STDERR, '(A)', ADVANCE="NO") msg//' '
+    end if
+    if (PRESENT(code)) then
+      select case (code)
+#:for code in range(256)
+      case (${code}$); error stop ${code}$
+#:endfor
+      end select
+    end if
+    error stop
+  end procedure error_stop
+end submodule error_stop_f18

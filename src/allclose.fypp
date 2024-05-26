@@ -1,0 +1,45 @@
+#:include "common.fypp"
+submodule(mod_unittest) allclose
+  use mod_unittest_printer
+  implicit none
+  integer, parameter :: DEF_MP = 10**7
+contains
+#:set erfs = ["REAL(a - b, RK)", "ABS(a - b)"]
+#:set fmts = ["(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
+#:set ktps = [REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+#:for ktp, fm, erf in zip(ktps, fmts, erfs)
+#:for kind, type, post in ktp
+#:for routine, op, neq in zip(["assert_allclose", "assert_not_allclose"], ["<", ">="], ["\~", "~ "])
+#:for rank1, rank2 in [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (0, 1), (0, 2), (0, 3), (0, 4), (1, 0), (2, 0), (3, 0), (4, 0)]
+  module procedure ${routine_name(routine, post, rank1, rank2)}$
+    logical err
+    real(${kind}$) :: tol
+${rank_check(rank1, rank2)}$
+    if (PRESENT(atol)) then; tol = MAX(atol, 0.0_${kind}$)
+    else; tol = 1E-8_${kind}$
+    end if
+    if (PRESENT(rtol)) then; tol = tol + MAX(rtol, 0.0_${kind}$)
+    else; tol = tol + 1E-5_${kind}$ * MAXVAL([ABS(a), ABS(b)])
+    end if
+    call check_expr_all(this%dev, this%num_test, ${flatten(routine+"_"+post+"(a, b, tol)", rank1, rank2)}$, &
+   &                    unitname, this%num_error, err)
+  end procedure ${routine_name(routine, post, rank1, rank2)}$
+!
+#:endfor
+  pure elemental function ${routine}$_${post}$(a, b, tol) result(res)
+    ${type}$, intent(in) :: a, b
+    real(${kind}$), intent(in) :: tol
+    type(expr_report)          :: res
+    res%ok = ABS(a - b) ${op}$ tol
+    if (res%ok) then
+      res%msg = ""
+    else
+      write (res%msg, '${fm}$') "[", a, "]${neq}$[", tol, "]"
+    end if
+    res%error_rate = ${erf}$
+  end function ${routine}$_${post}$
+!
+#:endfor
+#:endfor
+#:endfor
+end submodule allclose
