@@ -110,7 +110,11 @@ contains
     write (dev, '(A)', IOSTAT=ios) SEP3
     nerror = COUNT(.not.expr%ok)
 !
-    if (ntest < 100) then
+    if (ntest == 1) then
+      if (.not.expr(1)%ok.and.(expr(1)%msg/=""))then
+        write (dev, '(12X,A)', IOSTAT=ios) TRIM(expr(1)%msg)
+      endif
+    elseif (ntest < 100) then
       do i = 1, ntest
         if (expr(i)%ok) cycle
         write (dev, '(3X,I8,1X,A)', IOSTAT=ios) i, TRIM(expr(i)%msg)

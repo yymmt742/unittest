@@ -19,11 +19,10 @@ contains
     ${type}$, intent(in) :: expr
     type(expr_report)    :: res
     res%ok = ${op}$expr
+    res%msg = ""
     if(res%ok) then
-      res%msg = ""
       res%error_rate = 0.0_RK
     else
-      res%msg = "  xxx"
       res%error_rate = 1.0_RK
     end if
   end function ${routine}$_${post}$

@@ -186,7 +186,10 @@ contains
 !
     write (this%dev, '(A)', err=100) SEP2
     write (this%dev, '(A)', err=100) 'Test command :: '//this%script_name
-    if (PRESENT(section)) write (this%dev, '(A)', err=100) '  Section ----> '//section
+    if (PRESENT(section)) then
+      write (this%dev, '(A)', err=100) SEP1
+      write (this%dev, '(A)', err=100) '  Section ----> '//section
+    end if
 !
 100 return
   end subroutine utest_init
@@ -210,13 +213,13 @@ contains
 !
     if (this%num_test > 0) then
       write (this%dev, '(A)', err=100) SEP1
-      write (this%dev, '(A,I0,A,F9.3,A,F9.3,A)', err=100)    &
+      write (this%dev, '(A,I0,A,F9.3,A,F9.3,A)', ADVANCE='NO', err=100)    &
    &  ' Run ', this%num_test, ' tests in ', time / DBLE(t_rate), ' / ', &
    &  finish_cpu_time, ' s (sys/cpu)'
       if (this%num_error < 1) then
-        write (this%dev, '(A,I0,A,F9.3,A)', err=100) '   ----> Passed'
+        write (this%dev, '(A,I0,A,F9.3,A)', err=100) ' ----> Passed'
       else
-        write (this%dev, '(A,I0,A)', err=100) '   ----> Failed, ', this%num_error, ' error detected.'
+        write (this%dev, '(A,I0,A)', err=100) NEW_LINE('')//'         ----> ', this%num_error, ' error detected.'
       end if
     else
       write (this%dev, '(A)', err=100) 'No Test executed'
