@@ -13,16 +13,16 @@ module mod_unittest_printer
   character(*), parameter :: ESC   = ACHAR(INT(z'1b'))//"["
 !
   integer, parameter      :: NCMAP = 21
-  character(*), parameter :: CDIV(NCMAP)   = ["164", "129", "093", "092", "056", &
-                           &                  "055", "054", "236", "234", "232", &
-                           &                  "000", "232", "234", "022", "023", &
-                           &                  "031", "037", "036", "041", "046", &
-                           &                  "118"]
-! character(*), parameter :: CDIV(NCMAP)   = ["165", "129", "093", "057", "021", &
-!                          &                  "020", "019", "018", "017", "016", &
-!                          &                  "000", "052", "088", "124", "160", &
-!                          &                  "196", "202", "208", "214", "220", &
-!                          &                  "226"]
+! character(*), parameter :: CDIV(NCMAP)   = ["164", "129", "093", "092", "056", &
+!                          &                  "055", "054", "236", "234", "232", &
+!                          &                  "000", "232", "234", "022", "023", &
+!                          &                  "031", "037", "036", "041", "046", &
+!                          &                  "118"]
+  character(*), parameter :: CDIV(NCMAP)   = ["165", "129", "093", "057", "021", &
+                           &                  "020", "019", "018", "017", "016", &
+                           &                  "000", "052", "088", "124", "160", &
+                           &                  "196", "202", "208", "214", "220", &
+                           &                  "226"]
   character(*), parameter :: CSEQ(NCMAP)   = ["232", "233", "234", "235", "236", &
                            &                  "237", "238", "239", "240", "241", &
                            &                  "242", "243", "244", "245", "246", &
@@ -162,7 +162,7 @@ contains
     real(RK)                  :: norm
     integer                   :: i, j, k1, k2, n, ios
     norm = (nmap - 1) / (mmax - mmin)
-    write (dev, '(14X,G12.3,A,G12.3)', IOSTAT=ios) mmin, cbar(cmap), mmax
+    write (dev, '(A,2X,G12.3,A,G12.3,A)', IOSTAT=ios) NEW_LINE(''), mmin, cbar(cmap), mmax, NEW_LINE('')
     do i = 1, ndat, nbreak
       n = MIN(i + nbreak - 1, ndat)
       write (dev, '(I6,A,I6, 1X)', ADVANCE="NO", IOSTAT=ios) i, "-", n
@@ -197,12 +197,9 @@ contains
     integer                   :: i, n
     res = ""
     n = SIZE(cmap)
-    do i = 2, n, 2
-      res = res//cset(cmap(i-1), cmap(i))//"▌"
+    do i = 1, n
+      res = res//cset(cmap(i), cmap(i))//"  "
     end do
-    if(MODULO(n, 2)==1)then
-      res = res//cset(cmap(n), "000")//"▌"
-    endif
     res = res//RESET
   end function cbar
 !
