@@ -31,11 +31,10 @@
 
 ## About The Project
 
-<!--
-[![Product Name Screen Shot][product-screenshot]](https://yymmt742.github.io/unittest)
- -->
+[![CI](https://github.com/yymmt742/unittest/actions/workflows/ci.yml/badge.svg)]()
 
-Provides simple unittest utils for fortran.
+[![Screen Shot][product-screenshot1]]()
+
 
 [api-reference](https://yymmt742.github.io/unittest)
 
@@ -63,15 +62,17 @@ Provides simple unittest utils for fortran.
    ```
 2. Build fortran library
    ```sh
-   mkdir build && cd build
-   cmake ..
-   make install
+   cmake -B build
+   cmake --build build
+   cmake --install build
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+
+[![Screen Shot][product-screenshot2]]()
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -94,7 +95,8 @@ YYMMT742 - yymmt@kuchem.kyoto-u.ac.jp
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[product-screenshot1]: assets/snap_01.png
+[product-screenshot2]: assets/snap_02.png
 [fypp]: https://img.shields.io/badge/fypp-064F8C?style=for-the-badge
 [fypp-url]: https://fypp.readthedocs.io/en/stable/index.html
 [cmake]: https://img.shields.io/badge/Cmake-064F8C?style=for-the-badge&logo=cmake&logoColor=EEEEEE
