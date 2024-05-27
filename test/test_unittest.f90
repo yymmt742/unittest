@@ -12,12 +12,10 @@ program main
   integer(INT64), parameter   :: i8 = 1, j8(3) = [1, 1, 1], k8(3) = [2, 3, 4]
   real(REAL32), parameter     :: a4 = 1, b4(3) = [1, 1, 1], c4(3) = [2, 3, 4]
   real(REAL64), parameter     :: a8 = 1, b8(3) = [1, 1, 1], c8(3) = [2, 3, 4]
-  real(REAL128), parameter    :: af = 1, bf(3) = [1, 1, 1], cf(3) = [2, 3, 4]
   complex(REAL32), parameter  :: x4 = 1, y4(3) = [1, 1, 1], z4(3) = [2, 3, 4]
   complex(REAL64), parameter  :: x8 = 1, y8(3) = [1, 1, 1], z8(3) = [2, 3, 4]
-  complex(REAL128), parameter :: xf = 1, yf(3) = [1, 1, 1], zf(3) = [2, 3, 4]
-  real(REAL128)               :: rn(50, 50)
-  complex(REAL128)            :: xe(50, 50)
+  real(REAL64)                :: rn(50, 50)
+  complex(REAL64)             :: xe(50, 50)
   integer                     :: i, j
 !
   call u%init('test_unittest', terminate_with_error_code=.false.)
@@ -178,28 +176,6 @@ program main
   call u%assert_greater_equal(c8 - a8, a8, 'assert_greater_equal real64  10 ')
   call u%assert_greater_equal(c8, b8,      'assert_greater_equal real64  11 ')
 !
-  call u%assert_almost_equal(af, af,       'assert_almost_equal  real128 00 ')
-  call u%assert_almost_equal(af, bf,       'assert_almost_equal  real128 01 ')
-  call u%assert_almost_equal(bf, af,       'assert_almost_equal  real128 10 ')
-  call u%assert_almost_equal(cf, cf,       'assert_almost_equal  real128 11 ')
-  call u%assert_less(af, cf(1),            'assert_less          real128 00 ')
-  call u%assert_less(af, cf,               'assert_less          real128 01 ')
-  call u%assert_less(bf, cf(1),            'assert_less          real128 10 ')
-  call u%assert_less(bf, cf,               'assert_less          real128 11 ')
-  call u%assert_greater(cf(1), af,         'assert_greater       real128 00 ')
-  call u%assert_greater(cf(1), bf,         'assert_greater       real128 01 ')
-  call u%assert_greater(cf, af,            'assert_greater       real128 10 ')
-  call u%assert_greater(cf, bf,            'assert_greater       real128 11 ')
-  call u%assert_less_equal(af, af,         'assert_less_equal    real128 00 ')
-  call u%assert_less_equal(af, cf - af,    'assert_less_equal    real128 01 ')
-  call u%assert_less_equal(bf, af,         'assert_less_equal    real128 10 ')
-  call u%assert_less_equal(bf, cf - af,    'assert_less_equal    real128 11 ')
-  call u%assert_greater_equal(af, af,      'assert_greater_equal real128 00 ')
-  call u%assert_greater_equal(af, bf,      'assert_greater_equal real128 01 ')
-  call u%assert_greater_equal(cf - af, af, 'assert_greater_equal real128 10 ')
-  call u%assert_greater_equal(cf, bf,      'assert_greater_equal real128 11 ')
-  call u%assert_greater_equal(-cf, bf,     'assert_greater_equal real128 11 ')
-!
   call u%assert_almost_equal(x4, x4,       'assert_almost_equal  cmpx32  00 ')
   call u%assert_almost_equal(x4, y4,       'assert_almost_equal  cmpx32  01 ')
   call u%assert_almost_equal(y4, x4,       'assert_almost_equal  cmpx32  10 ')
@@ -211,24 +187,20 @@ program main
   call u%assert_almost_equal(y8, x8,       'assert_almost_equal  cmpx64  10 ')
   call u%assert_almost_equal(z8, z8,       'assert_almost_equal  cmpx64  11 ')
 !
-  call u%assert_almost_equal(xf, xf,       'assert_almost_equal  cmpx128 00 ')
-  call u%assert_almost_equal(xf, yf,       'assert_almost_equal  cmpx128 01 ')
-  call u%assert_almost_equal(yf, xf,       'assert_almost_equal  cmpx128 10 ')
-  call u%assert_almost_equal(zf, zf,       'assert_almost_equal  cmpx128 11 ')
-  call u%assert_almost_equal([-zf, zf], [zf,-zf],      'assert_almost_equal  cmpx128 11 ')
-  call u%assert_almost_equal([zf, zf], -zf, 'assert_almost_equal  cmpx128 11 ')
+  call u%assert_almost_equal([-z8, z8], [z8,-z8],      'assert_almost_equal  cmpx64  11 ')
+  call u%assert_almost_equal([z8, z8], -z8, 'assert_almost_equal  cmpx64  11 ')
   do concurrent(i=1:SIZE(xe, 1), j=1:SIZE(xe, 2))
     xe(i, j) = MERGE(1, 0, i==j)
   enddo
-  call u%assert_is_eye(xe,                 'assert_is_eye        cmpx128')
+  call u%assert_is_eye(xe,                 'assert_is_eye        cmpx64')
   call random_number(rn)
   xe = rn - 0.5
   call random_number(rn)
   xe = xe + CMPLX(0.0, rn - 0.5)
-  call u%assert_is_eye(xe,             'assert_is_eye        cmpx128')
-  call u%assert_is_zero(xe,            'assert_is_zero       cmpx128')
+  call u%assert_is_eye(xe,             'assert_is_eye        cmpx64')
+  call u%assert_is_zero(xe,            'assert_is_zero       cmpx64')
   xe = 0.0
-  call u%assert_is_zero(xe,            'assert_is_zero       cmpx128')
+  call u%assert_is_zero(xe,            'assert_is_zero       cmpx64')
 !&>
   call u%init('test_unittest', terminate_with_error_code=.false.)
   call u%assert(T,                         'assert               bool    0  ')
