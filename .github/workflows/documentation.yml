@@ -8,7 +8,7 @@ on:
 
 jobs:
   documentation:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     env:
       FC: gfortran
