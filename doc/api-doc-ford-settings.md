@@ -5,7 +5,7 @@ author: yymmt742
 license: MIT
 include: ./../include
 src_dir: ./../src/
-favicon: ./images/favicon.png
+favicon: ./../assets/favicon.png
 fpp_extensions: fypp
 preprocess: true
 preprocessor: fypp
