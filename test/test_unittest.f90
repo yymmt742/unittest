@@ -230,6 +230,13 @@ program main
   xe = 0.0
   call u%assert_is_zero(xe,            'assert_is_zero       cmpx128')
 !&>
+  call u%init('test_unittest', terminate_with_error_code=.false.)
+  call u%assert(T,                         'assert               bool    0  ')
+  call u%assert_almost_equal(x4, x4,       'assert_almost_equal  cmpx32  00 ')
+  do concurrent(i=1:SIZE(xe, 1), j=1:SIZE(xe, 2))
+    xe(i, j) = MERGE(1, 0, i==j)
+  enddo
+  call u%assert_is_eye(xe,                 'assert_is_eye        cmpx128')
 !
   call u%finish_and_terminate()
 !
