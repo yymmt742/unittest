@@ -182,7 +182,8 @@ contains
   pure function cset(C1, C2) result(res)
     character(*), intent(in)           :: C1
     character(*), intent(in), optional :: C2
-    integer, parameter                 :: LCSET = LEN(ESC//"38;5;000;48;5;000m")
+    character(*), parameter            :: CCSET = ESC//"38;5;000;48;5;000m"
+    integer, parameter                 :: LCSET = LEN(CCSET)
     character(LCSET)                   :: res
     if (PRESENT(C2)) then
       res = ESC//"38;5;"//C1//";48;5;"//C2//"m"
