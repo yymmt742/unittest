@@ -40,9 +40,9 @@ list(
   "-DQP_SUPPORT=$<BOOL:${QP_SUPPORT}>"
   "-I${PROJECT_SOURCE_DIR}/include"
   )
+
+enable_testing()
+include(CTest)
+
 add_subdirectory(src)
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  enable_testing()
-  include(CTest)
-  add_subdirectory(test)
-endif()
+add_subdirectory(test)
