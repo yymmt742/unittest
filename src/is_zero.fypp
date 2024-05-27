@@ -9,15 +9,15 @@ contains
 #:for ktp, fm in zip(ktps, fmts)
 #:for kind, type, post in ktp
 #:for routine, op, neq in zip(["assert_is_zero", "assert_isnot_zero"], ["<", ">="], ["\~", "~ "])
-#:for rank in range(4)
-  module procedure ${routine_name(routine, post, rank)}$
+#:for rank1, rank2 in RANK_ITERi
+  module procedure ${routine_name(routine, post, rank1)}$
     logical  :: err
     ${type}$ :: b
     this%num_test = this%num_test + 1
     b = 0
-    call check_expr_all(this%dev, this%num_test, ${flatten(routine+"_"+post+"(a, b, place)", rank)}$, &
+    call check_expr_all(this%dev, this%num_test, ${flatten(routine+"_"+post+"(a, b, place)", rank1)}$, &
    &                    unitname, this%num_error, err)
-  end procedure ${routine_name(routine, post, rank)}$
+  end procedure ${routine_name(routine, post, rank1)}$
 !
 #:endfor
   pure elemental function ${routine}$_${post}$ (a, b, place) result(res)

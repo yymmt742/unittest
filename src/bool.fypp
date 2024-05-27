@@ -5,7 +5,7 @@ submodule(mod_unittest) bool
 contains
 #:for routine, op in zip(["assert", "assert_true", "assert_false"], ["", "", ".not."])
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
-#:for rank in [0, 1, 2, 3]
+#:for rank in range(MAXIMUM_RANK + 1)
   module procedure ${routine_name(routine, post, rank)}$
     logical :: err
     this%num_test = this%num_test + 1

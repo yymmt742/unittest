@@ -11,8 +11,7 @@ contains
 #:for ktp, fm in zip(ktps, fmts)
 #:for kind, type, post in ktp
 #:for routine, op, neq, rate in zip(routines, ops, neqs, ["a - b", "a - b", "b - a", "b - a"])
-#:for rank2 in [0, 1]
-#:for rank1 in [0, 1]
+#:for rank1, rank2 in RANK_ITERii
   module procedure ${routine_name(routine, post, rank1, rank2)}$
     logical :: err
 ${rank_check(rank1, rank2)}$
@@ -20,7 +19,6 @@ ${rank_check(rank1, rank2)}$
    &                    unitname, this%num_error, err)
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
-#:endfor
 #:endfor
   pure elemental function ${routine}$_${post}$(a, b) result(res)
     ${type}$, intent(in) :: a, b

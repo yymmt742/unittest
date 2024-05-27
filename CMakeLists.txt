@@ -11,6 +11,10 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL GNU AND CMAKE_Fortran_COMPILER_VERSION VER
   message(FATAL_ERROR "GCC 9 or newer required.")
 endif()
 
+if(NOT DEFINED CMAKE_MAXIMUM_RANK)
+  set(CMAKE_MAXIMUM_RANK 4 CACHE STRING "Maxmum array rank")
+endif()
+
 find_program(FYPP fypp)
 if(NOT FYPP)
   message(FATAL_ERROR "FYPP not found.")
@@ -38,6 +42,7 @@ list(
   "-DHP_SUPPORT=$<BOOL:${HP_SUPPORT}>"
   "-DXDP_SUPPORT=$<BOOL:${XDP_SUPPORT}>"
   "-DQP_SUPPORT=$<BOOL:${QP_SUPPORT}>"
+  "-DMAXIMUM_RANK=${CMAKE_MAXIMUM_RANK}"
   "-I${PROJECT_SOURCE_DIR}/include"
   )
 

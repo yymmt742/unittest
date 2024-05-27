@@ -10,7 +10,7 @@ contains
 #:for ktp, fm, erf in zip(ktps, fmts, erfs)
 #:for kind, type, post in ktp
 #:for routine, op, neq in zip(["assert_allclose", "assert_not_allclose"], ["<", ">="], ["\~", "~ "])
-#:for rank1, rank2 in [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (0, 1), (0, 2), (0, 3), (0, 4), (1, 0), (2, 0), (3, 0), (4, 0)]
+#:for rank1, rank2 in RANK_ITERii
   module procedure ${routine_name(routine, post, rank1, rank2)}$
     logical err
     real(${kind}$) :: tol
