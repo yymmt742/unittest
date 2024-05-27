@@ -1,28 +1,32 @@
 name: Build and Deploy Documentation
 
-on:
-  push:
-    branches:
-      - main
-      - 'releases/**'
+on: [push, pull_request]
+
+env:
+  LANG: "en_US.UTF-8"
+  LC_ALL: "en_US.UTF-8"
+  PIP_DISABLE_PIP_VERSION_CHECK: "ON"
+  PIP_NO_CLEAN: "ON"
+  PIP_PREFER_BINARY: "ON"
+  TZ: "UTC"
 
 jobs:
   documentation:
     runs-on: ubuntu-latest
-
-    env:
-      FC: gfortran
-      GCC_V: 12
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
 
-    - name: Install Dependencies Ubuntu
+    - name: Install Dependencies
       run: |
-        sudo apt-get update
-        sudo apt install -y gfortran-${GCC_V} python3-dev graphviz
-        sudo pip install ford markdown==3.3.4 fypp
+        pip install -v ford==7.0.5
+        pip install fypp
+        python --version
+        ford --version
+        fypp --version
+
     - name: Build Developer Documentation
       run: |
         ford doc/api-doc-ford-settings.md
@@ -43,7 +47,8 @@ jobs:
 
     - name: Deploy API Documentation
       uses: JamesIves/github-pages-deploy-action@4.1.0
-      if: ${{ github.event_name == 'push'  &&  github.ref == 'refs/heads/main' }}
+      if: github.event_name == 'push' && github.repository == 'yymmt742/unittest' && ( startsWith( github.ref, 'refs/tags/' ) || github.ref == 'refs/heads/master' )
       with:
         branch: gh-pages
         folder: doc/api-doc
+        commit_message: "From https://github.com/${{ github.repository }}/commit/${{ github.sha }} ${{ github.ref }}"
