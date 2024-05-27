@@ -10,7 +10,7 @@ module mod_unittest_printer
 !<&
   integer, parameter      :: L_MSG = 56
   integer, parameter      :: L_WDH = L_MSG - 12
-  character(*), parameter :: ESC   = ACHAR(z'1b')//"["
+  character(*), parameter :: ESC   = ACHAR(INT(z'1b'))//"["
 !
   integer, parameter      :: NCMAP = 21
   character(*), parameter :: CDIV(NCMAP)   = ["164", "129", "093", "092", "056", &
