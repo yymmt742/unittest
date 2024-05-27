@@ -191,6 +191,10 @@ contains
       write (this%dev, '(A)', err=100) '  Section ----> '//section
     end if
 !
+    if (PRESENT(terminate_with_error_code)) then
+      this%terminate_with_error_code = terminate_with_error_code
+    end if
+!
 100 return
   end subroutine utest_init
 !
@@ -233,7 +237,7 @@ contains
   subroutine utest_finish_and_terminate(this)
     class(unittest), intent(inout) :: this
     logical                        :: error_terminate
-    error_terminate = this%terminate_with_error_code.and.(this%num_error > 0)
+    error_terminate = this%terminate_with_error_code .and. (this%num_error > 0)
     call this%finish()
     if (error_terminate) then
       call error_stop('TESTS WERE TERMINATED', 1)
