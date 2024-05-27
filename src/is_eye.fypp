@@ -8,7 +8,7 @@ contains
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:for ktp, fm in zip(ktps, fmts)
 #:for kind, type, post in ktp
-#:for routine, op, neq in zip(["assert_is_eye", "assert_isnot_eye"], ["<", ">="], ["\~", "~ "])
+#:for routine, op, neq in zip(["assert_is_eye", "assert_isnot_eye"], ["<", ">="], ["!~", "~ "])
   module procedure ${routine_name(routine, post, 2)}$
     type(expr_report)        :: expr(SIZE(a, 1), SIZE(a, 2))
     logical                  :: err

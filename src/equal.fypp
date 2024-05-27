@@ -8,8 +8,8 @@ $:"MERGE(1.0_RK,-1.0_RK,a)" if "logical" in type else "REAL(a - b, RK)"
 #:enddef
 #:set routines = ["assert_equal", "assert_not_equal"]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, LOGICAL_KIND_TYPE_POSTS]
-#:set oplists = [["==", "/="], [".eqv.", ".neqv."]]
-#:set neqlists = [["/=", "=="], ["noteq", "equiv"]]
+#:set oplists = [["==", ".ne."], [".eqv.", ".neqv."]]
+#:set neqlists = [["!=", "=="], ["noteq", "equiv"]]
 #:set fmts = ["(A,I14,2X,A,I14,2X,A)", "(A,L9,7X,A,L9,7X,A)"]
 #:for ktp, oplist, neqlist, fm in zip(ktps, oplists, neqlists, fmts)
 #:for kind, type, post in ktp

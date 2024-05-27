@@ -8,7 +8,7 @@ contains
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:for ktp, fm in zip(ktps, fmts)
 #:for kind, type, post in ktp
-#:for routine, op, neq in zip(["assert_is_zero", "assert_isnot_zero"], ["<", ">="], ["\~", "~ "])
+#:for routine, op, neq in zip(["assert_is_zero", "assert_isnot_zero"], ["<", ">="], ["!~", "~ "])
 #:for rank1, rank2 in RANK_ITERi
   module procedure ${routine_name(routine, post, rank1)}$
     logical  :: err
