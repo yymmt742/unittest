@@ -196,8 +196,6 @@ contains
     integer                        :: finish_time, t_rate, t_max
     real(RK)                       :: finish_cpu_time, time
 !
-    if (.not. ALLOCATED(this%script_name)) return
-!
     call SYSTEM_CLOCK(finish_time, t_rate, t_max)
 !
     if (finish_time < this%start_time) then
@@ -212,13 +210,13 @@ contains
 !
     if (this%num_test > 0) then
       write (this%dev, '(A)', err=100) SEP1
-      write (this%dev, '(A,I0,A,F9.3,A,F9.3,A)', advance='NO', err=100)    &
+      write (this%dev, '(A,I0,A,F9.3,A,F9.3,A)', err=100)    &
    &  ' Run ', this%num_test, ' tests in ', time / DBLE(t_rate), ' / ', &
-   &  finish_cpu_time, ' s (sys/cpu)----> '
+   &  finish_cpu_time, ' s (sys/cpu)'
       if (this%num_error < 1) then
-        write (this%dev, '(A,I0,A,F9.3,A)', err=100) 'Passed'
+        write (this%dev, '(A,I0,A,F9.3,A)', err=100) '   ----> Passed'
       else
-        write (this%dev, '(A,/,I12,A)', err=100) 'Failed, ', this%num_error, ' error detected.'
+        write (this%dev, '(A,I0,A)', err=100) '   ----> Failed, ', this%num_error, ' error detected.'
       end if
     else
       write (this%dev, '(A)', err=100) 'No Test executed'
@@ -231,9 +229,14 @@ contains
 !
   subroutine utest_finish_and_terminate(this)
     class(unittest), intent(inout) :: this
-    call utest_destroy(this)
-    if (.not. this%terminate_with_error_code) return
-    if (this%num_error > 0) call error_stop('TESTS WERE TERMINATED', 1)
+    logical                        :: error_terminate
+    error_terminate = this%terminate_with_error_code.and.(this%num_error > 0)
+    call this%finish()
+    if (error_terminate) then
+      call error_stop('TESTS WERE TERMINATED', 1)
+    else
+      stop
+    end if
   end subroutine utest_finish_and_terminate
 !
   pure subroutine utest_free(this)
