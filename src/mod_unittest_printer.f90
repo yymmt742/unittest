@@ -105,6 +105,8 @@ contains
       return
     end if
 !
+    return
+!
     ntest = SIZE(expr)
 !
     write (dev, '(A)', IOSTAT=ios) SEP3
@@ -163,10 +165,12 @@ contains
     integer, intent(in)       :: dev, ndat, nmap, nbreak
     real(RK), intent(in)      :: dat(ndat), mmin, mmax
     character(*), intent(in)  :: cmap(:)
+    character(:), allocatable :: cb
     real(RK)                  :: norm
     integer                   :: i, j, k1, k2, n, ios
     norm = (nmap - 1) / (mmax - mmin)
-    write (dev, '(A,2X,G12.3,A,G12.3,A)', IOSTAT=ios) NEW_LINE(''), mmin, cbar(cmap), mmax, NEW_LINE('')
+    cb = cbar(cmap)
+    write (dev, '(A,2X,G12.3,A,G12.3,A)', IOSTAT=ios) NEW_LINE(''), mmin, cb, mmax, NEW_LINE('')
     do i = 1, ndat, nbreak
       n = MIN(i + nbreak - 1, ndat)
       write (dev, '(I6,A,I6, 1X)', ADVANCE="NO", IOSTAT=ios) i, "-", n
