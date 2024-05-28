@@ -46,7 +46,7 @@ ${common_check(rank1, rank2)}$
     if (PRESENT(rtol)) then; tol = tol + MAX(rtol, 0.0_${kind}$)
     else; tol = tol + 1E-5_${kind}$ * MAXVAL([ABS(a), ABS(b)])
     end if
-    err = ${no + "ALL(ABS(a - b) < tol)" if rank1>0 else no + "ABS(a - b) < tol"}$
+    err = ${no + "ALL(ABS(a - b) < tol)" if rank1>0 else no + "(ABS(a - b) < tol)"}$
     call report_result(this%dev, this%num_test, err, unitname)
     if (err) then
       this%num_error = this%num_error + 1
