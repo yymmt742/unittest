@@ -83,7 +83,6 @@ target_compile_options(
   ${PROJECT_NAME}
   PRIVATE
     $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-O2>
-    $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-cpp>
     $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-std=f2008>
     $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-fimplicit-none>
     $<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-fall-intrinsics>
@@ -92,19 +91,34 @@ target_compile_options(
     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-Wunused>>
     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-fbacktrace>>
     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,GNU>:-fcheck=array-temps,bounds,do,mem,pointer>>
-    $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-O2>
-    $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-fpp>
-    $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-stand>
-    $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:f08>
-    $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-free>
-    $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-implicitnone>
-    $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-qopt-matmul>
-    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-warn>>
-    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:all>>
-    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-check>>
-    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:bounds>>
-    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-traceback>>
+    $<$<COMPILE_LANG_AND_ID:Fortran,NVHPC>:-fast>
+    $<$<COMPILE_LANG_AND_ID:Fortran,NVHPC>:-Mnobackslash>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,NVHPC>:-C>>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,NVHPC>:-g>>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,NVHPC>:-traceback>>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,NVHPC>:-Wall>>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,NVHPC>:-Mbounds>>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,NVHPC>:-Mchkptr>>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,NVHPC>:-Mchkstk>>
     )
+ if(UNIX)
+   target_compile_options(
+   ${PROJECT_NAME}
+   PRIVATE
+     $<$<COMPILE_LANG_AND_ID:Fortran,IntelLLVM>:-free>
+#    $<$<COMPILE_LANG_AND_ID:Fortran,IntelLLVM>:-fast>
+     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,IntelLLVM>:-g>>
+     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,IntelLLVM>:-traceback>>
+#    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,IntelLLVM>:-debug>>
+#    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,IntelLLVM>:-warn all>>
+     $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-free>
+#    $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-fast>
+     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-g>>
+     $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-traceback>>
+#    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-debug>>
+#    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-warn all>>
+     )
+ endif()
 
 install(
   TARGETS unittest

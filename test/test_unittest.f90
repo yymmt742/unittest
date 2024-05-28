@@ -193,19 +193,17 @@ program main
     xe(i, j) = MERGE(1, 0, i==j)
   enddo
   call u%assert_is_eye(xe,                 'assert_is_eye        cmpx64')
-<<<<<<< HEAD
+  stop
   call random_number(rn)
   xe = rn - 0.5
   call random_number(rn)
   xe = xe + CMPLX(0.0, rn - 0.5)
   call u%assert_is_eye(xe,             'assert_is_eye        cmpx64')
   call u%assert_is_zero(xe,            'assert_is_zero       cmpx64')
-=======
-  stop
   call u%assert_is_zero(xe,                'assert_is_zero       cmpx64')
->>>>>>> 4be50c4... [update] tmp
+  call u%assert_is_zero(xe,                'assert_is_zero       cmpx64')
   xe = 0.0
-  call u%assert_is_zero(xe,            'assert_is_zero       cmpx64')
+  call u%assert_is_zero(xe,                'assert_is_zero       cmpx64')
 !&>
   call u%init('test_unittest', terminate_with_error_code=.false.)
   call u%assert(T,                         'assert               bool    0  ')
