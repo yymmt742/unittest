@@ -13,11 +13,11 @@
 #:endif
 
 #:if not defined("MAXIMUM_RANK")
-#:set MAXIMUM_RANK = 7
+#:set MAXIMUM_RANK = 3
 #:endif
 
 #:set RANK_ITERi  = [(i, None) for i in range(MAXIMUM_RANK + 1)]
-#:set RANK_ITERii = [(i, i) for i in range(MAXIMUM_RANK + 1)] + [(0, i) for i in range(1, MAXIMUM_RANK + 1)] + [(i, 0) for i in range(1, MAXIMUM_RANK + 1)]
+#:set RANK_ITERii = [(i, i) for i in range(MAXIMUM_RANK + 1)] + [(i, 0) for i in range(1, MAXIMUM_RANK + 1)]
 
 #:set INTEGER_KINDS = ["INT8", "INT16", "INT32", "INT64"]
 #:set INTEGER_POSTFIX = ["i8", "i16", "i32", "i64"]
@@ -53,8 +53,6 @@
 #:set COMPLEX_KIND_TYPE_POSTS = list(zip(REAL_KINDS, COMPLEX_TYPES, COMPLEX_POSTFIX))
 #:set LOGICAL_KIND_TYPE_POSTS = list(zip(LOGICAL_KINDS, LOGICAL_TYPES, LOGICAL_POSTFIX))
 
-#:set COUNTER_VAR = ["i", "j", "k", "l", "m", "n"]
-
 #:def decimal_suffix(i, kind)
 $:f"{i}.0_" + kind if "REAL" in kind else f"{i}_" + kind
 #:enddef
@@ -68,7 +66,7 @@ $:f"unittest_{g}_{post}_{rank1}" if rank2 is None else f"unittest_{g}_{post}_{ra
 #:enddef
 
 #:def counter_suffix(rank)
-#{if rank>0}#(${",".join(COUNTER_VAR[:rank])}$)#{endif}#
+#{if rank>0}#(${", ".join(["i"+str(i+1) for i in range(rank)])}$)#{endif}#
 #:enddef
 
 #:def generic_procedure(g, tup, ranks)
@@ -81,10 +79,24 @@ generic            :: ${g}$ => &
 ${", &\n  ".join([", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup]) for rank1, rank2 in ranks])}$
 #:enddef
 
-#:set inc_ntest = "    this%num_test = this%num_test + 1"
-#:set rankcheck = "    call check_rank(this%dev, this%num_test, SIZE(a), SIZE(b), unitname, this%num_error, err)\n    if (err) return" 
-#:def rank_check(rank1, rank2)
-$:inc_ntest+"\n"+rankcheck if rank1>0 and rank2>0 else inc_ntest
+#:def common_check_0()
+    logical :: err
+    this%num_test = this%num_test + 1
+#:enddef
+
+#:def common_check_1()
+    logical :: err
+    this%num_test = this%num_test + 1
+    err = ANY(SHAPE(a) /= SHAPE(b))
+    if (err) then
+      this%num_error = this%num_error + 1
+      call report_rank_error(this%dev, this%num_test, SHAPE(a), SHAPE(b), unitname)
+      return
+    end if
+#:enddef
+
+#:def common_check(rank1, rank2)
+$:common_check_1() if rank1>0 and (rank2 is not None and rank2>0) else common_check_0()
 #:enddef
 
 #:def flatten(expr, rank1, rank2=None)

@@ -3,10 +3,10 @@ module mod_unittest_printer
   use, intrinsic :: ISO_FORTRAN_ENV, only: RK => REAL64
   implicit none
   private
-  public  :: expr_report
-  public  :: check_rank
-  public  :: check_expr_all
-  public  :: check_expr_not_any
+  public  :: report_rank_error
+  public  :: report_result
+  public  :: report_error_rate
+  public  :: report_error_as_image
 !<&
   integer, parameter      :: L_MSG = 56
   integer, parameter      :: L_WDH = L_MSG - 12
@@ -36,122 +36,87 @@ module mod_unittest_printer
   character(*), parameter :: RESET         = Esc//'m'
   character(*), parameter :: WSPC          = REPEAT(' ', 8)
   character(*), parameter :: SEP3          = WSPC//REPEAT('-', L_MSG)
-  character(*), parameter :: rankMissMatch = WSPC//'  Rank MissMatch : '
-  character(*), parameter :: ErrorRateIs   = WSPC//'  Error rate is  : '
 !&>
-  type expr_report
-    sequence
-    logical          :: ok
-    real(RK)         :: error_rate
-    character(L_MSG) :: msg
-  end type expr_report
+! type expr_report
+!   sequence
+!   logical          :: ok
+!   real(RK)         :: error_rate
+!   character(L_MSG) :: msg
+! end type expr_report
 !
 contains
-  subroutine check_rank(dev, num_test, size_a, size_b, unitname, num_error, err)
-    !!
-    integer, intent(in)      :: dev
-    integer, intent(in)      :: num_test
-    integer, intent(in)      :: size_a
-    integer, intent(in)      :: size_b
-    character(*), intent(in) :: unitname
-    integer, intent(inout)   :: num_error
-    logical, intent(inout)   :: err
-    integer                  :: ios
-    err = size_a /= size_b; if (.not. err) return
-    num_error = num_error + 1
-    write (dev, '(I8,A)', IOSTAT=ios) num_test, padd_string(unitname, '... failed', L_WDH)
+!
+! subroutine check_expr_all(dev, num_test, expr, unitname, num_error, err)
+!   integer, intent(in)           :: dev
+!   integer, intent(in)           :: num_test
+!   type(expr_report), intent(in) :: expr(:)
+!   character(*), intent(in)      :: unitname
+!   integer, intent(inout)        :: num_error
+!   logical, intent(inout)        :: err
+!   err = .not. ALL(expr%ok)
+!   if (err) num_error = num_error + 1
+!   call report_result(dev, num_test, err, expr, unitname)
+! end subroutine check_expr_all
+!
+! subroutine check_expr_not_any(dev, num_test, expr, unitname, num_error, err)
+!   integer, intent(in)           :: dev
+!   integer, intent(in)           :: num_test
+!   type(expr_report), intent(in) :: expr(:)
+!   character(*), intent(in)      :: unitname
+!   integer, intent(inout)        :: num_error
+!   logical, intent(inout)        :: err
+!   err = ANY(expr%ok)
+!   if (err) num_error = num_error + 1
+!   call report_result(dev, num_test, err, expr, unitname)
+! end subroutine check_expr_not_any
+!
+  subroutine report_rank_error(dev, num_test, size_a, size_b, unitname)
+    !! print rank error
+    integer, intent(in)                :: dev
+    integer, intent(in)                :: num_test
+    integer, intent(in)                :: size_a(:)
+    integer, intent(in)                :: size_b(:)
+    character(*), intent(in), optional :: unitname
+    character(:), allocatable          :: ps
+    character(*), parameter            :: rankMissMatch = WSPC//'  Rank MissMatch : '
+    integer                            :: ios
+    call padd_string(unitname, num_test, '... failed', L_WDH, ps)
+    write (dev, '(I8,A)', IOSTAT=ios) num_test, ps
     write (dev, '(A)', IOSTAT=ios) SEP3
-    write (dev, '(2A,I0,A,I0,A)', IOSTAT=ios) rankMissMatch, '[', size_a, '] /= [', size_b, ']'
+    write (dev, '(2A)', IOSTAT=ios, ADVANCE="NO") rankMissMatch, '['
+    write (dev, '(*(I0,/,", "))', IOSTAT=ios, ADVANCE="NO") size_a
+    write (dev, '(A)', IOSTAT=ios, ADVANCE="NO") '] /= ['
+    write (dev, '(*(I0,/,", "))', IOSTAT=ios, ADVANCE="NO") size_b
+    write (dev, '(A)', IOSTAT=ios) ']'
     write (dev, '(A)', IOSTAT=ios) SEP3
     FLUSH (dev)
-  end subroutine check_rank
+  end subroutine report_rank_error
 !
-  subroutine check_expr_all(dev, num_test, expr, unitname, num_error, err)
-    integer, intent(in)           :: dev
-    integer, intent(in)           :: num_test
-    type(expr_report), intent(in) :: expr(:)
-    character(*), intent(in)      :: unitname
-    integer, intent(inout)        :: num_error
-    logical, intent(inout)        :: err
-    err = .not. ALL(expr%ok)
-    if (err) num_error = num_error + 1
-    call report_result(dev, num_test, err, expr, unitname)
-  end subroutine check_expr_all
-!
-  subroutine check_expr_not_any(dev, num_test, expr, unitname, num_error, err)
-    integer, intent(in)           :: dev
-    integer, intent(in)           :: num_test
-    type(expr_report), intent(in) :: expr(:)
-    character(*), intent(in)      :: unitname
-    integer, intent(inout)        :: num_error
-    logical, intent(inout)        :: err
-    err = ANY(expr%ok)
-    if (err) num_error = num_error + 1
-    call report_result(dev, num_test, err, expr, unitname)
-  end subroutine check_expr_not_any
-!
-  subroutine report_result(dev, num_test, err, expr, unitname)
-    integer, intent(in)           :: dev
-    integer, intent(in)           :: num_test
-    logical, intent(in)           :: err
-    type(expr_report), intent(in) :: expr(:)
-    character(*), intent(in)      :: unitname
-    real(RK)                      :: error_rate
-    integer                       :: i, nerror, ntest, ios
+  subroutine report_result(dev, num_test, err, unitname)
+    !! print test result
+    integer, intent(in)                :: dev
+    integer, intent(in)                :: num_test
+    logical, intent(in)                :: err
+    character(*), intent(in), optional :: unitname
+    character(:), allocatable          :: ps
+    integer                            :: ios
     if (err) then
-      write (dev, '(I8,A)', IOSTAT=ios) num_test, padd_string(unitname, '... failed', L_WDH)
-    else
-      write (dev, '(I8,A)', IOSTAT=ios) num_test, padd_string(unitname, '... OK', L_WDH)
-      return
-    end if
-!
-    return
-!
-    ntest = SIZE(expr)
-!
-    write (dev, '(A)', IOSTAT=ios) SEP3
-    nerror = COUNT(.not.expr%ok)
-!
-    if (ntest == 1) then
-      if (.not.expr(1)%ok.and.(expr(1)%msg/=""))then
-        write (dev, '(12X,A)', IOSTAT=ios) TRIM(expr(1)%msg)
-      endif
-    elseif (ntest < 100) then
-      do i = 1, ntest
-        if (expr(i)%ok) cycle
-        write (dev, '(3X,I8,1X,A)', IOSTAT=ios) i, TRIM(expr(i)%msg)
-      end do
-    else
-      call report_as_image(dev, ntest, expr%error_rate)
-    end if
-!
-    if (ntest > 1) then
-      error_rate = 100.0_RK * real(nerror, RK) / real(ntest, RK)
+      call padd_string(unitname, num_test, '... failed', L_WDH, ps)
+      write (dev, '(I8,A)', IOSTAT=ios) num_test, ps
       write (dev, '(A)', IOSTAT=ios) SEP3
-      write (dev, '(A,f7.3,A,I0,A,I0,A)', IOSTAT=ios) &
-     &  ErrorRateIs, error_rate, ' %  ( ', nerror, ' / ', ntest, ' )'
+    else
+      call padd_string(unitname, num_test, '... OK', L_WDH, ps)
+      write (dev, '(I8,A)', IOSTAT=ios) num_test, ps
     end if
-!
-    FLUSH (dev)
   end subroutine report_result
 !
-  pure function padd_string(s, post, nline) result(res)
-    character(*), intent(in)  :: s
-    character(*), intent(in)  :: post
-    integer, intent(in)       :: nline
-    character(:), allocatable :: res
-    integer                   :: npad
-    npad = MAX(0, nline - LEN_TRIM(s))
-    res = ' '//TRIM(s)//REPEAT(' ', npad)//post
-  end function padd_string
-!
-  subroutine report_as_image(dev, ndat, error_rate)
+  subroutine report_error_as_image(dev, ndat, error_rate)
     integer, intent(in)  :: dev, ndat
     real(RK), intent(in) :: error_rate(ndat)
     real(RK)             :: mmax
-    integer              :: nmap
-    nmap = SIZE(error_rate)
+    integer              :: ios
     mmax = MAXVAL(ABS(error_rate))
+    write (dev, '(A)', IOSTAT=ios) SEP3
     if (ALL(error_rate >= 0.0_RK)) then
       call dump_image(dev, ndat, SIZE(CSEQ), 100, error_rate, 0.0_RK, mmax, CSEQ)
     elseif (ALL(error_rate <= 0.0_RK)) then
@@ -159,7 +124,21 @@ contains
     else
       call dump_image(dev, ndat, SIZE(CDIV), 100, error_rate, -mmax, mmax, CDIV)
     end if
-  end subroutine report_as_image
+  end subroutine report_error_as_image
+!
+  subroutine report_error_rate(dev, n, nerror)
+    integer, intent(in)     :: dev, n, nerror
+    real(RK)                :: error_rate
+    character(*), parameter :: ErrorRateIs = WSPC//'  Error rate is  : '
+    integer                 :: ios
+    if (n > 1) then
+      error_rate = real(100 * nerror, RK) / real(n, RK)
+      write (dev, '(A)', IOSTAT=ios) SEP3
+      write (dev, '(A,f7.3,A,I0,A,I0,A)', IOSTAT=ios) &
+     &  ErrorRateIs, error_rate, ' %  ( ', nerror, ' / ', n, ' )'
+    end if
+    FLUSH (dev)
+  end subroutine report_error_rate
 !
   subroutine dump_image(dev, ndat, nmap, nbreak, dat, mmin, mmax, cmap)
     integer, intent(in)       :: dev, ndat, nmap, nbreak
@@ -169,7 +148,7 @@ contains
     real(RK)                  :: norm
     integer                   :: i, j, k1, k2, n, ios
     norm = (nmap - 1) / (mmax - mmin)
-    cb = cbar(cmap)
+    call cbar(cmap, cb)
     write (dev, '(A,2X,G12.3,A,G12.3,A)', IOSTAT=ios) NEW_LINE(''), mmin, cb, mmax, NEW_LINE('')
     do i = 1, ndat, nbreak
       n = MIN(i + nbreak - 1, ndat)
@@ -200,9 +179,30 @@ contains
     end if
   end function cset
 !
-  pure function cbar(cmap) result(res)
+  pure subroutine padd_string(s, ntest, post, nline, res)
+    character(*), intent(in), optional       :: s
+    integer, intent(in)                      :: ntest
+    character(*), intent(in)                 :: post
+    integer, intent(in)                      :: nline
+    character(:), allocatable, intent(inout) :: res
+    integer                                  :: npad
+    if(PRESENT(s))then
+      npad = MAX(0, nline - LEN_TRIM(s))
+      res = ' '//TRIM(s)//REPEAT(' ', npad)//post
+    else
+      block
+        character(32) :: cntest
+        character(*), parameter :: default_string = " unittest_"
+        write(cntest, '(I0)') ntest
+        npad = MAX(0, nline - LEN(default_string) - LEN_TRIM(cntest))
+        res = default_string//TRIM(cntest)//REPEAT(' ', npad)//post
+      end block
+    endif
+  end subroutine padd_string
+!
+  pure subroutine cbar(cmap, res)
     character(*), intent(in)  :: cmap(:)
-    character(:), allocatable :: res
+    character(:), allocatable, intent(inout) :: res
     integer                   :: i, n
     res = ""
     n = SIZE(cmap)
@@ -210,7 +210,7 @@ contains
       res = res//cset(cmap(i), cmap(i))//"  "
     end do
     res = res//RESET
-  end function cbar
+  end subroutine cbar
 !
 end module mod_unittest_printer
 

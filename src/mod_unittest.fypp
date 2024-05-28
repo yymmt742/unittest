@@ -64,9 +64,9 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for rank1, rank2 in RANK_ITERi
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
     module subroutine ${routine_name(routine, post, rank1)}$ (this, expr, unitname)
-      class(unittest), intent(inout) :: this
-      ${type}$, intent(in)           :: expr${rank_suffix(rank1)}$
-      character(*), intent(in)       :: unitname
+      class(unittest), intent(inout)     :: this
+      ${type}$, intent(in)               :: expr${rank_suffix(rank1)}$
+      character(*), intent(in), optional :: unitname
     end subroutine ${routine_name(routine, post, rank1)}$
 !
 #:endfor
@@ -76,9 +76,9 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERii
     module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname)
-      class(unittest), intent(inout) :: this
-      ${type}$, intent(in)           :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
-      character(*), intent(in)       :: unitname
+      class(unittest), intent(inout)     :: this
+      ${type}$, intent(in)               :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
+      character(*), intent(in), optional :: unitname
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
@@ -88,10 +88,10 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERii
     module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, place)
-      class(unittest), intent(inout) :: this
-      ${type}$, intent(in)           :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
-      character(*), intent(in)       :: unitname
-      integer, intent(in), optional  :: place
+      class(unittest), intent(inout)     :: this
+      ${type}$, intent(in)               :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
+      character(*), intent(in), optional :: unitname
+      integer, intent(in), optional      :: place
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
@@ -101,10 +101,10 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for rank1, rank2 in RANK_ITERii
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS
     module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname)
-      class(unittest), intent(inout) :: this
-      ${type}$, intent(in)           :: a${rank_suffix(rank1)}$
-      ${type}$, intent(in)           :: b${rank_suffix(rank2)}$
-      character(*), intent(in)       :: unitname
+      class(unittest), intent(inout)     :: this
+      ${type}$, intent(in)               :: a${rank_suffix(rank1)}$
+      ${type}$, intent(in)               :: b${rank_suffix(rank2)}$
+      character(*), intent(in), optional :: unitname
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
@@ -113,10 +113,10 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for routine in ["assert_is_eye", "assert_isnot_eye"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
     module subroutine ${routine_name(routine, post, 2)}$ (this, a, unitname, place)
-      class(unittest), intent(inout) :: this
-      ${type}$, intent(in)           :: a${rank_suffix(2)}$
-      character(*), intent(in)       :: unitname
-      integer, intent(in), optional  :: place
+      class(unittest), intent(inout)     :: this
+      ${type}$, intent(in)               :: a${rank_suffix(2)}$
+      character(*), intent(in), optional :: unitname
+      integer, intent(in), optional      :: place
     end subroutine ${routine_name(routine, post, 2)}$
 !
 #:endfor
@@ -125,10 +125,10 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERi
     module subroutine ${routine_name(routine, post, rank1)}$ (this, a, unitname, place)
-      class(unittest), intent(inout) :: this
-      ${type}$, intent(in)           :: a${rank_suffix(rank1)}$
-      character(*), intent(in)       :: unitname
-      integer, intent(in), optional  :: place
+      class(unittest), intent(inout)     :: this
+      ${type}$, intent(in)               :: a${rank_suffix(rank1)}$
+      character(*), intent(in), optional :: unitname
+      integer, intent(in), optional      :: place
     end subroutine ${routine_name(routine, post, rank1)}$
 !
 #:endfor
@@ -138,12 +138,12 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for kind, type, post in REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERii
     module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, rtol, atol)
-      class(unittest), intent(inout) :: this
-      ${type}$, intent(in)           :: a${rank_suffix(rank1)}$
-      ${type}$, intent(in)           :: b${rank_suffix(rank2)}$
-      character(*), intent(in)       :: unitname
-      real(${kind}$), intent(in), optional  :: rtol
-      real(${kind}$), intent(in), optional  :: atol
+      class(unittest), intent(inout)       :: this
+      ${type}$, intent(in)                 :: a${rank_suffix(rank1)}$
+      ${type}$, intent(in)                 :: b${rank_suffix(rank2)}$
+      character(*), intent(in), optional   :: unitname
+      real(${kind}$), intent(in), optional :: rtol
+      real(${kind}$), intent(in), optional :: atol
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
