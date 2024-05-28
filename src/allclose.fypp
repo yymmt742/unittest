@@ -1,8 +1,4 @@
 #:include "common.fypp"
-submodule(mod_unittest) allclose
-  use mod_unittest_printer
-  implicit none
-contains
 #:def erff(s, erf_t)
 $:"REAL("+s+", RK)" if erf_t==0 else "ABS("+s+")"
 #:enddef
@@ -33,6 +29,10 @@ $:"REAL("+s+", RK)" if erf_t==0 else "ABS("+s+")"
 #:enddef
 #:set fmts = ["(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
 #:set ktps = [REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+submodule(mod_unittest) allclose
+  use mod_unittest_printer
+  implicit none
+contains
 #:for ktp, fm, erf_t in zip(ktps, fmts, [0, 1])
 #:for kind, type, post in ktp
 #:for routine, op, neq, no in zip(["assert_allclose", "assert_not_allclose"], ["<", ">="], ["!~", "~ "], [".not.", ""])

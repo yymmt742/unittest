@@ -24,13 +24,13 @@
         call report_error_rate(this%dev, SIZE(a), nerror)
       end block
 #:enddef
+#:set fmts = ["(A,1X,I0,2X,A,1X,I0,2X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
+#:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 submodule(mod_unittest) almost_equal
   use mod_unittest_printer
   implicit none
   integer, parameter :: DEF_PLACE = 7
 contains
-#:set fmts = ["(A,1X,I0,2X,A,1X,I0,2X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
-#:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:for ktp, fm in zip(ktps, fmts)
 #:for kind, type, post in ktp
 #:for routine, op, neq, no in zip(["assert_almost_equal", "assert_not_almost_equal"], ["<", ">="], ["!~", "~ "], [".not.", ""])
