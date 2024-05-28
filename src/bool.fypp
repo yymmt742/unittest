@@ -2,7 +2,7 @@
 #:def error_list_scalar(neq)
       block
         integer  :: ios
-        write (this%dev, '(A)', IOSTAT=ios) " Assertion Error :: [ ${neq}$ ]"
+        write (this%dev, '(8X,A)', IOSTAT=ios) " Assertion Error :: [ ${neq}$ ]"
       end block
 #:enddef
 #:def error_list_loop(rank, no, neq)
@@ -14,7 +14,7 @@
 #:endfor
           if (${no}$expr${counter_suffix(rank)}$) cycle
           nerror = nerror + 1
-          write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank+1)])}$
+          write (this%dev, '(8X,*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank+1)])}$
           write (this%dev, '(A)', IOSTAT=ios) " Assertion Error :: [ ${neq}$ ]"
 #:for i in range(rank)
         end do
@@ -26,12 +26,12 @@ submodule(mod_unittest) bool
   use mod_unittest_printer
   implicit none
 contains
-#:for routine, no, neq in zip(["assert", "assert_true", "assert_false"], ["", "", ".not."], ["failed", "false", "true"])
+#:for routine, no, neq in zip(["assert", "assert_true", "assert_false"], [".not.", ".not.", ""], ["failed", "false", "true"])
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
 #:for rank in range(MAXIMUM_RANK + 1)
   module procedure ${routine_name(routine, post, rank)}$
 ${common_check(rank, None)}$
-    err = ${no + "ALL(expr)" if rank>0 else no + "expr"}$
+    err = ${no}$${"ALL" if rank>0 else ""}$(expr)
     call report_result(this%dev, this%num_test, err, unitname)
     if (err) then
       this%num_error = this%num_error + 1

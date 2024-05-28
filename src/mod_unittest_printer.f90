@@ -37,38 +37,7 @@ module mod_unittest_printer
   character(*), parameter :: WSPC          = REPEAT(' ', 8)
   character(*), parameter :: SEP3          = WSPC//REPEAT('-', L_MSG)
 !&>
-! type expr_report
-!   sequence
-!   logical          :: ok
-!   real(RK)         :: error_rate
-!   character(L_MSG) :: msg
-! end type expr_report
-!
 contains
-!
-! subroutine check_expr_all(dev, num_test, expr, unitname, num_error, err)
-!   integer, intent(in)           :: dev
-!   integer, intent(in)           :: num_test
-!   type(expr_report), intent(in) :: expr(:)
-!   character(*), intent(in)      :: unitname
-!   integer, intent(inout)        :: num_error
-!   logical, intent(inout)        :: err
-!   err = .not. ALL(expr%ok)
-!   if (err) num_error = num_error + 1
-!   call report_result(dev, num_test, err, expr, unitname)
-! end subroutine check_expr_all
-!
-! subroutine check_expr_not_any(dev, num_test, expr, unitname, num_error, err)
-!   integer, intent(in)           :: dev
-!   integer, intent(in)           :: num_test
-!   type(expr_report), intent(in) :: expr(:)
-!   character(*), intent(in)      :: unitname
-!   integer, intent(inout)        :: num_error
-!   logical, intent(inout)        :: err
-!   err = ANY(expr%ok)
-!   if (err) num_error = num_error + 1
-!   call report_result(dev, num_test, err, expr, unitname)
-! end subroutine check_expr_not_any
 !
   subroutine report_rank_error(dev, num_test, size_a, size_b, unitname)
     !! print rank error
@@ -84,9 +53,9 @@ contains
     write (dev, '(I8,A)', IOSTAT=ios) num_test, ps
     write (dev, '(A)', IOSTAT=ios) SEP3
     write (dev, '(2A)', IOSTAT=ios, ADVANCE="NO") rankMissMatch, '['
-    write (dev, '(*(I0,/,", "))', IOSTAT=ios, ADVANCE="NO") size_a
+    write (dev, '(*(I0,:,", "))', IOSTAT=ios, ADVANCE="NO") size_a
     write (dev, '(A)', IOSTAT=ios, ADVANCE="NO") '] /= ['
-    write (dev, '(*(I0,/,", "))', IOSTAT=ios, ADVANCE="NO") size_b
+    write (dev, '(*(I0,:,", "))', IOSTAT=ios, ADVANCE="NO") size_b
     write (dev, '(A)', IOSTAT=ios) ']'
     write (dev, '(A)', IOSTAT=ios) SEP3
     FLUSH (dev)
