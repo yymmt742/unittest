@@ -8,22 +8,20 @@
         nerror = 0
         if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
           do j = 1, s2
-            do i = 1, s1
-              b = MERGE(1, 0, i == j)
-              diff = ABS(a(i, j) - b) * mp
+            do i = j + 1, s1
+              diff = ABS(a(i, j) - a(j, i)) * mp
               if (INT(diff) < 1) cycle
               nerror = nerror + 1
               write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') i, j
-              write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a(i, j), "] !~ [", b, "]"
+              write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a(i, j), "] !~ [", a(j, i), "]"
             end do
           end do
         else
           block
             real(RK) :: error(s1, s2)
             do j = 1, s2
-              do i = 1, s1
-                b = MERGE(1, 0, i == j)
-                error(i, j) = a(i, j) - b
+              do i = j + 1, s1
+                error(i, j) = a(i, j) - a(j, i)
                 if (INT(ABS(error(i, j)) * mp) >= 1) nerror = nerror + 1
               end do
             end do
@@ -34,16 +32,15 @@
       end block
     end if
 #:enddef
-submodule(mod_unittest) is_eye
+submodule(mod_unittest) is_symmetric
   implicit none
   integer, parameter :: DEF_PLACE = 7
 contains
 #:for ktp, fm in zip(ktps, fmts)
 #:for kind, type, post in ktp
-#:for routine, no in zip(["assert_is_eye", "assert_isnot_eye"], ["", ".not."])
+#:for routine, no in zip(["assert_is_symmetric", "assert_isnot_symmetric"], ["", ".not."])
   module procedure ${routine_name(routine, post, 2)}$
     ${"real(RK)" if "INT" in kind else "real("+kind+")"}$ :: mp, diff
-    ${type}$ :: b
     integer :: i, j, s1, s2
 ${common_check(2, None, routine)}$
     s1 = SIZE(a, 1)
@@ -59,9 +56,8 @@ ${common_check(2, None, routine)}$
     else; mp = 10**DEF_PLACE
     end if
     do j = 1, s2
-      do i = 1, s1
-        b = MERGE(1, 0, i == j)
-        diff = ABS(a(i, j) - b) * mp
+      do i = j + 1, s1
+        diff = ABS(a(i, j) - a(j, i)) * mp
         err = INT(diff) >= 1
         if(err) exit
       end do
@@ -78,4 +74,4 @@ ${error_list(fm) if no == "" else "!"}$
 #:endfor
 ${report_functions()}$
 ${image_functions()}$
-end submodule is_eye
+end submodule is_symmetric

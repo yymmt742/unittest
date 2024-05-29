@@ -39,7 +39,10 @@ ${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + CO
 #:for routine in ["assert_less", "assert_less_equal", "assert_greater", "assert_greater_equal"]
 ${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS, RANK_ITERii)}$
 #:endfor
-#:for routine in ["assert_is_eye"]
+#:for routine in ["assert_is_eye", "assert_isnot_eye"]
+${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, [(2, None)])}$
+#:endfor
+#:for routine in ["assert_is_symmetric", "assert_isnot_symmetric"]
 ${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, [(2, None)])}$
 #:endfor
 #:for routine in ["assert_is_zero", "assert_isnot_zero"]
@@ -117,7 +120,19 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:endfor
 #:endfor
 #:endfor
-#:for routine in ["assert_is_eye"]
+#:for routine in ["assert_is_eye", "assert_isnot_eye"]
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
+    module subroutine ${routine_name(routine, post, 2)}$ (this, a, unitname, place, is_failed)
+      class(unittest), intent(inout)     :: this
+      ${type}$, intent(in)               :: a${rank_suffix(2)}$
+      character(*), intent(in), optional :: unitname
+      integer, intent(in), optional      :: place
+      logical, intent(out), optional     :: is_failed
+    end subroutine ${routine_name(routine, post, 2)}$
+!
+#:endfor
+#:endfor
+#:for routine in ["assert_is_symmetric", "assert_isnot_symmetric"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
     module subroutine ${routine_name(routine, post, 2)}$ (this, a, unitname, place, is_failed)
       class(unittest), intent(inout)     :: this

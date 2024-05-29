@@ -41,9 +41,10 @@ list(APPEND fyppFiles
    equal.fypp
    almost_equal.fypp
    compare.fypp
+   allclose.fypp
    is_eye.fypp
    is_zero.fypp
-   allclose.fypp
+   is_symmetric.fypp
    mod_unittest.fypp
    )
 
