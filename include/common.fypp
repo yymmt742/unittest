@@ -184,8 +184,8 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
       block
         character(32) :: cntest
         write(cntest, '(I0)') ntest
-        npad = MAX(0, nline - LEN(routine//" ") - LEN_TRIM(cntest))
-        res = routine//TRIM(cntest)//REPEAT(' ', npad)//post
+        npad = MAX(0, nline - LEN(' '//routine//' ') - LEN_TRIM(cntest))
+        res = ' '//routine//' '//TRIM(cntest)//REPEAT(' ', npad)//post
       end block
     endif
   end subroutine padd_string
