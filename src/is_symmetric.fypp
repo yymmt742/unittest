@@ -20,7 +20,7 @@
           block
             real(RK) :: error(s1, s2)
             do j = 1, s2
-              do i = j + 1, s1
+              do i = 1, s1
                 error(i, j) = a(i, j) - a(j, i)
                 if (INT(ABS(error(i, j)) * mp) >= 1) nerror = nerror + 1
               end do

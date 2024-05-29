@@ -1,5 +1,5 @@
 #:include "common.fypp"
-#:set routine = "test_is_eye_"
+#:set routine = "test_is_symmetric_"
 program main
   use mod_unittest
   use mod_unittest_kinds
@@ -17,25 +17,20 @@ contains
 #:for kind, type, post in ktp
   subroutine ${routine + post}$(u)
     type(unittest), intent(inout) :: u
-    ${type}$            :: i2(4, 4)
-    ${type}$, parameter :: j2(4, 4) = 0
-    integer :: i, j
+    ${type}$, parameter :: i2(4, 4) = RESHAPE([0, 1, 2, 3, 4, 3, 2, 1, 1, 3, 4, 2, 4, 3, 2, 1], [4, 4])
+    ${type}$, parameter :: j2(4, 4) = i2 + TRANSPOSE(i2)
     logical :: is_failed
 !<&
-    call u%init('is_eye ${post}$', terminate_with_error_code=.false.)
+    call u%init('is_symmetric ${post}$', terminate_with_error_code=.false.)
 !
-    do concurrent(i=1:SIZE(i2, 1), j=1:SIZE(i2, 2))
-      i2(i, j) = MERGE(1, 0, i==j)
-    end do
-!
-    call u%assert_is_eye(i2, 'is_eye ${post}$', is_failed=is_failed)
-    if (is_failed) call error_stop(code=1)
-    call u%assert_is_eye(j2, 'is_eye ${post}$', is_failed=is_failed)
+    call u%assert_is_symmetric(i2, 'is_symmetric ${post}$', is_failed=is_failed)
     if (.not.is_failed) call error_stop(code=1)
-    call u%assert_isnot_eye(j2, 'isnot_eye ${post}$', is_failed=is_failed)
+    call u%assert_is_symmetric(j2, 'is_symmetric ${post}$', is_failed=is_failed)
     if (is_failed) call error_stop(code=1)
-    call u%assert_isnot_eye(i2, 'isnot_eye ${post}$', is_failed=is_failed)
+    call u%assert_isnot_symmetric(j2, 'isnot_symmetric ${post}$', is_failed=is_failed)
     if (.not.is_failed) call error_stop(code=1)
+    call u%assert_isnot_symmetric(i2, 'isnot_symmetric ${post}$', is_failed=is_failed)
+    if (is_failed) call error_stop(code=1)
 !
 !&>
   end subroutine ${routine + post}$
