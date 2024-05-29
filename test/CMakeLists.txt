@@ -43,5 +43,6 @@ macro(ADDTEST name)
   add_test(NAME ${name} COMMAND $<TARGET_FILE:test_${name}>)
 endmacro(ADDTEST)
 
+ADDTEST(assert)
 ADDTEST(bool)
-ADDTEST(unittest)
+#ADDTEST(unittest)

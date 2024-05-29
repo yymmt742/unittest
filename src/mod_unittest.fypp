@@ -9,6 +9,7 @@ module mod_unittest
   implicit none
   private
   public  :: unittest
+  public  :: error_stop
 !
   character(*), parameter :: SEP1 = REPEAT('-', 64)
   character(*), parameter :: SEP2 = REPEAT('=', 64)
