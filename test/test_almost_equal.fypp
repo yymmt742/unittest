@@ -1,0 +1,53 @@
+#:include "common.fypp"
+#:set routine = "test_almost_equal_"
+program main
+  use mod_unittest
+  use mod_unittest_kinds
+  implicit none
+  type(unittest) :: u
+!
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
+  call ${routine + post}$(u)
+#:endfor
+!
+  call u%finish_and_terminate()
+!
+contains
+#:for ktp in [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+#:for kind, type, post in ktp
+  subroutine ${routine + post}$(u)
+    type(unittest), intent(inout) :: u
+#:for rank1, rank2 in RANK_ITERi
+    ${type}$, parameter :: i${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 0, j${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 1
+#:endfor
+    logical             :: is_failed
+!<&
+    call u%init('almost_equal ${post}$', terminate_with_error_code=.false.)
+!
+#:for rank1, rank2 in RANK_ITERii
+    call u%assert_almost_equal(i${rank1}$, i${rank2}$, 'almost_equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    if (is_failed) call error_stop(code=1)
+#:endfor
+!
+#:for rank1, rank2 in RANK_ITERii
+    call u%assert_almost_equal(i${rank1}$, j${rank2}$, 'almost_equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    if (.not.is_failed) call error_stop(code=1)
+#:endfor
+!
+    call u%init('not almost_equal ${post}$', terminate_with_error_code=.false.)
+!
+#:for rank1, rank2 in RANK_ITERii
+    call u%assert_not_almost_equal(i${rank1}$, i${rank2}$, 'not almost_equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    if (.not.is_failed) call error_stop(code=1)
+#:endfor
+!
+#:for rank1, rank2 in RANK_ITERii
+    call u%assert_not_almost_equal(i${rank1}$, j${rank2}$, 'not almost_equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    if (is_failed) call error_stop(code=1)
+#:endfor
+!&>
+  end subroutine ${routine + post}$
+#:endfor
+#:endfor
+!
+end program main

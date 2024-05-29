@@ -1,7 +1,8 @@
 #:include "common.fypp"
+#:set routine = "test_equal_"
 program main
   use mod_unittest
-  use mod_kinds
+  use mod_unittest_kinds
   implicit none
   type(unittest) :: u
 !
@@ -12,11 +13,12 @@ program main
   call u%finish_and_terminate()
 !
 contains
-#:for kind, type, post in INTEGER_KIND_TYPE_POSTS
-  subroutine ${"test_equal_" + post}$(u)
+#:for ktp, ini in zip([INTEGER_KIND_TYPE_POSTS, LOGICAL_KIND_TYPE_POSTS], [("0", "1"), (".false.", ".true.")])
+#:for kind, type, post in ktp
+  subroutine ${routine + post}$(u)
     type(unittest), intent(inout) :: u
 #:for rank1, rank2 in RANK_ITERi
-    ${type}$, parameter :: i${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 0, j${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 1
+    ${type}$, parameter :: i${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = ${ini[0]}$, j${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = ${ini[1]}$
 #:endfor
     logical             :: is_failed
 !<&
@@ -44,42 +46,8 @@ contains
     if (is_failed) call error_stop(code=1)
 #:endfor
 !&>
-  end subroutine ${"test_equal_" + post}$
+  end subroutine ${routine + post}$
 !
 #:endfor
-#:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
-  subroutine ${"test_equal_" + post}$(u)
-    type(unittest), intent(inout) :: u
-#:for rank1, rank2 in RANK_ITERi
-    ${type}$, parameter :: i${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = .true., j${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = .false.
-#:endfor
-    logical             :: is_failed
-!<&
-    call u%init('Equal ${post}$', terminate_with_error_code=.false.)
-!
-#:for rank1, rank2 in RANK_ITERii
-    call u%assert_equal(i${rank1}$, i${rank2}$, 'equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
-    if (is_failed) call error_stop(code=1)
-#:endfor
-!
-#:for rank1, rank2 in RANK_ITERii
-    call u%assert_equal(i${rank1}$, j${rank2}$, 'equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
-    if (.not.is_failed) call error_stop(code=1)
-#:endfor
-!
-    call u%init('Not Equal ${post}$', terminate_with_error_code=.false.)
-!
-#:for rank1, rank2 in RANK_ITERii
-    call u%assert_not_equal(i${rank1}$, i${rank2}$, 'equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
-    if (.not.is_failed) call error_stop(code=1)
-#:endfor
-!
-#:for rank1, rank2 in RANK_ITERii
-    call u%assert_not_equal(i${rank1}$, j${rank2}$, 'equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
-    if (is_failed) call error_stop(code=1)
-#:endfor
-!&>
-  end subroutine ${"test_equal_" + post}$
-!
 #:endfor
 end program main
