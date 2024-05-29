@@ -1,11 +1,11 @@
 #:include "common.fypp"
-#:set fmts = ["(A,1X,I0,1X,A,1X,I0,1X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
+#:set fmts = ["A,1X,I0,1X,A,1X,I0,1X,A", "A,G16.9,A,G16.9,A", "A,2(ES9.2,1X),A,2(ES9.2,1X),A"]
 #:set tors = ["REAL(a, RK)", "REAL(a, RK)", "REAL(ABS(a), RK)"]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:def error_list_scalar(fm, neq)
       block
         integer  :: ios
-        write (this%dev, '${fm}$', IOSTAT=ios)  " [", a, "] ${neq}$ [", b, "]"
+        write (this%dev, '(16X,${fm}$)', IOSTAT=ios)  " [", a, "] ${neq}$ [", b, "]"
       end block
 #:enddef
 #:def error_list_loop(op, rank1, fm, neq, tor)
@@ -21,7 +21,7 @@
             if (INT(diff) ${op}$ 1) cycle
             nerror = nerror + 1
             write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
-            write (this%dev, '${fm}$', IOSTAT=ios) " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b, "]"
+            write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b, "]"
 #:for i in range(rank1)
           end do
 #:endfor

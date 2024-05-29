@@ -7,7 +7,7 @@ program main
   type(unittest) :: u
 !
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS
-  call ${"test_equal_" + post}$(u)
+  call ${routine + post}$(u)
 #:endfor
 !
   call u%finish_and_terminate()

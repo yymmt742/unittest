@@ -3,7 +3,7 @@ program main
   implicit none
   type(unittest) :: u
   logical        :: is_failed
-  call u%init('Simple unittests', terminate_with_error_code=.false.)
+  call u%init('bool', terminate_with_error_code=.false.)
   call u%assert_true(.true., is_failed=is_failed)
   if (is_failed) call error_stop(code=1)
   call u%assert_true(.false., is_failed=is_failed)

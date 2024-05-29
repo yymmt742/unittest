@@ -1,5 +1,5 @@
 #:include "common.fypp"
-#:set fmts = ["(A,1X,I0,1X,A,1X,I0,1X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
+#:set fmts = ["A,1X,I0,1X,A,1X,I0,1X,A", "A,G16.9,A,G16.9,A", "A,2(ES9.2,1X),A,2(ES9.2,1X),A"]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 submodule(mod_unittest) is_eye
   implicit none
@@ -48,7 +48,7 @@ ${common_check(2, None, routine)}$
               if (INT(diff) < 1) cycle
               nerror = nerror + 1
               write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') i, j
-              write (this%dev, '${fm}$', IOSTAT=ios) " [", a(i, j), "] !~ [", b, "]"
+              write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a(i, j), "] !~ [", b, "]"
             end do
           end do
         else

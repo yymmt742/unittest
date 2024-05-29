@@ -1,0 +1,41 @@
+#:include "common.fypp"
+#:set routine = "test_is_eye_"
+program main
+  use mod_unittest
+  use mod_unittest_kinds
+  implicit none
+  type(unittest) :: u
+!
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
+  call ${routine + post}$(u)
+#:endfor
+!
+  call u%finish_and_terminate()
+!
+contains
+#:for ktp in [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+#:for kind, type, post in ktp
+  subroutine ${routine + post}$(u)
+    type(unittest), intent(inout) :: u
+    ${type}$            :: i2(4, 4)
+    ${type}$, parameter :: j2(4, 4) = 0
+    integer :: i, j
+    logical :: is_failed
+!<&
+    call u%init('is_zero ${post}$', terminate_with_error_code=.false.)
+!
+    do concurrent(i=1:SIZE(i2, 1), j=1:SIZE(i2, 2))
+      i2(i, j) = MERGE(1, 0, i==j)
+    end do
+!
+    call u%assert_is_eye(i2, 'is_eye ${post}$', is_failed=is_failed)
+    if (is_failed) call error_stop(code=1)
+    call u%assert_is_eye(j2, 'is_eye ${post}$', is_failed=is_failed)
+    if (.not.is_failed) call error_stop(code=1)
+!
+!&>
+  end subroutine ${routine + post}$
+!
+#:endfor
+#:endfor
+end program main
