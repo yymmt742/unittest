@@ -19,7 +19,7 @@ module mod_unittest
     integer                   :: num_test
     integer                   :: num_error
     integer                   :: verbose
-    integer                   :: start_time
+    integer(INT64)            :: start_time
     real(RK)                  :: start_cpu_time
     character(:), allocatable :: script_name
     logical                   :: terminate_with_error_code = .true.
@@ -207,18 +207,17 @@ contains
 !
   subroutine utest_finish(this)
     class(unittest), intent(inout) :: this
-    integer                        :: finish_time, t_rate, t_max
+    integer(INT64)                 :: finish_time, t_rate, t_max
     real(RK)                       :: finish_cpu_time, time
 !
     call SYSTEM_CLOCK(finish_time, t_rate, t_max)
+    call CPU_TIME(finish_cpu_time)
 !
     if (finish_time < this%start_time) then
-      time = (t_max - this%start_time + finish_time + 1)
+      time = REAL(t_max - this%start_time + finish_time + 1, RK) / REAL(t_rate, RK)
     else
-      time = (finish_time - this%start_time)
+      time = REAL(finish_time - this%start_time, RK) / REAL(t_rate, RK)
     end if
-!
-    call CPU_TIME(finish_cpu_time)
 !
     finish_cpu_time = finish_cpu_time - this%start_cpu_time
 !
