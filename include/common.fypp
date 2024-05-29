@@ -190,4 +190,84 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
   end subroutine padd_string
 #:enddef
 
+#:def image_functions()
+  subroutine report_error_as_image(dev, ndat, nbreak, error_rate)
+    integer, intent(in)     :: dev, ndat, nbreak
+    real(RK), intent(in)    :: error_rate(ndat)
+    character(*), parameter :: SEP3 = ${SEP3}$
+    character(*), parameter :: CDIV(21)   = ["165", "129", "093", "057", "021", &
+                             &               "020", "019", "018", "017", "016", &
+                             &               "000", "052", "088", "124", "160", &
+                             &               "196", "202", "208", "214", "220", &
+                             &               "226"]
+    character(*), parameter :: CSEQ(21)   = ["232", "233", "234", "235", "236", &
+                             &               "237", "238", "239", "240", "241", &
+                             &               "242", "243", "244", "245", "246", &
+                             &               "247", "248", "249", "251", "253", &
+                             &               "255"]
+    character(*), parameter :: CSEQ_R(21) = ["255", "253", "251", "249", "248", &
+                             &               "247", "246", "245", "244", "243", &
+                             &               "242", "241", "240", "239", "238", &
+                             &               "237", "236", "235", "234", "233", &
+                             &               "232"]
+    real(RK)                :: mmax
+    integer                 :: ios
+    mmax = MAXVAL(ABS(error_rate))
+    write (dev, '(A)', IOSTAT=ios) SEP3
+    if (ALL(error_rate >= 0.0_RK)) then
+      call dump_image(dev, ndat, SIZE(CSEQ), nbreak, error_rate, 0.0_RK, mmax, CSEQ)
+    elseif (ALL(error_rate <= 0.0_RK)) then
+      call dump_image(dev, ndat, SIZE(CSEQ_R), nbreak, error_rate, -mmax, 0.0_RK, CSEQ_R)
+    else
+      call dump_image(dev, ndat, SIZE(CDIV), nbreak, error_rate, -mmax, mmax, CDIV)
+    end if
+  end subroutine report_error_as_image
+!
+  subroutine dump_image(dev, ndat, nmap, nbreak, dat, mmin, mmax, cmap)
+    integer, intent(in)       :: dev, ndat, nmap, nbreak
+    real(RK), intent(in)      :: dat(ndat), mmin, mmax
+    character(*), intent(in)  :: cmap(:)
+    character(*), parameter   :: ANSI = ACHAR(INT(z'1b'))//"[30m"
+    character(*), parameter   :: RESET = ACHAR(INT(z'1b'))//'[m'
+    character(:), allocatable :: cb
+    real(RK)                  :: norm
+    integer                   :: i, j, n, ios
+    norm = (nmap - 1) / (mmax - mmin)
+    call colorbar(cmap, cb)
+    write (dev, '(A,2X,G12.3,2A,G12.3,A)', IOSTAT=ios) NEW_LINE(''), mmin, cb, RESET, mmax, NEW_LINE('')
+    do i = 1, ndat, nbreak
+      n = MIN(i + nbreak - 1, ndat)
+      write (dev, '(I6,A,I6, 1X, A)', ADVANCE="NO", IOSTAT=ios) i, "-", n, ANSI
+      do j = i, n
+        write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) colorpiece(dat(j), mmin, mmax, cmap)
+      end do
+      write (dev, '(A)', IOSTAT=ios) RESET
+    end do
+  end subroutine dump_image
+!
+  pure function colorpiece(dat, mmin, mmax, cmap) result(res)
+    real(RK), intent(in)     :: dat, mmin, mmax
+    character(*), intent(in) :: cmap(:)
+    character(*), parameter  :: ANSI = ACHAR(INT(z'1b'))//"[48;5;"
+    character(*), parameter  :: CRES = ANSI//"000m_"
+    integer, parameter       :: LRES = LEN(CRES)
+    character(LRES)          :: res
+    integer                  :: k
+    k = NINT((SIZE(cmap) - 1) / (mmax - mmin) * (dat - mmin)) + 1
+    res = ANSI//cmap(k)//"m_"
+  end function colorpiece
+!
+  pure subroutine colorbar(cmap, res)
+    character(*), intent(in)  :: cmap(:)
+    character(:), allocatable, intent(inout) :: res
+    character(*), parameter   :: ANSI = ACHAR(INT(z'1b'))//"[30;48;5;"
+    integer                   :: i, n
+    res = ""
+    n = SIZE(cmap)
+    do i = 1, n
+      res = res//ANSI//cmap(i)//"m__"
+    end do
+  end subroutine colorbar
+#:enddef
+
 #:endmute

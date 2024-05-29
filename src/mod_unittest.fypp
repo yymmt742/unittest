@@ -18,6 +18,7 @@ module mod_unittest
     integer                   :: dev
     integer                   :: num_test
     integer                   :: num_error
+    integer                   :: verbose
     integer                   :: start_time
     real(RK)                  :: start_cpu_time
     character(:), allocatable :: script_name
@@ -175,6 +176,7 @@ contains
     if (ios /= 0) return
 !
     this%dev = STDERR
+    this%verbose = 0
     allocate (character(lna) :: tmp)
     allocate (character(0) :: this%script_name)
     call GET_COMMAND_ARGUMENT(0, value=tmp, status=ios)

@@ -37,16 +37,31 @@ ${common_check(2, None, routine)}$
     if (err) then
       block
         integer :: ios, nerror
-        do j = 1, s2
-          do i = 1, s1
-            b = MERGE(1, 0, i == j)
-            diff = ABS(a(i, j) - b) * mp
-            if (INT(diff) < 1) cycle
-            nerror = nerror + 1
-            write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') i, j
-            write (this%dev, '${fm}$', IOSTAT=ios) " [", a(i, j), "] !~ [", b, "]"
+        nerror = 0
+        if (this%verbose > 0 .or. SIZE(a)<11) then
+          do j = 1, s2
+            do i = 1, s1
+              b = MERGE(1, 0, i == j)
+              diff = ABS(a(i, j) - b) * mp
+              if (INT(diff) < 1) cycle
+              nerror = nerror + 1
+              write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') i, j
+              write (this%dev, '${fm}$', IOSTAT=ios) " [", a(i, j), "] !~ [", b, "]"
+            end do
           end do
-        end do
+        else
+          block
+            real(RK) :: error(s1, s2)
+            do j = 1, s2
+              do i = 1, s1
+                b = MERGE(1, 0, i == j)
+                error(i, j) = a(i, j) - b
+                if (INT(ABS(error(i, j)) * mp) >= 1) nerror = nerror + 1
+              end do
+            end do
+            call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [error])
+          end block
+        end if
         call report_error_rate(this%dev, SIZE(a), nerror)
       end block
     end if
@@ -56,4 +71,5 @@ ${common_check(2, None, routine)}$
 #:endfor
 #:endfor
 ${report_functions()}$
+${image_functions()}$
 end submodule is_eye

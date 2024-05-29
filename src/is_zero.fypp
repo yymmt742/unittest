@@ -1,5 +1,6 @@
 #:include "common.fypp"
 #:set fmts = ["(A,1X,I0,1X,A,1X,I0,1X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
+#:set tors = ["REAL(a, RK)", "REAL(a, RK)", "REAL(ABS(a), RK)"]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:def error_list_scalar(fm, neq)
       block
@@ -7,30 +8,35 @@
         write (this%dev, '${fm}$', IOSTAT=ios)  " [", a, "] ${neq}$ [", b, "]"
       end block
 #:enddef
-#:def error_list_loop(op, rank1, fm, neq)
+#:def error_list_loop(op, rank1, fm, neq, tor)
       block
         integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
         real(RK) :: diff
-        nerror = 0
+        if (this%verbose > 0 .or. SIZE(a)<11) then
+          nerror = 0
 #:for i in range(rank1,0,-1)
-        do i${i}$ = 1, SIZE(a, ${i}$)
+          do i${i}$ = 1, SIZE(a, ${i}$)
 #:endfor
-          diff = ABS(${"a" + counter_suffix(rank1) + " - b"}$) * mp
-          if (INT(diff) ${op}$ 1) cycle
-          nerror = nerror + 1
-          write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
-          write (this%dev, '${fm}$', IOSTAT=ios)  " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b, "]"
+            diff = ABS(${"a" + counter_suffix(rank1)}$) * mp
+            if (INT(diff) ${op}$ 1) cycle
+            nerror = nerror + 1
+            write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
+            write (this%dev, '${fm}$', IOSTAT=ios) " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b, "]"
 #:for i in range(rank1)
-        enddo
+          end do
 #:endfor
+        else
+          nerror = COUNT([.not.(INT(ABS(a) * mp) ${op}$ 1)])
+          call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [${tor}$])
+        end if
         call report_error_rate(this%dev, SIZE(a), nerror)
       end block
 #:enddef
 submodule(mod_unittest) is_zero
   implicit none
-  integer, parameter :: DEF_PLACE = 10**7
+  integer, parameter :: DEF_PLACE = 7
 contains
-#:for ktp, fm in zip(ktps, fmts)
+#:for ktp, fm, tor in zip(ktps, fmts, tors)
 #:for kind, type, post in ktp
 #:for routine, op, neq, no in zip(["assert_is_zero", "assert_isnot_zero"], ["<", ">="], ["!~", "~ "], [".not.", ""])
 #:for rank1, rank2 in RANK_ITERi
@@ -45,7 +51,7 @@ ${common_check(rank1, rank2, routine)}$
     call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
     if (err) then
       this%num_error = this%num_error + 1
-${error_list_loop(op, rank1, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
+${error_list_loop(op, rank1, fm, neq, tor) if rank1>0 else error_list_scalar(fm, neq)}$
     end if
   end procedure ${routine_name(routine, post, rank1)}$
 !
@@ -54,4 +60,5 @@ ${error_list_loop(op, rank1, fm, neq) if rank1>0 else error_list_scalar(fm, neq)
 #:endfor
 #:endfor
 ${report_functions()}$
+${image_functions()}$
 end submodule is_zero

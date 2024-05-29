@@ -1,6 +1,6 @@
 #:include "common.fypp"
 #:def erff(s, erf_t)
-$:"REAL("+s+", RK)" if erf_t==0 else "ABS("+s+")"
+$:"REAL("+s+", RK)" if erf_t==0 else "REAL(ABS("+s+"), RK)"
 #:enddef
 #:def error_list_scalar(fm, neq)
       block
@@ -9,23 +9,28 @@ $:"REAL("+s+", RK)" if erf_t==0 else "ABS("+s+")"
       end block
 #:enddef
 #:def error_list_loop(op, rank1, rank2, erf_t, fm, neq)
-      block
+        block
         integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
         real(RK) :: diff
-        nerror = 0
+        if (this%verbose > 0 .or. SIZE(a)<11) then
+          nerror = 0
 #:for i in range(rank1,0,-1)
-        do i${i}$ = 1, SIZE(a, ${i}$)
+          do i${i}$ = 1, SIZE(a, ${i}$)
 #:endfor
-          diff = ${erff("a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2), erf_t)}$
-          if (diff ${op}$ tol) cycle
-          nerror = nerror + 1
-          write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
-          write (this%dev, '${fm}$', IOSTAT=ios)  " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
+            diff = ${erff("a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2), erf_t)}$
+            if (diff ${op}$ tol) cycle
+            nerror = nerror + 1
+            write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
+            write (this%dev, '${fm}$', IOSTAT=ios)  " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
 #:for i in range(rank1)
-        enddo
+          enddo
 #:endfor
+        else
+          nerror = COUNT([.not.(${erff("a - b", erf_t)}$ ${op}$ tol)])
+          call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [${erff("a - b", erf_t)}$])
+        end if
         call report_error_rate(this%dev, SIZE(a), nerror)
-      end block
+        end block
 #:enddef
 #:set fmts = ["(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
 #:set ktps = [REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
@@ -50,6 +55,7 @@ ${common_check(rank1, rank2, routine)}$
     if (err) then
       this%num_error = this%num_error + 1
 ${error_list_loop(op, rank1, rank2, erf_t, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
+
     end if
     FLUSH (this%dev)
   end procedure ${routine_name(routine, post, rank1, rank2)}$
@@ -59,4 +65,5 @@ ${error_list_loop(op, rank1, rank2, erf_t, fm, neq) if rank1>0 else error_list_s
 #:endfor
 #:endfor
 ${report_functions()}$
+${image_functions()}$
 end submodule allclose
