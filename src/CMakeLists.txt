@@ -34,7 +34,7 @@ else()
   fypp_generate("error_stop_f08.fypp" "error_stop.f90" "${fyppFlags}" "${f90files}" f90files)
 endif()
 
-fypp_generate("mod_kinds.fypp" "mod_kinds.f90" "${fyppFlags}" "${f90files}" f90files)
+fypp_generate("mod_unittest_kinds.fypp" "mod_unittest_kinds.f90" "${fyppFlags}" "${f90files}" f90files)
 
 list(APPEND fyppFiles
    bool.fypp

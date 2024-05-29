@@ -46,7 +46,7 @@ ${common_check(rank1, rank2, routine)}$
     if (PRESENT(place)) then; mp = 10**place
     else; mp = 10**DEF_PLACE
     end if
-    err = ${no + "ALL(INT(mp * ABS(a - b)) < 1)" if rank1>0 else no + "(mp * ABS(a - b) < 1)"}$
+    err = ${no}$${"ALL" if rank1>0 else ""}$(INT(mp * ABS(a - b)) < 1)
     if (PRESENT(is_failed)) is_failed = err
     call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
     if (err) then

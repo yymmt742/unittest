@@ -1,5 +1,5 @@
 #:include "common.fypp"
-module mod_kinds
+module mod_unittest_kinds
   !! Defines the available integer and floating-point precision.
   use, intrinsic :: ISO_FORTRAN_ENV, only: INT8, INT16, INT32, INT64
   implicit none
@@ -26,4 +26,4 @@ module mod_kinds
 #:if HP_SUPPORT
   integer, parameter :: HP = SELECTED_REAL_KIND(3)
 #:endif
-end module mod_kinds
+end module mod_unittest_kinds
