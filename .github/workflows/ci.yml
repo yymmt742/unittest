@@ -42,7 +42,7 @@ jobs:
             toolchain: {compiler: nvidia-hpc, version: '23.11'}
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup fortran
@@ -60,11 +60,20 @@ jobs:
       - name: Install cmake and fypp
         run: pip install --upgrade cmake fypp
 
-      - name: Configure with CMake
+      - name: Configure with CMake (windows)
+        if: contains(matrix.os, 'windows')
         run: >-
           cmake -Wdev
-          -DCMAKE_Fortran_COMPILER=${{ env.FC }}
-          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_INSTALL_PREFIX=_dist
+          -G "MinGW Makefiles"
+          -S . -B build
+
+      - name: Configure with CMake (UNIX)
+        if: contains(matrix.os, 'ubuntu') || contains(matrix.os, 'macos')
+        run: >-
+          cmake -Wdev
+          -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_INSTALL_PREFIX=_dist
           -S . -B build
 

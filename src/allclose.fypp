@@ -1,44 +1,60 @@
 #:include "common.fypp"
+#:def erff(s, erf_t)
+$:"REAL("+s+", RK)" if erf_t==0 else "ABS("+s+")"
+#:enddef
+#:def error_list_scalar(fm, neq)
+      block
+        integer  :: ios
+        write (this%dev, '${fm}$', IOSTAT=ios)  " [", a, "] ${neq}$ [", b, "]"
+      end block
+#:enddef
+#:def error_list_loop(op, rank1, rank2, erf_t, fm, neq)
+      block
+        integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
+        real(RK) :: diff
+        nerror = 0
+#:for i in range(rank1,0,-1)
+        do i${i}$ = 1, SIZE(a, ${i}$)
+#:endfor
+          diff = ${erff("a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2), erf_t)}$
+          if (diff ${op}$ tol) cycle
+          nerror = nerror + 1
+          write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
+          write (this%dev, '${fm}$', IOSTAT=ios)  " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
+#:for i in range(rank1)
+        enddo
+#:endfor
+        call report_error_rate(this%dev, SIZE(a), nerror)
+      end block
+#:enddef
+#:set fmts = ["(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
+#:set ktps = [REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 submodule(mod_unittest) allclose
   use mod_unittest_printer
   implicit none
-  integer, parameter :: DEF_MP = 10**7
 contains
-#:set erfs = ["REAL(a - b, RK)", "ABS(a - b)"]
-#:set fmts = ["(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
-#:set ktps = [REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
-#:for ktp, fm, erf in zip(ktps, fmts, erfs)
+#:for ktp, fm, erf_t in zip(ktps, fmts, [0, 1])
 #:for kind, type, post in ktp
-#:for routine, op, neq in zip(["assert_allclose", "assert_not_allclose"], ["<", ">="], ["\~", "~ "])
+#:for routine, op, neq, no in zip(["assert_allclose", "assert_not_allclose"], ["<", ">="], ["!~", "~ "], [".not.", ""])
 #:for rank1, rank2 in RANK_ITERii
   module procedure ${routine_name(routine, post, rank1, rank2)}$
-    logical err
     real(${kind}$) :: tol
-${rank_check(rank1, rank2)}$
+${common_check(rank1, rank2)}$
     if (PRESENT(atol)) then; tol = MAX(atol, 0.0_${kind}$)
     else; tol = 1E-8_${kind}$
     end if
     if (PRESENT(rtol)) then; tol = tol + MAX(rtol, 0.0_${kind}$)
     else; tol = tol + 1E-5_${kind}$ * MAXVAL([ABS(a), ABS(b)])
     end if
-    call check_expr_all(this%dev, this%num_test, ${flatten(routine+"_"+post+"(a, b, tol)", rank1, rank2)}$, &
-   &                    unitname, this%num_error, err)
+    err = ${no + "ALL(ABS(a - b) < tol)" if rank1>0 else no + "(ABS(a - b) < tol)"}$
+    call report_result(this%dev, this%num_test, err, unitname)
+    if (err) then
+      this%num_error = this%num_error + 1
+${error_list_loop(op, rank1, rank2, erf_t, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
+    end if
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
-  pure elemental function ${routine}$_${post}$(a, b, tol) result(res)
-    ${type}$, intent(in) :: a, b
-    real(${kind}$), intent(in) :: tol
-    type(expr_report)          :: res
-    res%ok = ABS(a - b) ${op}$ tol
-    if (res%ok) then
-      res%msg = ""
-    else
-      write (res%msg, '${fm}$') "[", a, "]${neq}$[", tol, "]"
-    end if
-    res%error_rate = ${erf}$
-  end function ${routine}$_${post}$
-!
 #:endfor
 #:endfor
 #:endfor

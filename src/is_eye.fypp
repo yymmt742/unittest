@@ -1,44 +1,56 @@
 #:include "common.fypp"
+#:set fmts = ["(A,1X,I0,1X,A,1X,I0,1X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
+#:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 submodule(mod_unittest) is_eye
   use mod_unittest_printer
   implicit none
-  integer, parameter :: DEF_MP = 10**7
+  integer, parameter :: DEF_PLACE = 7
 contains
-#:set fmts = ["(A,I14,2X,A,I14,2X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
-#:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:for ktp, fm in zip(ktps, fmts)
 #:for kind, type, post in ktp
-#:for routine, op, neq in zip(["assert_is_eye", "assert_isnot_eye"], ["<", ">="], ["\~", "~ "])
+#:for routine in ["assert_is_eye"]
   module procedure ${routine_name(routine, post, 2)}$
-    type(expr_report)        :: expr(SIZE(a, 1), SIZE(a, 2))
-    logical                  :: err
-    integer                  :: i, j, s1, s2
-    this%num_test = this%num_test + 1
+    ${"real(RK)" if "INT" in kind else "real("+kind+")"}$ :: mp, diff
+    ${type}$ :: b
+    integer :: i, j, s1, s2
+${common_check(2, None)}$
     s1 = SIZE(a, 1)
     s2 = SIZE(a, 2)
-    call check_rank(this%dev, this%num_test, s1, s2, unitname, this%num_error, err)
-    if (err) return
-    do concurrent(i=1:s1,j=1:s2)
+    err = s1 /= s2
+    if (err)then
+      this%num_error = this%num_error + 1
+      call report_rank_error(this%dev, this%num_test, [s1], [s2], unitname)
+      return
+    endif
+    if (PRESENT(place)) then; mp = 10**place
+    else; mp = 10**DEF_PLACE
+    end if
+    do j = 1, s2
+      do i = 1, s1
+        b = MERGE(1, 0, i == j)
+        diff = ABS(a(i, j) - b) * mp
+        err = INT(diff) >= 1
+        if(err) exit
+      end do
+      if(err) exit
+    end do
+    call report_result(this%dev, this%num_test, err, unitname)
+    if (err) then
       block
-        real(RK) :: diff
-        ${type}$ :: b
-        b = MERGE(1, 0, i==j)
-        diff = ABS(a(i, j) - b)
-        if (PRESENT(place)) then; diff = diff * 10**place
-        else; diff = diff * DEF_MP
-        end if
-        expr(i, j)%ok = INT(diff) ${op}$ 1
-        if (expr(i, j)%ok) then
-          expr(i, j)%msg = ""
-          expr(i, j)%error_rate = 0.0_RK
-        else
-          write (expr(i, j)%msg, '${fm}$') "[", a(i, j), "]${neq}$[", b, "]"
-          expr(i, j)%error_rate = real(a(i, j) - b, RK)
-        end if
+        integer :: ios, nerror
+        do j = 1, s2
+          do i = 1, s1
+            b = MERGE(1, 0, i == j)
+            diff = ABS(a(i, j) - b) * mp
+            if (INT(diff) < 1) cycle
+            nerror = nerror + 1
+            write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') i, j
+            write (this%dev, '${fm}$', IOSTAT=ios) " [", a(i, j), "] !~ [", b, "]"
+          end do
+        end do
+        call report_error_rate(this%dev, SIZE(a), nerror)
       end block
-    enddo
-    call check_expr_all(this%dev, this%num_test, [expr], &
-   &                    unitname, this%num_error, err)
+    end if
   end procedure ${routine_name(routine, post, 2)}$
 !
 #:endfor

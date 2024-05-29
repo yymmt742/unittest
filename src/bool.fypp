@@ -1,31 +1,45 @@
 #:include "common.fypp"
+#:def error_list_scalar(neq)
+      block
+        integer  :: ios
+        write (this%dev, '(8X,A)', IOSTAT=ios) " Assertion Error :: [ ${neq}$ ]"
+      end block
+#:enddef
+#:def error_list_loop(rank, no, neq)
+      block
+        integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank+1)])}$
+        nerror = 0
+#:for i in range(rank,0,-1)
+        do i${i}$ = 1, SIZE(expr, ${i}$)
+#:endfor
+          if (${no}$expr${counter_suffix(rank)}$) cycle
+          nerror = nerror + 1
+          write (this%dev, '(8X,*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank+1)])}$
+          write (this%dev, '(A)', IOSTAT=ios) " Assertion Error :: [ ${neq}$ ]"
+#:for i in range(rank)
+        end do
+#:endfor
+        call report_error_rate(this%dev, SIZE(expr), nerror)
+      end block
+#:enddef
 submodule(mod_unittest) bool
   use mod_unittest_printer
   implicit none
 contains
-#:for routine, op in zip(["assert", "assert_true", "assert_false"], ["", "", ".not."])
+#:for routine, no, neq in zip(["assert", "assert_true", "assert_false"], [".not.", ".not.", ""], ["failed", "false", "true"])
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
 #:for rank in range(MAXIMUM_RANK + 1)
   module procedure ${routine_name(routine, post, rank)}$
-    logical :: err
-    this%num_test = this%num_test + 1
-    call check_expr_all(this%dev, this%num_test, ${flatten(routine+"_"+post+"(expr)", rank)}$, &
-   &                    unitname, this%num_error, err)
+${common_check(rank, None)}$
+    err = ${no}$${"ALL" if rank>0 else ""}$(expr)
+    call report_result(this%dev, this%num_test, err, unitname)
+    if (err) then
+      this%num_error = this%num_error + 1
+${error_list_loop(rank, no, neq) if rank>0 else error_list_scalar(neq)}$
+    end if
   end procedure ${routine_name(routine, post, rank)}$
 !
 #:endfor
 #:endfor
-  pure elemental function ${routine}$_${post}$(expr) result(res)
-    ${type}$, intent(in) :: expr
-    type(expr_report)    :: res
-    res%ok = ${op}$expr
-    res%msg = ""
-    if(res%ok) then
-      res%error_rate = 0.0_RK
-    else
-      res%error_rate = 1.0_RK
-    end if
-  end function ${routine}$_${post}$
-!
 #:endfor
 end submodule bool

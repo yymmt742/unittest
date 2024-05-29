@@ -12,7 +12,7 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL GNU AND CMAKE_Fortran_COMPILER_VERSION VER
 endif()
 
 if(NOT DEFINED CMAKE_MAXIMUM_RANK)
-  set(CMAKE_MAXIMUM_RANK 4 CACHE STRING "Maxmum array rank")
+  set(CMAKE_MAXIMUM_RANK 2 CACHE STRING "Maxmum array rank")
 endif()
 
 find_program(FYPP fypp)

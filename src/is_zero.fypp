@@ -1,43 +1,56 @@
 #:include "common.fypp"
+#:set fmts = ["(A,1X,I0,1X,A,1X,I0,1X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
+#:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+#:def error_list_scalar(fm, neq)
+      block
+        integer  :: ios
+        write (this%dev, '${fm}$', IOSTAT=ios)  " [", a, "] ${neq}$ [", b, "]"
+      end block
+#:enddef
+#:def error_list_loop(op, rank1, fm, neq)
+      block
+        integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
+        real(RK) :: diff
+        nerror = 0
+#:for i in range(rank1,0,-1)
+        do i${i}$ = 1, SIZE(a, ${i}$)
+#:endfor
+          diff = ABS(${"a" + counter_suffix(rank1) + " - b"}$) * mp
+          if (INT(diff) ${op}$ 1) cycle
+          nerror = nerror + 1
+          write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
+          write (this%dev, '${fm}$', IOSTAT=ios)  " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b, "]"
+#:for i in range(rank1)
+        enddo
+#:endfor
+        call report_error_rate(this%dev, SIZE(a), nerror)
+      end block
+#:enddef
 submodule(mod_unittest) is_zero
   use mod_unittest_printer
   implicit none
-  integer, parameter :: DEF_MP = 10**7
+  integer, parameter :: DEF_PLACE = 10**7
 contains
-#:set fmts = ["(A,I14,2X,A,I14,2X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
-#:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:for ktp, fm in zip(ktps, fmts)
 #:for kind, type, post in ktp
-#:for routine, op, neq in zip(["assert_is_zero", "assert_isnot_zero"], ["<", ">="], ["\~", "~ "])
+#:for routine, op, neq, no in zip(["assert_is_zero", "assert_isnot_zero"], ["<", ">="], ["!~", "~ "], [".not.", ""])
 #:for rank1, rank2 in RANK_ITERi
   module procedure ${routine_name(routine, post, rank1)}$
-    logical  :: err
-    ${type}$ :: b
-    this%num_test = this%num_test + 1
-    b = 0
-    call check_expr_all(this%dev, this%num_test, ${flatten(routine+"_"+post+"(a, b, place)", rank1)}$, &
-   &                    unitname, this%num_error, err)
+    ${type}$, parameter :: b = 0
+    ${"real(RK)" if "INT" in kind else "real("+kind+")"}$ :: mp
+${common_check(rank1, rank2)}$
+    if (PRESENT(place)) then; mp = 10**place
+    else; mp = 10**DEF_PLACE
+    end if
+    err = ${no}$${"ALL" if rank1>0 else ""}$((mp * ABS(a - b)) < 1)
+    call report_result(this%dev, this%num_test, err, unitname)
+    if (err) then
+      this%num_error = this%num_error + 1
+${error_list_loop(op, rank1, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
+    end if
   end procedure ${routine_name(routine, post, rank1)}$
 !
 #:endfor
-  pure elemental function ${routine}$_${post}$ (a, b, place) result(res)
-    ${type}$, intent(in) :: a, b
-    integer, intent(in), optional :: place
-    real(RK)                      :: diff
-    type(expr_report)             :: res
-    diff = ABS(a - b)
-    if (PRESENT(place)) then; diff = diff * 10**place
-    else; diff = diff * DEF_MP
-    end if
-    res%ok = INT(diff) ${op}$1
-    if (res%ok) then
-      res%msg = ""
-    else
-      write (res%msg, '${fm}$') "[", a, "]${neq}$[", b, "]"
-    end if
-    res%error_rate = real(a - b, RK)
-  end function ${routine}$_${post}$
-!
 #:endfor
 #:endfor
 #:endfor
