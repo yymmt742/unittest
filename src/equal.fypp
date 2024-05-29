@@ -16,7 +16,7 @@ $:"MERGE(MERGE(1.0_RK,-1.0_RK,a), 0.0_RK, "+no+"a.eqv.b)" if "logical" in type e
 #:def error_list_loop(op, rank1, rank2, fm, no, neq, type)
       block
         integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
-        if (this%verbose > 0 .or. SIZE(a)<11) then
+        if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
           nerror = 0
 #:for i in range(rank1,0,-1)
           do i${i}$ = 1, SIZE(a, ${i}$)

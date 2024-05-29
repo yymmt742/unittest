@@ -40,7 +40,7 @@ ${common_check(2, None, routine)}$
       block
         integer :: ios, nerror
         nerror = 0
-        if (this%verbose > 0 .or. SIZE(a)<11) then
+        if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
           do j = 1, s2
             do i = 1, s1
               b = MERGE(1, 0, i == j)

@@ -20,6 +20,7 @@ module mod_unittest
     integer                   :: num_test
     integer                   :: num_error
     integer                   :: verbose
+    integer                   :: dump_line_limit
     integer(INT64)            :: start_time
     real(RK)                  :: start_cpu_time
     character(:), allocatable :: script_name
@@ -169,10 +170,11 @@ contains
     call utest_init(res, section, terminate_with_error_code)
   end function utest_new
 !
-  subroutine utest_init(this, section, terminate_with_error_code)
+  subroutine utest_init(this, section, terminate_with_error_code, dump_line_limit)
     class(unittest), intent(inout)     :: this
     character(*), intent(in), optional :: section
     logical, intent(in), optional      :: terminate_with_error_code
+    integer, intent(in), optional      :: dump_line_limit
     integer                            :: lna, ios
     character(:), allocatable          :: tmp
     call utest_destroy(this)
@@ -184,7 +186,6 @@ contains
     if (ios /= 0) return
 !
     this%dev = STDERR
-    this%verbose = 0
     allocate (character(lna) :: tmp)
     allocate (character(0) :: this%script_name)
     call GET_COMMAND_ARGUMENT(0, value=tmp, status=ios)
@@ -199,9 +200,9 @@ contains
       write (this%dev, '(A)', err=100) '  Section ----> '//section
     end if
 !
-    if (PRESENT(terminate_with_error_code)) then
-      this%terminate_with_error_code = terminate_with_error_code
-    end if
+    if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code
+    if (PRESENT(dump_line_limit)) this%dump_line_limit = dump_line_limit
+    this%verbose = MERGE(1, 0, this%dump_line_limit<0)
 !
 100 return
   end subroutine utest_init
@@ -259,6 +260,7 @@ contains
     this%num_test = 0
     this%num_error = 0
     this%terminate_with_error_code = .true.
+    this%dump_line_limit = 10
   end subroutine utest_free
 !
   subroutine utest_destroy(this)

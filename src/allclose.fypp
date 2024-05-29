@@ -14,7 +14,7 @@ $:"REAL("+s+", RK)" if erf_t==0 else "REAL(ABS("+s+"), RK)"
         block
         integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
         real(RK) :: diff
-        if (this%verbose > 0 .or. SIZE(a)<11) then
+        if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
           nerror = 0
 #:for i in range(rank1,0,-1)
           do i${i}$ = 1, SIZE(a, ${i}$)
