@@ -226,17 +226,19 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
     integer, intent(in)       :: dev, ndat, nmap, nbreak
     real(RK), intent(in)      :: dat(ndat), mmin, mmax
     character(*), intent(in)  :: cmap(:)
-    character(*), parameter   :: ANSI = ACHAR(INT(z'1b'))//"[30m"
+    character(*), parameter   :: ANSI = ACHAR(INT(z'1b'))//"[37m"
     character(*), parameter   :: RESET = ACHAR(INT(z'1b'))//'[m'
     character(:), allocatable :: cb
     real(RK)                  :: norm
     integer                   :: i, j, n, ios
     norm = (nmap - 1) / (mmax - mmin)
     call colorbar(cmap, cb)
-    write (dev, '(2X,G12.3,2A,G12.3,A)', IOSTAT=ios) mmin, cb, RESET, mmax, NEW_LINE('')
+    write (dev, '(2X,G12.3,2A,G12.3)', IOSTAT=ios) mmin, cb, RESET, mmax
+    n = MIN(nbreak, ndat)
+    write (dev, '(14X, A)', IOSTAT=ios) ANSI//REPEAT("_", n)//RESET
     do i = 1, ndat, nbreak
       n = MIN(i + nbreak - 1, ndat)
-      write (dev, '(I6,A,I6, 1X, A)', ADVANCE="NO", IOSTAT=ios) i, "-", n, ANSI
+      write (dev, '(I5,A,I5, 2X, A)', ADVANCE="NO", IOSTAT=ios) i, " -", n, ANSI
       do j = i, n
         write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) colorpiece(dat(j), mmin, mmax, cmap)
       end do
@@ -259,7 +261,7 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
   pure subroutine colorbar(cmap, res)
     character(*), intent(in)  :: cmap(:)
     character(:), allocatable, intent(inout) :: res
-    character(*), parameter   :: ANSI = ACHAR(INT(z'1b'))//"[30;48;5;"
+    character(*), parameter   :: ANSI = ACHAR(INT(z'1b'))//"[37;48;5;"
     integer                   :: i, n
     res = ""
     n = SIZE(cmap)
