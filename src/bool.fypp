@@ -25,12 +25,12 @@
 submodule(mod_unittest) bool
   implicit none
 contains
-#:for routine, no, neq in zip(["assert", "assert_true", "assert_false"], [".not.", ".not.", ""], ["failed", "false", "true"])
+#:for routine, no, neq in zip(["assert", "assert_true", "assert_false"], ["", "", ".not."], ["failed", "false", "true"])
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
 #:for rank in range(MAXIMUM_RANK + 1)
   module procedure ${routine_name(routine, post, rank)}$
 ${common_check(rank, None, routine)}$
-    err = ${no}$${"ALL" if rank>0 else ""}$(expr)
+    err = .not.${"ALL" if rank>0 else ""}$(${no}$expr)
     if (PRESENT(is_failed)) is_failed = err
     call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
     if (err) then
