@@ -3,35 +3,40 @@
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, LOGICAL_KIND_TYPE_POSTS]
 #:set neqlists = [["!=", "=="], ["noteq", "equiv"]]
 #:set fmts = ["A,1X,I0,1X,A,1X,I0,1X,A", "A,1X,L,1X,A,1X,L,1X,A"]
+#:def error_rate(type, op)
+$:"MERGE(0.0_RK, MERGE(1.0_RK,-1.0_RK, a), a"+op+"b)" if "logical" in type else "REAL(a - b, RK)"
+#:enddef
 #:def error_list_scalar(fm, neq)
       block
         integer  :: ios
         write (this%dev, '(16X,${fm}$)', IOSTAT=ios)  " [", a, "] ${neq}$ [", b, "]"
       end block
 #:enddef
-#:def error_list_loop(op, rank1, rank2, fm, neq)
+#:def error_list_loop(op, rank1, rank2, fm, neq, type)
       block
         integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
-        nerror = 0
+        if (this%verbose > 0 .or. SIZE(a)<11) then
+          nerror = 0
 #:for i in range(rank1,0,-1)
-        do i${i}$ = 1, SIZE(a, ${i}$)
+          do i${i}$ = 1, SIZE(a, ${i}$)
 #:endfor
-          if (a${counter_suffix(rank1)}$ ${op}$ b${counter_suffix(rank2)}$) cycle
-          nerror = nerror + 1
-          write (this%dev, '(8X,*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
-          write (this%dev, '(${fm}$)', IOSTAT=ios)  " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
+            if (a${counter_suffix(rank1)}$${op}$b${counter_suffix(rank2)}$) cycle
+            nerror = nerror + 1
+            write (this%dev, '(8X,*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
+            write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
 #:for i in range(rank1)
-        enddo
+          end do
 #:endfor
+        else
+          nerror = COUNT([.not.(a ${op}$ b)])
+          call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [${error_rate(type, op)}$])
+        end if
         call report_error_rate(this%dev, SIZE(a), nerror)
       end block
 #:enddef
 submodule(mod_unittest) equal
   implicit none
 contains
-#:def error_rate(type)
-$:"MERGE(1.0_RK,-1.0_RK,a)" if "logical" in type else "REAL(a - b, RK)"
-#:enddef
 #:for ktp, op, neqlist, fm in zip(ktps, ["==", ".eqv."], neqlists, fmts)
 #:for kind, type, post in ktp
 #:for routine, neq, no in zip(routines, neqlist, [".not.", ""])
@@ -42,7 +47,7 @@ ${common_check(rank1, rank2, routine)}$
     call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
     if (err) then
       this%num_error = this%num_error + 1
-${error_list_loop(op, rank1, rank2, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
+${error_list_loop(op, rank1, rank2, fm, neq, type) if rank1>0 else error_list_scalar(fm, neq)}$
     end if
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
@@ -51,4 +56,5 @@ ${error_list_loop(op, rank1, rank2, fm, neq) if rank1>0 else error_list_scalar(f
 #:endfor
 #:endfor
 ${report_functions()}$
+${image_functions()}$
 end submodule equal

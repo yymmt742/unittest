@@ -1,4 +1,7 @@
 #:include "common.fypp"
+#:set tors = ["REAL(a - b, RK)", "REAL(a - b, RK)", "REAL(ABS(a - b), RK)"]
+#:set fmts = ["A,1X,I0,2X,A,1X,I0,2X,A", "A,G16.9,A,G16.9,A", "A,2(ES9.2,1X),A,2(ES9.2,1X),A"]
+#:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:def error_list_scalar(fm, neq)
       block
         integer  :: ios
@@ -9,28 +12,31 @@
       block
         integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
         real(RK) :: diff
-        nerror = 0
+        if (this%verbose > 0 .or. SIZE(a)<11) then
+          nerror = 0
 #:for i in range(rank1,0,-1)
-        do i${i}$ = 1, SIZE(a, ${i}$)
+          do i${i}$ = 1, SIZE(a, ${i}$)
 #:endfor
-          diff = ABS(${"a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2)}$) * mp
-          if (INT(diff) ${op}$ 1) cycle
-          nerror = nerror + 1
-          write (this%dev, '(8X,*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
-          write (this%dev, '(${fm}$)', IOSTAT=ios)  " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
+            diff = ABS(${"a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2)}$) * mp
+            if (INT(diff) ${op}$ 1) cycle
+            nerror = nerror + 1
+            write (this%dev, '(8X,*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
+            write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
 #:for i in range(rank1)
-        enddo
+          end do
 #:endfor
+        else
+          nerror = COUNT([.not.(INT(ABS(a - b)) ${op}$ 1)])
+          call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [${tor}$])
+        end if
         call report_error_rate(this%dev, SIZE(a), nerror)
       end block
 #:enddef
-#:set fmts = ["A,1X,I0,2X,A,1X,I0,2X,A", "A,G16.9,A,G16.9,A", "A,2(ES9.2,1X),A,2(ES9.2,1X),A"]
-#:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 submodule(mod_unittest) almost_equal
   implicit none
   integer, parameter :: DEF_PLACE = 7
 contains
-#:for ktp, fm in zip(ktps, fmts)
+#:for ktp, fm, tor in zip(ktps, fmts, tors)
 #:for kind, type, post in ktp
 #:for routine, op, neq, no in zip(["assert_almost_equal", "assert_not_almost_equal"], ["<", ">="], ["!~", "~ "], [".not.", ""])
 #:for rank1, rank2 in RANK_ITERii
@@ -53,4 +59,5 @@ ${error_list_loop(op, rank1, rank2, fm, neq) if rank1>0 else error_list_scalar(f
 #:endfor
 #:endfor
 ${report_functions()}$
+${image_functions()}$
 end submodule almost_equal
