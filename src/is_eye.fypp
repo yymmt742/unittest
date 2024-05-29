@@ -2,7 +2,6 @@
 #:set fmts = ["(A,1X,I0,1X,A,1X,I0,1X,A)", "(A,G16.9,A,G16.9,A)", "(A,2(ES9.2,1X),A,2(ES9.2,1X),A)"]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 submodule(mod_unittest) is_eye
-  use mod_unittest_printer
   implicit none
   integer, parameter :: DEF_PLACE = 7
 contains
@@ -13,7 +12,7 @@ contains
     ${"real(RK)" if "INT" in kind else "real("+kind+")"}$ :: mp, diff
     ${type}$ :: b
     integer :: i, j, s1, s2
-${common_check(2, None)}$
+${common_check(2, None, routine)}$
     s1 = SIZE(a, 1)
     s2 = SIZE(a, 2)
     err = s1 /= s2
@@ -34,7 +33,7 @@ ${common_check(2, None)}$
       end do
       if(err) exit
     end do
-    call report_result(this%dev, this%num_test, err, unitname)
+    call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
     if (err) then
       block
         integer :: ios, nerror
@@ -56,4 +55,5 @@ ${common_check(2, None)}$
 #:endfor
 #:endfor
 #:endfor
+${report_functions()}$
 end submodule is_eye

@@ -35,8 +35,6 @@ else()
 endif()
 
 fypp_generate("mod_kinds.fypp" "mod_kinds.f90" "${fyppFlags}" "${f90files}" f90files)
-#fypp_generate("procedure.fypp" "procedure.h" "${fyppFlags}" "${incfiles}" incfiles)
-#fypp_generate("interface.fypp" "interface.f90" "${fyppFlags}" "${incfiles}" incfiles)
 
 list(APPEND fyppFiles
    bool.fypp
@@ -56,7 +54,6 @@ endforeach()
 
 add_library(
   ${PROJECT_NAME} STATIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/mod_unittest_printer.f90
   ${f90files}
   )
 target_include_directories(

@@ -27,7 +27,6 @@
 #:set fmts = ["A,1X,I0,2X,A,1X,I0,2X,A", "A,G16.9,A,G16.9,A", "A,2(ES9.2,1X),A,2(ES9.2,1X),A"]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 submodule(mod_unittest) almost_equal
-  use mod_unittest_printer
   implicit none
   integer, parameter :: DEF_PLACE = 7
 contains
@@ -37,12 +36,12 @@ contains
 #:for rank1, rank2 in RANK_ITERii
   module procedure ${routine_name(routine, post, rank1, rank2)}$
   ${"real(RK)" if "INT" in kind else "real("+kind+")"}$ :: mp
-${common_check(rank1, rank2)}$
+${common_check(rank1, rank2, routine)}$
     if (PRESENT(place)) then; mp = 10**place
     else; mp = 10**DEF_PLACE
     end if
     err = ${no + "ALL(INT(mp * ABS(a - b)) < 1)" if rank1>0 else no + "(mp * ABS(a - b) < 1)"}$
-    call report_result(this%dev, this%num_test, err, unitname)
+    call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
     if (err) then
       this%num_error = this%num_error + 1
 ${error_list_loop(op, rank1, rank2, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
@@ -53,4 +52,5 @@ ${error_list_loop(op, rank1, rank2, fm, neq) if rank1>0 else error_list_scalar(f
 #:endfor
 #:endfor
 #:endfor
+${report_functions()}$
 end submodule almost_equal

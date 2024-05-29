@@ -23,16 +23,15 @@
       end block
 #:enddef
 submodule(mod_unittest) bool
-  use mod_unittest_printer
   implicit none
 contains
 #:for routine, no, neq in zip(["assert", "assert_true", "assert_false"], [".not.", ".not.", ""], ["failed", "false", "true"])
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
 #:for rank in range(MAXIMUM_RANK + 1)
   module procedure ${routine_name(routine, post, rank)}$
-${common_check(rank, None)}$
+${common_check(rank, None, routine)}$
     err = ${no}$${"ALL" if rank>0 else ""}$(expr)
-    call report_result(this%dev, this%num_test, err, unitname)
+    call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
     if (err) then
       this%num_error = this%num_error + 1
 ${error_list_loop(rank, no, neq) if rank>0 else error_list_scalar(neq)}$
@@ -42,4 +41,5 @@ ${error_list_loop(rank, no, neq) if rank>0 else error_list_scalar(neq)}$
 #:endfor
 #:endfor
 #:endfor
+${report_functions()}$
 end submodule bool

@@ -79,28 +79,115 @@ generic            :: ${g}$ => &
 ${", &\n  ".join([", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup]) for rank1, rank2 in ranks])}$
 #:enddef
 
+#:def flatten(expr, rank1, rank2=None)
+$:f"{expr}" if rank1 == 1 and (rank2 is None or rank2 == 1) else f"[{expr}]"
+#:enddef
+
+#:def common_check(rank1, rank2, routine)
+$:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else common_check_0()
+#:enddef
+
 #:def common_check_0()
     logical :: err
     this%num_test = this%num_test + 1
 #:enddef
 
-#:def common_check_1()
+#:def common_check_1(routine)
     logical :: err
     this%num_test = this%num_test + 1
     err = ANY(SHAPE(a) /= SHAPE(b))
     if (err) then
       this%num_error = this%num_error + 1
-      call report_rank_error(this%dev, this%num_test, SHAPE(a), SHAPE(b), unitname)
+      call report_rank_error(this%dev, this%num_test, SHAPE(a), SHAPE(b), "${routine}$", unitname)
       return
     end if
 #:enddef
 
-#:def common_check(rank1, rank2)
-$:common_check_1() if rank1>0 and (rank2 is not None and rank2>0) else common_check_0()
-#:enddef
+#:set L_MSG = 56
+#:set L_WDH = L_MSG - 12
+#:set WSPC = "REPEAT(' ', 8)"
+#:set SEP3 = WSPC + "//REPEAT('-', " + str(L_MSG) + ")"
 
-#:def flatten(expr, rank1, rank2=None)
-$:f"{expr}" if rank1 == 1 and (rank2 is None or rank2 == 1) else f"[{expr}]"
+#:def report_functions()
+  subroutine report_rank_error(dev, num_test, size_a, size_b, routine, unitname)
+    !! print rank error
+    integer, intent(in)                :: dev
+    integer, intent(in)                :: num_test
+    integer, intent(in)                :: size_a(:)
+    integer, intent(in)                :: size_b(:)
+    character(*), intent(in)           :: routine
+    character(*), intent(in), optional :: unitname
+    character(:), allocatable          :: ps
+    character(*), parameter            :: WSPC = ${WSPC}$
+    character(*), parameter            :: SEP3 = ${SEP3}$
+    character(*), parameter            :: rankMissMatch = WSPC//'  Rank MissMatch : '
+    integer                            :: ios
+    call padd_string(unitname, num_test, routine, '... failed', ${L_WDH}$, ps)
+    write (dev, '(I8,A)', IOSTAT=ios) num_test, ps
+    write (dev, '(A)', IOSTAT=ios) SEP3
+    write (dev, '(2A)', IOSTAT=ios, ADVANCE="NO") rankMissMatch, '['
+    write (dev, '(*(I0,:,", "))', IOSTAT=ios, ADVANCE="NO") size_a
+    write (dev, '(A)', IOSTAT=ios, ADVANCE="NO") '] /= ['
+    write (dev, '(*(I0,:,", "))', IOSTAT=ios, ADVANCE="NO") size_b
+    write (dev, '(A)', IOSTAT=ios) ']'
+    write (dev, '(A)', IOSTAT=ios) SEP3
+  end subroutine report_rank_error
+!
+  subroutine report_result(dev, num_test, err, routine, unitname)
+    !! print test result
+    integer, intent(in)                :: dev
+    integer, intent(in)                :: num_test
+    logical, intent(in)                :: err
+    character(*), intent(in)           :: routine
+    character(*), intent(in), optional :: unitname
+    character(*), parameter            :: SEP3 = ${SEP3}$
+    character(:), allocatable          :: ps
+    integer                            :: ios
+    if (err) then
+      call padd_string(unitname, num_test, routine, '... failed', ${L_WDH}$, ps)
+      write (dev, '(I8,A)', IOSTAT=ios) num_test, ps
+      write (dev, '(A)', IOSTAT=ios) SEP3
+    else
+      call padd_string(unitname, num_test, routine, '... OK', ${L_WDH}$, ps)
+      write (dev, '(I8,A)', IOSTAT=ios) num_test, ps
+    end if
+  end subroutine report_result
+!
+  subroutine report_error_rate(dev, n, nerror)
+    integer, intent(in)     :: dev, n, nerror
+    real(RK)                :: error_rate
+    character(*), parameter :: WSPC = ${WSPC}$
+    character(*), parameter :: SEP3 = ${SEP3}$
+    character(*), parameter :: ErrorRateIs = WSPC//'  Error rate is  : '
+    integer                 :: ios
+    if (n > 1) then
+      error_rate = real(100 * nerror, RK) / real(n, RK)
+      write (dev, '(A)', IOSTAT=ios) SEP3
+      write (dev, '(A,f7.3,A,I0,A,I0,A)', IOSTAT=ios) &
+     &  ErrorRateIs, error_rate, ' %  ( ', nerror, ' / ', n, ' )'
+    end if
+  end subroutine report_error_rate
+!
+  pure subroutine padd_string(unitname, ntest, routine, post, nline, res)
+    character(*), intent(in), optional       :: unitname
+    integer, intent(in)                      :: ntest
+    character(*), intent(in)                 :: routine
+    character(*), intent(in)                 :: post
+    integer, intent(in)                      :: nline
+    character(:), allocatable, intent(inout) :: res
+    integer                                  :: npad
+    if(PRESENT(unitname))then
+      npad = MAX(0, nline - LEN_TRIM(unitname))
+      res = ' '//TRIM(unitname)//REPEAT(' ', npad)//post
+    else
+      block
+        character(32) :: cntest
+        write(cntest, '(I0)') ntest
+        npad = MAX(0, nline - LEN(routine//" ") - LEN_TRIM(cntest))
+        res = routine//TRIM(cntest)//REPEAT(' ', npad)//post
+      end block
+    endif
+  end subroutine padd_string
 #:enddef
 
 #:endmute
