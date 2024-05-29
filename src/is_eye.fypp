@@ -16,6 +16,7 @@ ${common_check(2, None, routine)}$
     s1 = SIZE(a, 1)
     s2 = SIZE(a, 2)
     err = s1 /= s2
+    if (PRESENT(is_failed)) is_failed = err
     if (err)then
       this%num_error = this%num_error + 1
       call report_rank_error(this%dev, this%num_test, [s1], [s2], unitname)
@@ -33,6 +34,7 @@ ${common_check(2, None, routine)}$
       end do
       if(err) exit
     end do
+    if (PRESENT(is_failed)) is_failed = err
     call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
     if (err) then
       block

@@ -51,6 +51,7 @@ ${common_check(rank1, rank2, routine)}$
     else; tol = tol + 1E-5_${kind}$ * MAXVAL([ABS(a), ABS(b)])
     end if
     err = ${no + "ALL(ABS(a - b) < tol)" if rank1>0 else no + "(ABS(a - b) < tol)"}$
+    if (PRESENT(is_failed)) is_failed = err
     call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
     if (err) then
       this%num_error = this%num_error + 1

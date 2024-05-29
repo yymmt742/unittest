@@ -96,6 +96,7 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
     logical :: err
     this%num_test = this%num_test + 1
     err = ANY(SHAPE(a) /= SHAPE(b))
+    if(PRESENT(is_failed)) is_failed = err
     if (err) then
       this%num_error = this%num_error + 1
       call report_rank_error(this%dev, this%num_test, SHAPE(a), SHAPE(b), "${routine}$", unitname)

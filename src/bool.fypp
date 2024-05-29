@@ -31,6 +31,7 @@ contains
   module procedure ${routine_name(routine, post, rank)}$
 ${common_check(rank, None, routine)}$
     err = ${no}$${"ALL" if rank>0 else ""}$(expr)
+    if (PRESENT(is_failed)) is_failed = err
     call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
     if (err) then
       this%num_error = this%num_error + 1

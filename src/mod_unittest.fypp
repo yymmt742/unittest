@@ -62,12 +62,13 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
     end subroutine error_stop
 !
 #:for routine, cond in zip(["assert", "assert_true", "assert_false"], ["ALL(expr)", "ALL(expr)", ".not.ANY(expr)"])
-#:for rank1, rank2 in RANK_ITERi
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
-    module subroutine ${routine_name(routine, post, rank1)}$ (this, expr, unitname)
+#:for rank1, rank2 in RANK_ITERi
+    module subroutine ${routine_name(routine, post, rank1)}$ (this, expr, unitname, is_failed)
       class(unittest), intent(inout)     :: this
       ${type}$, intent(in)               :: expr${rank_suffix(rank1)}$
       character(*), intent(in), optional :: unitname
+      logical, intent(out), optional     :: is_failed
     end subroutine ${routine_name(routine, post, rank1)}$
 !
 #:endfor
@@ -76,10 +77,11 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for routine in ["assert_equal", "assert_not_equal"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERii
-    module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname)
+    module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, is_failed)
       class(unittest), intent(inout)     :: this
       ${type}$, intent(in)               :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
       character(*), intent(in), optional :: unitname
+      logical, intent(out), optional     :: is_failed
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
@@ -88,11 +90,12 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for routine in ["assert_almost_equal", "assert_not_almost_equal"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERii
-    module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, place)
+    module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, place, is_failed)
       class(unittest), intent(inout)     :: this
       ${type}$, intent(in)               :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
       character(*), intent(in), optional :: unitname
       integer, intent(in), optional      :: place
+      logical, intent(out), optional     :: is_failed
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
@@ -101,11 +104,12 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for routine, cond in zip(["assert_less", "assert_less_equal", "assert_greater", "assert_greater_equal"], ["ALL(a<b)", "ALL(a<=b)", "ALL(a>b)", "ALL(a>=b)"])
 #:for rank1, rank2 in RANK_ITERii
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS
-    module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname)
+    module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, is_failed)
       class(unittest), intent(inout)     :: this
       ${type}$, intent(in)               :: a${rank_suffix(rank1)}$
       ${type}$, intent(in)               :: b${rank_suffix(rank2)}$
       character(*), intent(in), optional :: unitname
+      logical, intent(out), optional     :: is_failed
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
@@ -113,11 +117,12 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:endfor
 #:for routine in ["assert_is_eye"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
-    module subroutine ${routine_name(routine, post, 2)}$ (this, a, unitname, place)
+    module subroutine ${routine_name(routine, post, 2)}$ (this, a, unitname, place, is_failed)
       class(unittest), intent(inout)     :: this
       ${type}$, intent(in)               :: a${rank_suffix(2)}$
       character(*), intent(in), optional :: unitname
       integer, intent(in), optional      :: place
+      logical, intent(out), optional     :: is_failed
     end subroutine ${routine_name(routine, post, 2)}$
 !
 #:endfor
@@ -125,11 +130,12 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for routine in ["assert_is_zero", "assert_isnot_zero"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERi
-    module subroutine ${routine_name(routine, post, rank1)}$ (this, a, unitname, place)
+    module subroutine ${routine_name(routine, post, rank1)}$ (this, a, unitname, place, is_failed)
       class(unittest), intent(inout)     :: this
       ${type}$, intent(in)               :: a${rank_suffix(rank1)}$
       character(*), intent(in), optional :: unitname
       integer, intent(in), optional      :: place
+      logical, intent(out), optional     :: is_failed
     end subroutine ${routine_name(routine, post, rank1)}$
 !
 #:endfor
@@ -138,11 +144,12 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 #:for routine in ["assert_allclose", "assert_not_allclose"]
 #:for kind, type, post in REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERii
-    module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, rtol, atol)
+    module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, is_failed, rtol, atol)
       class(unittest), intent(inout)       :: this
       ${type}$, intent(in)                 :: a${rank_suffix(rank1)}$
       ${type}$, intent(in)                 :: b${rank_suffix(rank2)}$
       character(*), intent(in), optional   :: unitname
+      logical, intent(out), optional       :: is_failed
       real(${kind}$), intent(in), optional :: rtol
       real(${kind}$), intent(in), optional :: atol
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
