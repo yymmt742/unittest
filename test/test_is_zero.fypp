@@ -1,0 +1,47 @@
+#:include "common.fypp"
+#:set routine = "test_is_zero_"
+program main
+  use mod_unittest
+  use mod_unittest_kinds
+  implicit none
+  type(unittest) :: u
+!
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
+  call ${routine + post}$(u)
+#:endfor
+!
+  call u%finish_and_terminate()
+!
+contains
+#:for ktp in [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+#:for kind, type, post in ktp
+  subroutine ${routine + post}$(u)
+    type(unittest), intent(inout) :: u
+#:for rank1, rank2 in RANK_ITERi
+    ${type}$, parameter :: i${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 0, j${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 1
+#:endfor
+    logical             :: is_failed
+!<&
+    call u%init('is_zero ${post}$', terminate_with_error_code=.false.)
+!
+#:for rank1, rank2 in RANK_ITERi
+    call u%assert_is_zero(i${rank1}$, 'is_zero ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    if (is_failed) call error_stop(code=1)
+    call u%assert_is_zero(j${rank1}$, 'is_zero ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    if (.not.is_failed) call error_stop(code=1)
+#:endfor
+!
+    call u%init('isnot_zero ${post}$', terminate_with_error_code=.false.)
+!
+#:for rank1, rank2 in RANK_ITERi
+    call u%assert_isnot_zero(i${rank1}$, 'isnot_zero ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    if (.not.is_failed) call error_stop(code=1)
+    call u%assert_isnot_zero(j${rank1}$, 'isnot_zero ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    if (is_failed) call error_stop(code=1)
+#:endfor
+!&>
+  end subroutine ${routine + post}$
+!
+#:endfor
+#:endfor
+end program main
