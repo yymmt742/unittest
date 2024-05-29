@@ -212,9 +212,7 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
                              &               "237", "236", "235", "234", "233", &
                              &               "232"]
     real(RK)                :: mmax
-    integer                 :: ios
     mmax = MAXVAL(ABS(error_rate))
-    write (dev, '(A)', IOSTAT=ios) SEP3
     if (ALL(error_rate >= 0.0_RK)) then
       call dump_image(dev, ndat, SIZE(CSEQ), nbreak, error_rate, 0.0_RK, mmax, CSEQ)
     elseif (ALL(error_rate <= 0.0_RK)) then
@@ -235,7 +233,7 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
     integer                   :: i, j, n, ios
     norm = (nmap - 1) / (mmax - mmin)
     call colorbar(cmap, cb)
-    write (dev, '(A,2X,G12.3,2A,G12.3,A)', IOSTAT=ios) NEW_LINE(''), mmin, cb, RESET, mmax, NEW_LINE('')
+    write (dev, '(2X,G12.3,2A,G12.3,A)', IOSTAT=ios) mmin, cb, RESET, mmax, NEW_LINE('')
     do i = 1, ndat, nbreak
       n = MIN(i + nbreak - 1, ndat)
       write (dev, '(I6,A,I6, 1X, A)', ADVANCE="NO", IOSTAT=ios) i, "-", n, ANSI
