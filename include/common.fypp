@@ -225,14 +225,12 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
   subroutine dump_image(dev, ndat, nmap, nbreak, dat, mmin, mmax, cmap)
     integer, intent(in)       :: dev, ndat, nmap, nbreak
     real(RK), intent(in)      :: dat(ndat), mmin, mmax
-    character(*), intent(in)  :: cmap(:)
+    character(*), intent(in)  :: cmap(nmap)
     character(*), parameter   :: ANSI = ACHAR(INT(z'1b'))//"[37m"
     character(*), parameter   :: RESET = ACHAR(INT(z'1b'))//'[m'
     character(:), allocatable :: cb
-    real(RK)                  :: norm
     integer                   :: i, j, n, ios
-    norm = (nmap - 1) / (mmax - mmin)
-    call colorbar(cmap, cb)
+    call colorbar(nmap, cmap, cb)
     write (dev, '(2X,G12.3,2A,G12.3)', IOSTAT=ios) mmin, cb, RESET, mmax
     n = MIN(nbreak, ndat)
     write (dev, '(14X, A)', IOSTAT=ios) ANSI//REPEAT("_", n)//RESET
@@ -240,32 +238,37 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
       n = MIN(i + nbreak - 1, ndat)
       write (dev, '(I5,A,I5, 2X, A)', ADVANCE="NO", IOSTAT=ios) i, " -", n, ANSI
       do j = i, n
-        write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) colorpiece(dat(j), mmin, mmax, cmap)
+        write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) colorpiece(dat(j), mmin, mmax, nmap, cmap)
       end do
       write (dev, '(A)', IOSTAT=ios) RESET
     end do
   end subroutine dump_image
 !
-  pure function colorpiece(dat, mmin, mmax, cmap) result(res)
+  pure function colorpiece(dat, mmin, mmax, nmap, cmap) result(res)
     real(RK), intent(in)     :: dat, mmin, mmax
-    character(*), intent(in) :: cmap(:)
+    integer, intent(in)      :: nmap
+    character(*), intent(in) :: cmap(nmap)
     character(*), parameter  :: ANSI = ACHAR(INT(z'1b'))//"[48;5;"
     character(*), parameter  :: CRES = ANSI//"000m_"
     integer, parameter       :: LRES = LEN(CRES)
     character(LRES)          :: res
     integer                  :: k
-    k = NINT((SIZE(cmap) - 1) / (mmax - mmin) * (dat - mmin)) + 1
+    if (mmax - mmin < 1.0E-8_RK) then
+      k = nmap
+    else
+      k = NINT((nmap - 1) / (mmax - mmin) * (dat - mmin)) + 1
+    end if
     res = ANSI//cmap(k)//"m_"
   end function colorpiece
 !
-  pure subroutine colorbar(cmap, res)
-    character(*), intent(in)  :: cmap(:)
+  pure subroutine colorbar(nmap, cmap, res)
+    integer, intent(in)       :: nmap
+    character(*), intent(in)  :: cmap(nmap)
     character(:), allocatable, intent(inout) :: res
     character(*), parameter   :: ANSI = ACHAR(INT(z'1b'))//"[37;48;5;"
-    integer                   :: i, n
+    integer                   :: i
     res = ""
-    n = SIZE(cmap)
-    do i = 1, n
+    do i = 1, nmap
       res = res//ANSI//cmap(i)//"m__"
     end do
   end subroutine colorbar
