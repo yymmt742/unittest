@@ -13,7 +13,7 @@
 #:endif
 
 #:if not defined("MAXIMUM_RANK")
-#:set MAXIMUM_RANK = 2
+#:set MAXIMUM_RANK = 1
 #:endif
 
 #:set RANK_ITERi  = [(i, None) for i in range(MAXIMUM_RANK + 1)]
