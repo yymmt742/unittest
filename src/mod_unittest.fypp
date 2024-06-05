@@ -178,21 +178,23 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 !
 contains
 !
-  function utest_new(section, terminate_with_error_code, dump_line_limit, tap_support) result(res)
+  function utest_new(section, terminate_with_error_code, dump_line_limit, tap_support, argparse) result(res)
     character(*), intent(in), optional :: section
     logical, intent(in), optional      :: terminate_with_error_code
     integer, intent(in), optional      :: dump_line_limit
     logical, intent(in), optional      :: tap_support
+    logical, intent(in), optional      :: argparse
     type(unittest)                     :: res
     call utest_init(res, section, terminate_with_error_code, dump_line_limit)
   end function utest_new
 !
-  subroutine utest_init(this, section, terminate_with_error_code, dump_line_limit, tap_support)
+  subroutine utest_init(this, section, terminate_with_error_code, dump_line_limit, tap_support, argparse)
     class(unittest), intent(inout)     :: this
     character(*), intent(in), optional :: section
     logical, intent(in), optional      :: terminate_with_error_code
     integer, intent(in), optional      :: dump_line_limit
     logical, intent(in), optional      :: tap_support
+    logical, intent(in), optional      :: argparse
     integer                            :: lna, ios
     character(:), allocatable          :: tmp
     call utest_destroy(this)
@@ -219,6 +221,12 @@ contains
     if (PRESENT(dump_line_limit)) this%dump_line_limit = dump_line_limit
     this%verbose = MERGE(1, 0, this%dump_line_limit < 0)
 !
+    if (PRESENT(argparse)) then
+      if(argparse) call argparse_(this)
+    else
+      call argparse_(this)
+    end if
+!
     ALLOCATE(this%errors(0))
 !
     if (this%verbose > 0) then
@@ -232,6 +240,25 @@ contains
 !
 100 return
   end subroutine utest_init
+!
+  subroutine argparse_(this)
+    class(unittest), intent(inout) :: this
+    character(:), allocatable      :: argv
+    integer                        :: i, narg, length, ios
+    argv = ""
+    narg = COMMAND_ARGUMENT_COUNT()
+    do i = 1, narg
+      call GET_COMMAND_ARGUMENT(i, length = length, status=ios)
+      if (ios /= 0) cycle
+      if (LEN(argv) < length) argv = REPEAT(" ", length)
+      call GET_COMMAND_ARGUMENT(i, argv, status=ios)
+      if (ios /= 0) cycle
+      select case(argv)
+      case("--tap")
+        this%tap_support = .true.
+      end select
+    end do
+  end subroutine argparse_
 !
   subroutine utest_finish(this)
     class(unittest), intent(inout) :: this
