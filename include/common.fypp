@@ -26,6 +26,8 @@
 
 #:set RANK_ITERi  = [(i, None) for i in range(MAXIMUM_RANK + 1)]
 #:set RANK_ITERii = [(i, i) for i in range(MAXIMUM_RANK + 1)] + [(i, 0) for i in range(1, MAXIMUM_RANK + 1)]
+#:set RANK_SCALAR = [(0, None)]
+#:set RANK_MATRIX = [(2, None)]
 
 #:set INTEGER_KINDS = ["INT8", "INT16", "INT32", "INT64"]
 #:set INTEGER_POSTFIX = ["i8", "i16", "i32", "i64"]
@@ -68,20 +70,43 @@
 #:set COMPLEX_KIND_TYPE_POSTS = list(zip(REAL_KINDS, COMPLEX_TYPES, COMPLEX_POSTFIX))
 #:set LOGICAL_KIND_TYPE_POSTS = list(zip(LOGICAL_KINDS, LOGICAL_TYPES, LOGICAL_POSTFIX))
 
+#:set OPERATORS = ["==", "/=", "<", "<=", ">", ">=", ".eqv.", ".neqv.", "~", "!~"]
+#:set NEGA_OPRS = ["/=", "==", ">=", ">", "<=", "<", ".neqv.", ".eqv.", "!~", "~"]
+#:set OPERATOR_STRINGS = ["==", "!=", "< ", "<=", "> ", ">=", "equiv", "noteq", "~", "!~"]
+#:set NEGA_OPR_STRINGS = ["!=", "==", ">=", "> ", "<=", "< ", "noteq", "equiv", "!~", "~"]
+#:def negation(op)
+$:NEGA_OPRS[OPERATORS.index(op)]
+#:enddef
+#:def strop(op)
+$:OPERATOR_STRINGS[OPERATORS.index(op)]
+#:enddef
+#:def strnop(op)
+$:NEGA_OPR_STRINGS[OPERATORS.index(op)]
+#:enddef
+
 #:def decimal_suffix(i, kind)
 $:f"{i}.0_" + kind if "REAL" in kind else f"{i}_" + kind
 #:enddef
 
 #:def routine_name(g, post, rank1, rank2=None)
-$:f"unittest_{g}_{post}_{rank1}" if rank2 is None else f"unittest_{g}_{post}_{rank1}{rank2}"
+$:f"unittest_assert_" + ("" if g == "" else g + "_") + f"{post}_{rank1}" if rank2 is None else f"unittest_assert_" + ("" if g == "" else g + "_") + f"{post}_{rank1}{rank2}"
 #:enddef
 
 #:def rank_suffix(rank)
 #{if rank>0}#(${",".join([":" for i in range(rank)])}$)#{endif}#
 #:enddef
-
 #:def counter_suffix(rank)
 #{if rank>0}#(${", ".join(["i"+str(i+1) for i in range(rank)])}$)#{endif}#
+#:enddef
+#:def do_start(rank, var=None)
+#:for i in range(rank,0,-1)
+          do i${i}$ = 1, SIZE(${"a" if var is None else var}$, ${i}$)
+#:endfor
+#:enddef
+#:def do_end(rank)
+#:for i in range(rank)
+          end do
+#:endfor
 #:enddef
 
 #:def generic_procedure(g, tup, ranks)
@@ -90,7 +115,7 @@ $:f"unittest_{g}_{post}_{rank1}" if rank2 is None else f"unittest_{g}_{post}_{ra
 procedure, private :: ${routine_name(g, post, rank1, rank2)}$
 #:endfor
 #:endfor
-generic            :: ${g}$ => &
+generic            :: assert${"" if g == "" else "_" + g}$ => &
 ${", &\n  ".join([", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup]) for rank1, rank2 in ranks])}$
 #:enddef
 
@@ -119,7 +144,7 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
 
 #:set L_MSG = 56
 #:set L_WDH = L_MSG - 12
-#:set WSPC = "'#'//REPEAT(' ', 7)"
+#:set WSPC = "REPEAT(' ', 8)"
 #:set SEP3 = WSPC + "//REPEAT('-', " + str(L_MSG) + ")"
 
 #:endmute

@@ -14,17 +14,13 @@
         real(RK) :: diff
         if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
           nerror = 0
-#:for i in range(rank1,0,-1)
-          do i${i}$ = 1, SIZE(a, ${i}$)
-#:endfor
+${do_start(rank1)}$
             diff = ABS(${"a" + counter_suffix(rank1)}$) * mp
             if (INT(diff) ${op}$ 1) cycle
             nerror = nerror + 1
             write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
             write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b, "]"
-#:for i in range(rank1)
-          end do
-#:endfor
+${do_end(rank1)}$
         else
           nerror = COUNT([.not.(INT(ABS(a) * mp) ${op}$ 1)])
           call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [${tor}$])
@@ -38,7 +34,7 @@ submodule(mod_unittest) is_zero
 contains
 #:for ktp, fm, tor in zip(ktps, fmts, tors)
 #:for kind, type, post in ktp
-#:for routine, op, neq, no in zip(["assert_is_zero", "assert_isnot_zero"], ["<", ">="], ["!~", "~ "], [".not.", ""])
+#:for routine, op, no in zip(["is_zero", "isnot_zero"], ["<", ">="], [".not.", ""])
 #:for rank1, rank2 in RANK_ITERi
   module procedure ${routine_name(routine, post, rank1)}$
     ${type}$, parameter :: b = 0
@@ -52,7 +48,7 @@ ${common_check(rank1, rank2, routine)}$
     if (PRESENT(is_failed)) is_failed = err
     call report_result(this%dev, this%results(SIZE(this%results))%id, err, "${routine}$", unitname)
     if (err) then
-${error_list_loop(op, rank1, fm, neq, tor) if rank1>0 else error_list_scalar(fm, neq)}$
+${error_list_loop(op, rank1, fm, strnop(op), tor) if rank1>0 else error_list_scalar(fm, strnop(op))}$
     end if
   end procedure ${routine_name(routine, post, rank1)}$
 !

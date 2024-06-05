@@ -16,17 +16,13 @@ $:"REAL("+s+", RK)" if erf_t==0 else "REAL(ABS("+s+"), RK)"
         real(RK) :: diff
         if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
           nerror = 0
-#:for i in range(rank1,0,-1)
-          do i${i}$ = 1, SIZE(a, ${i}$)
-#:endfor
+${do_start(rank1)}$
             diff = ${erff("a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2), erf_t)}$
             if (diff ${op}$ tol) cycle
             nerror = nerror + 1
             write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
             write (this%dev, '(${fm}$)', IOSTAT=ios)  " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
-#:for i in range(rank1)
-          enddo
-#:endfor
+${do_end(rank1)}$
         else
           nerror = COUNT([.not.(${erff("a - b", erf_t)}$ ${op}$ tol)])
           call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [${erff("a - b", erf_t)}$])
@@ -39,7 +35,7 @@ submodule(mod_unittest) allclose
 contains
 #:for ktp, fm, erf_t in zip(ktps, fmts, [0, 1])
 #:for kind, type, post in ktp
-#:for routine, op, neq, no in zip(["assert_allclose", "assert_not_allclose"], ["<", ">="], ["!~", "~ "], [".not.", ""])
+#:for routine, op, no in zip(["allclose", "not_allclose"], ["<", ">="], [".not.", ""])
 #:for rank1, rank2 in RANK_ITERii
   module procedure ${routine_name(routine, post, rank1, rank2)}$
     real(${kind}$) :: tol
@@ -55,7 +51,7 @@ ${common_check(rank1, rank2, routine)}$
     if (PRESENT(is_failed)) is_failed = err
     call report_result(this%dev, this%results(SIZE(this%results))%id, err, "${routine}$", unitname)
     if (err) then
-${error_list_loop(op, rank1, rank2, erf_t, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
+${error_list_loop(op, rank1, rank2, erf_t, fm, strnop(op)) if rank1>0 else error_list_scalar(fm, strnop(op))}$
     end if
     FLUSH (this%dev)
   end procedure ${routine_name(routine, post, rank1, rank2)}$

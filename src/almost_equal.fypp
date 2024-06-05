@@ -1,34 +1,36 @@
 #:include "common.fypp"
 #:set tors = ["REAL(a - b, RK)", "REAL(a - b, RK)", "REAL(ABS(a - b), RK)"]
-#:set fmts = ["A,1X,I0,2X,A,1X,I0,2X,A", "A,G16.9,A,G16.9,A", "A,2(ES9.2,1X),A,2(ES9.2,1X),A"]
 #:set fmts = [INTEGER_FORMAT, REAL_FORMAT, COMPLEX_FORMAT]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
-#:def error_list_scalar(fm, neq)
+#:def error_list_scalar(fm, op)
       block
         integer  :: ios
-        write (this%dev, '(16X,${fm}$)', IOSTAT=ios)  " [", a, "] ${neq}$ [", b, "]"
+        write (this%dev, '(16X,${fm}$)', IOSTAT=ios)  " [", a, "] ${strnop(op)}$ [", b, "]"
       end block
 #:enddef
-#:def error_list_loop(op, rank1, rank2, fm, neq)
+#:def error_list_loop(op, rank1, rank2, fm)
       block
-        integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
+        integer  :: ${', '.join(["nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
+#:if op == "~"
+        integer  :: ios
+#:endif
         real(RK) :: diff
         if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
           nerror = 0
-#:for i in range(rank1,0,-1)
-          do i${i}$ = 1, SIZE(a, ${i}$)
-#:endfor
+${do_start(rank1)}$
             diff = ABS(${"a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2)}$) * mp
-            if (INT(diff) ${op}$ 1) cycle
+            if (INT(diff) ${"<=" if op == "~" else ">"}$ 1) cycle
             nerror = nerror + 1
+#:if op == "~"
             write (this%dev, '(8X,*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
-            write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
-#:for i in range(rank1)
-          end do
-#:endfor
+            write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a${counter_suffix(rank1)}$, "] ${strnop(op)}$ [", b${counter_suffix(rank2)}$, "]"
+#:endif
+${do_end(rank1)}$
         else
-          nerror = COUNT([.not.(INT(ABS(a - b)) ${op}$ 1)])
+          nerror = COUNT([(INT(ABS(a - b)) ${">" if op == "~" else "<="}$ 1)])
+#:if op == "~"
           call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [${tor}$])
+#:endif
         end if
         call report_error_rate(this%dev, SIZE(a), nerror)
       end block
@@ -39,7 +41,7 @@ submodule(mod_unittest) almost_equal
 contains
 #:for ktp, fm, tor in zip(ktps, fmts, tors)
 #:for kind, type, post in ktp
-#:for routine, op, neq, no in zip(["assert_almost_equal", "assert_not_almost_equal"], ["<", ">="], ["!~", "~ "], [".not.", ""])
+#:for routine, op, no in zip(["almost_equal", "not_almost_equal"], ["~", "!~"], [".not.", ""])
 #:for rank1, rank2 in RANK_ITERii
   module procedure ${routine_name(routine, post, rank1, rank2)}$
   ${"real(RK)" if "INT" in kind else "real("+kind+")"}$ :: mp
@@ -51,8 +53,8 @@ ${common_check(rank1, rank2, routine)}$
     call test_result_append(this%results, err)
     if (PRESENT(is_failed)) is_failed = err
     call report_result(this%dev, this%results(SIZE(this%results))%id, err, "${routine}$", unitname)
-    if (err) then
-${error_list_loop(op, rank1, rank2, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
+    if (this%verbose > 0 .and. err) then
+${error_list_loop(op, rank1, rank2, fm) if rank1 > 0 else error_list_scalar(fm, op)}$
     end if
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !

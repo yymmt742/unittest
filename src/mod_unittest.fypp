@@ -11,8 +11,8 @@ module mod_unittest
   public  :: unittest
   public  :: error_stop
 !
-  character(*), parameter :: SEP1 = "# "//REPEAT('-', 62)
-  character(*), parameter :: SEP2 = "# "//REPEAT('=', 62)
+  character(*), parameter :: SEP1 = REPEAT('-', 64)
+  character(*), parameter :: SEP2 = REPEAT('=', 64)
   include "constants.f90"
 !
   type timestamp
@@ -27,42 +27,32 @@ module mod_unittest
     logical :: err
   end type test_result
 !
+#:set asse = [[""], LOGICAL_KIND_TYPE_POSTS, RANK_SCALAR]
+#:set bool = [["true", "false"], LOGICAL_KIND_TYPE_POSTS, RANK_ITERi]
+#:set equal = [["equal", "not_equal"], INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS, RANK_ITERii]
+#:set almost_equal = [["almost_equal", "not_almost_equal"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERii]
+#:set compare = [["less", "less_equal", "greater", "greater_equal"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS, RANK_ITERii]
+#:set is_eye = [["is_eye", "isnot_eye"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_MATRIX]
+#:set is_symmetric = [["is_symmetric", "isnot_symmetric"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_MATRIX]
+#:set is_zero = [["is_zero", "isnot_zero"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERi]
+#:set allclose = [["allclose", "not_allclose"], REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERii]
+#:set procs = [asse, bool, equal, almost_equal, compare, is_eye, is_symmetric, is_zero, allclose]
   type unittest
     private
     integer                        :: dev
     integer                        :: verbose
     integer                        :: dump_line_limit
     character(:), allocatable      :: script_name
-    character(:), allocatable      :: tap_string
     type(test_result), allocatable :: results(:)
     type(timestamp), allocatable   :: times(:)
-    logical                        :: terminate_with_error_code = .true.
-    logical                        :: tap_support = .true.
+    logical                        :: terminate_with_error_code
+    logical                        :: tap_support
   contains
     procedure         :: init => utest_init
-#:for routine in ["assert", "assert_true", "assert_false"]
-${generic_procedure(routine, LOGICAL_KIND_TYPE_POSTS, RANK_ITERi)}$
+#:for routines, ktp, rank in procs
+#:for routine in routines
+${generic_procedure(routine, ktp, rank)}$
 #:endfor
-#:for routine in ["assert_equal", "assert_not_equal"]
-${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS, RANK_ITERii)}$
-#:endfor
-#:for routine in ["assert_almost_equal", "assert_not_almost_equal"]
-${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERii)}$
-#:endfor
-#:for routine in ["assert_less", "assert_less_equal", "assert_greater", "assert_greater_equal"]
-${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS, RANK_ITERii)}$
-#:endfor
-#:for routine in ["assert_is_eye", "assert_isnot_eye"]
-${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, [(2, None)])}$
-#:endfor
-#:for routine in ["assert_is_symmetric", "assert_isnot_symmetric"]
-${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, [(2, None)])}$
-#:endfor
-#:for routine in ["assert_is_zero", "assert_isnot_zero"]
-${generic_procedure(routine, INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERi)}$
-#:endfor
-#:for routine in ["assert_allclose", "assert_not_allclose"]
-${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERii)}$
 #:endfor
     procedure         :: finish => utest_finish
     procedure         :: finish_and_terminate => utest_finish_and_terminate
@@ -79,107 +69,103 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
       integer, intent(in), optional      :: code
     end subroutine error_stop
 !
-#:for routine, cond in zip(["assert", "assert_true", "assert_false"], ["ALL(expr)", "ALL(expr)", ".not.ANY(expr)"])
-#:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
-#:for rank1, rank2 in RANK_ITERi
-    module subroutine ${routine_name(routine, post, rank1)}$ (this, expr, unitname, is_failed)
+#:def arg_type_bool(type, rank1)
       class(unittest), intent(inout)     :: this
       ${type}$, intent(in)               :: expr${rank_suffix(rank1)}$
       character(*), intent(in), optional :: unitname
       logical, intent(out), optional     :: is_failed
+#:enddef
+#:def arg_type_ab(type, rank1, rank2=None)
+      class(unittest), intent(inout)     :: this
+        ${type}$, intent(in)               :: a${rank_suffix(rank1)}$${"" if rank2 is None else ", b"+rank_suffix(rank2)}$
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional     :: is_failed
+#:enddef
+#:def arg_type_matrix(type)
+      class(unittest), intent(inout)     :: this
+      ${type}$, intent(in)               :: a${rank_suffix(2)}$
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional     :: is_failed
+#:enddef
+#:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
+  module subroutine ${routine_name("", post, 0)}$ (this, expr, unitname, is_failed)
+${arg_type_bool(type, 0)}$
+  end subroutine ${routine_name("", post, 0)}$
+#:endfor
+#:for routine in ["true", "false"]
+#:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
+#:for rank1, rank2 in RANK_ITERi
+    module subroutine ${routine_name(routine, post, rank1)}$ (this, expr, unitname, is_failed)
+${arg_type_bool(type, rank1)}$
     end subroutine ${routine_name(routine, post, rank1)}$
-!
 #:endfor
 #:endfor
 #:endfor
-#:for routine in ["assert_equal", "assert_not_equal"]
+#:for routine in ["equal", "not_equal"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERii
     module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, is_failed)
-      class(unittest), intent(inout)     :: this
-      ${type}$, intent(in)               :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
-      character(*), intent(in), optional :: unitname
-      logical, intent(out), optional     :: is_failed
+${arg_type_ab(type, rank1, rank2)}$
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
 #:endfor
 #:endfor
-#:for routine in ["assert_almost_equal", "assert_not_almost_equal"]
+#:for routine in ["almost_equal", "not_almost_equal"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERii
     module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, place, is_failed)
-      class(unittest), intent(inout)     :: this
-      ${type}$, intent(in)               :: a${rank_suffix(rank1)}$, b${rank_suffix(rank2)}$
-      character(*), intent(in), optional :: unitname
+${arg_type_ab(type, rank1, rank2)}$
       integer, intent(in), optional      :: place
-      logical, intent(out), optional     :: is_failed
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
 #:endfor
 #:endfor
-#:for routine, cond in zip(["assert_less", "assert_less_equal", "assert_greater", "assert_greater_equal"], ["ALL(a<b)", "ALL(a<=b)", "ALL(a>b)", "ALL(a>=b)"])
+#:for routine in ["less", "less_equal", "greater", "greater_equal"]
 #:for rank1, rank2 in RANK_ITERii
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS
     module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, is_failed)
-      class(unittest), intent(inout)     :: this
-      ${type}$, intent(in)               :: a${rank_suffix(rank1)}$
-      ${type}$, intent(in)               :: b${rank_suffix(rank2)}$
-      character(*), intent(in), optional :: unitname
-      logical, intent(out), optional     :: is_failed
+${arg_type_ab(type, rank1, rank2)}$
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
 #:endfor
 #:endfor
-#:for routine in ["assert_is_eye", "assert_isnot_eye"]
+#:for routine in ["is_eye", "isnot_eye"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
     module subroutine ${routine_name(routine, post, 2)}$ (this, a, unitname, place, is_failed)
-      class(unittest), intent(inout)     :: this
-      ${type}$, intent(in)               :: a${rank_suffix(2)}$
-      character(*), intent(in), optional :: unitname
+${arg_type_matrix(type)}$
       integer, intent(in), optional      :: place
-      logical, intent(out), optional     :: is_failed
     end subroutine ${routine_name(routine, post, 2)}$
 !
 #:endfor
 #:endfor
-#:for routine in ["assert_is_symmetric", "assert_isnot_symmetric"]
+#:for routine in ["is_symmetric", "isnot_symmetric"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
     module subroutine ${routine_name(routine, post, 2)}$ (this, a, unitname, place, is_failed)
-      class(unittest), intent(inout)     :: this
-      ${type}$, intent(in)               :: a${rank_suffix(2)}$
-      character(*), intent(in), optional :: unitname
+${arg_type_matrix(type)}$
       integer, intent(in), optional      :: place
-      logical, intent(out), optional     :: is_failed
     end subroutine ${routine_name(routine, post, 2)}$
 !
 #:endfor
 #:endfor
-#:for routine in ["assert_is_zero", "assert_isnot_zero"]
+#:for routine in ["is_zero", "isnot_zero"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERi
     module subroutine ${routine_name(routine, post, rank1)}$ (this, a, unitname, place, is_failed)
-      class(unittest), intent(inout)     :: this
-      ${type}$, intent(in)               :: a${rank_suffix(rank1)}$
-      character(*), intent(in), optional :: unitname
+${arg_type_ab(type, rank1)}$
       integer, intent(in), optional      :: place
-      logical, intent(out), optional     :: is_failed
     end subroutine ${routine_name(routine, post, rank1)}$
 !
 #:endfor
 #:endfor
 #:endfor
-#:for routine in ["assert_allclose", "assert_not_allclose"]
+#:for routine in ["allclose", "not_allclose"]
 #:for kind, type, post in REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
 #:for rank1, rank2 in RANK_ITERii
     module subroutine ${routine_name(routine, post, rank1, rank2)}$ (this, a, b, unitname, is_failed, rtol, atol)
-      class(unittest), intent(inout)       :: this
-      ${type}$, intent(in)                 :: a${rank_suffix(rank1)}$
-      ${type}$, intent(in)                 :: b${rank_suffix(rank2)}$
-      character(*), intent(in), optional   :: unitname
-      logical, intent(out), optional       :: is_failed
+${arg_type_ab(type, rank1, rank2)}$
       real(${kind}$), intent(in), optional :: rtol
       real(${kind}$), intent(in), optional :: atol
     end subroutine ${routine_name(routine, post, rank1, rank2)}$
@@ -190,7 +176,6 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
   end interface
 !
 contains
-!
   function utest_new(section, terminate_with_error_code, dump_line_limit, tap_support, argparse) result(res)
     character(*), intent(in), optional :: section
     logical, intent(in), optional      :: terminate_with_error_code
@@ -209,20 +194,15 @@ contains
     logical, intent(in), optional      :: tap_support
     logical, intent(in), optional      :: argparse
 !
-    this%terminate_with_error_code = .true.
-    this%tap_support = .true.
-    this%dump_line_limit = 10
-    this%dev = STDERR
-!
-    if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code
-    if (PRESENT(tap_support)) then
-      this%dump_line_limit = 0
-      this%tap_support = tap_support
-    end if
-    if (PRESENT(dump_line_limit)) this%dump_line_limit = dump_line_limit
-    this%verbose = MERGE(1, 0, this%dump_line_limit < 0)
-!
     if (.not. ALLOCATED(this%script_name)) then
+      this%terminate_with_error_code = .true.
+      this%dump_line_limit = 10
+      this%dev = STDERR
+      this%tap_support = .false.
+      if (PRESENT(tap_support)) then
+        this%dump_line_limit = 0
+        this%tap_support = tap_support
+      end if
       block
         integer                   :: lna, ios
         character(:), allocatable :: tmp
@@ -231,12 +211,8 @@ contains
         allocate (character(0) :: this%script_name)
         allocate (character(lna) :: tmp)
         call GET_COMMAND_ARGUMENT(0, value=tmp, status=ios)
-#:def strip(PATH_SLASH)
-$:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
-#:enddef
-        this%script_name = tmp(${strip(PATH_SLASH)}$:)
+        this%script_name = tmp(${"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"}$:)
         deallocate (tmp)
-!
         if (PRESENT(argparse)) then
           if (argparse) call argparse_(this)
         else
@@ -244,6 +220,10 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
         end if
       end block
     end if
+!
+    if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code
+    if (PRESENT(dump_line_limit)) this%dump_line_limit = dump_line_limit
+    this%verbose = MERGE(1, 0, .not.this%tap_support .or. this%dump_line_limit < 0)
 !
     call timestamp_append(this%times)
 !
@@ -288,6 +268,7 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
       if (ios /= 0) cycle
       select case(argv)
       case("--tap")
+        this%dump_line_limit = 0
         this%tap_support = .true.
       end select
     end do
@@ -301,22 +282,23 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
     time = elappes_time(this%times)
     cputime = elappes_cputime(this%times)
 !
-    if (n_test(this%results) > 0) then
-      write (this%dev, '(A)', err=100) SEP1
-      write (this%dev, '(A,I0,A,F9.3,A,F9.3,A)', ADVANCE='NO', err=100)    &
-   &  '# Run ', n_test(this%results), ' tests in ', time, ' / ', &
-   &  cputime, ' s (sys/cpu)'
-      if (n_error(this%results) < 1) then
-        write (this%dev, '(A,I0,A,F9.3,A)', err=100) ' ----> Passed'
+    if (this%verbose > 0) then
+      if (n_test(this%results) > 0) then
+        write (this%dev, '(A)', err=100) SEP1
+        write (this%dev, '(A,I0,A,F9.3,A,F9.3,A)', ADVANCE='NO', err=100)    &
+     &  '# Run ', n_test(this%results), ' tests in ', time, ' / ', &
+     &  cputime, ' s (sys/cpu)'
+        if (n_error(this%results) < 1) then
+          write (this%dev, '(A,I0,A,F9.3,A)', err=100) ' ----> Passed'
+        else
+          write (this%dev, '(A,I0,A)', err=100) NEW_LINE('')//'         ----> ', n_error(this%results), ' error detected.'
+        end if
       else
-        write (this%dev, '(A,I0,A)', err=100) NEW_LINE('')//'         ----> ', n_error(this%results), ' error detected.'
+        write (this%dev, '(A)', err=100) '# No Test executed'
       end if
-    else
-      write (this%dev, '(A)', err=100) '# No Test executed'
+      write (this%dev, '(A)', err=100) SEP2
+100   FLUSH (this%dev)
     end if
-    write (this%dev, '(A)', err=100) SEP2
-!
-100 FLUSH (this%dev)
     call utest_free(this)
   end subroutine utest_finish
 !
@@ -326,7 +308,7 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
     error_terminate = this%terminate_with_error_code .and. (COUNT(this%results(:)%err) > 0)
     call this%finish()
     if (error_terminate) then
-      call error_stop('TESTS WERE TERMINATED', 1)
+      call error_stop('# TESTS WERE TERMINATED', 1)
     else
       stop
     end if
@@ -335,11 +317,10 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
   pure subroutine utest_free(this)
     type(unittest), intent(inout) :: this
     if (ALLOCATED(this%script_name)) deallocate (this%script_name)
-    if (ALLOCATED(this%tap_string)) deallocate (this%tap_string)
     if (ALLOCATED(this%times)) deallocate (this%times)
     if (ALLOCATED(this%results)) deallocate (this%results)
     this%terminate_with_error_code = .true.
-    this%tap_support = .true.
+    this%tap_support = .false.
     this%dump_line_limit = 10
   end subroutine utest_free
 !
