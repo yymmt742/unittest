@@ -48,8 +48,8 @@ ${common_check(2, None, routine)}$
     err = s1 /= s2
     if (PRESENT(is_failed)) is_failed = err
     if (err)then
-      this%errors = [this%errors, err]
-      call report_rank_error(this%dev, SIZE(this%errors), [s1], [s2], unitname)
+      call test_result_append(this%results, err)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, [s1], [s2], unitname)
       return
     endif
     if (PRESENT(place)) then; mp = 10**place
@@ -63,16 +63,17 @@ ${common_check(2, None, routine)}$
       end do
       if(err) exit
     end do
-    this%errors = [this%errors, err]
+    call test_result_append(this%results, err)
 ${"!" if no == "" else "    err = .not.err"}$
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, SIZE(this%errors), err, "${routine}$", unitname)
+    call report_result(this%dev, this%results(SIZE(this%results))%id, err, "${routine}$", unitname)
 ${error_list(fm) if no == "" else "!"}$
   end procedure ${routine_name(routine, post, 2)}$
 !
 #:endfor
 #:endfor
 #:endfor
+include "result_functions.f90"
 include "report_functions.f90"
 include "image_functions.f90"
 end submodule is_symmetric

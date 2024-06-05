@@ -27,3 +27,4 @@ module mod_unittest_kinds
   integer, parameter :: HP = SELECTED_REAL_KIND(3)
 #:endif
 end module mod_unittest_kinds
+

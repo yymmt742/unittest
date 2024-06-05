@@ -48,9 +48,9 @@ ${common_check(rank1, rank2, routine)}$
     else; mp = 10**DEF_PLACE
     end if
     err = ${no}$${"ALL" if rank1>0 else ""}$(INT(mp * ABS(a - b)) < 1)
-    this%errors = [this%errors, err]
+    call test_result_append(this%results, err)
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, SIZE(this%errors), err, "${routine}$", unitname)
+    call report_result(this%dev, this%results(SIZE(this%results))%id, err, "${routine}$", unitname)
     if (err) then
 ${error_list_loop(op, rank1, rank2, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
     end if
@@ -60,6 +60,7 @@ ${error_list_loop(op, rank1, rank2, fm, neq) if rank1>0 else error_list_scalar(f
 #:endfor
 #:endfor
 #:endfor
+include "result_functions.f90"
 include "report_functions.f90"
 include "image_functions.f90"
 end submodule almost_equal

@@ -1,0 +1,22 @@
+#:include "common.fypp"
+  pure subroutine test_result_append(results, err)
+    type(test_result), intent(inout), allocatable :: results(:)
+    logical, intent(in)                           :: err
+    type(test_result), allocatable                :: temp(:)
+    integer                                       :: n
+    if (ALLOCATED(results)) then
+      n = SIZE(results)
+    else
+      n = 0
+    end if
+    if (n > 0) then
+      allocate (temp(n + 1))
+      temp(:n) = results(:n)
+      temp(n + 1) = test_result(temp(n)%id + 1, err)
+    else
+      allocate (temp(1))
+      temp(1) = test_result(1, err)
+    end if
+    call MOVE_ALLOC(from=temp, to=results)
+  end subroutine test_result_append
+

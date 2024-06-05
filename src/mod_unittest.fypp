@@ -14,17 +14,29 @@ module mod_unittest
   character(*), parameter :: SEP1 = "# "//REPEAT('-', 62)
   character(*), parameter :: SEP2 = "# "//REPEAT('=', 62)
 !
+  type timestamp
+    sequence
+    integer(INT64) :: time
+    real(RK)       :: ctime
+  end type timestamp
+!
+  type test_result
+    sequence
+    integer :: id
+    logical :: err
+  end type test_result
+!
   type unittest
     private
-    integer                   :: dev
-    integer                   :: verbose
-    integer                   :: dump_line_limit
-    integer(INT64)            :: start_time
-    real(RK)                  :: start_cpu_time
-    character(:), allocatable :: script_name
-    logical, allocatable      :: errors(:)
-    logical                   :: terminate_with_error_code = .true.
-    logical                   :: tap_support = .true.
+    integer                        :: dev
+    integer                        :: verbose
+    integer                        :: dump_line_limit
+    character(:), allocatable      :: script_name
+    character(:), allocatable      :: tap_string
+    type(test_result), allocatable :: results(:)
+    type(timestamp), allocatable   :: times(:)
+    logical                        :: terminate_with_error_code = .true.
+    logical                        :: tap_support = .true.
   contains
     procedure         :: init => utest_init
 #:for routine in ["assert", "assert_true", "assert_false"]
@@ -195,25 +207,11 @@ contains
     integer, intent(in), optional      :: dump_line_limit
     logical, intent(in), optional      :: tap_support
     logical, intent(in), optional      :: argparse
-    integer                            :: lna, ios
-    character(:), allocatable          :: tmp
-    call utest_destroy(this)
 !
-    call CPU_TIME(this%start_cpu_time)
-    call SYSTEM_CLOCK(this%start_time)
-!
-    call GET_COMMAND_ARGUMENT(0, length=lna, status=ios)
-    if (ios /= 0) return
-!
+    this%terminate_with_error_code = .true.
+    this%tap_support = .true.
+    this%dump_line_limit = 10
     this%dev = STDERR
-    allocate (character(lna) :: tmp)
-    allocate (character(0) :: this%script_name)
-    call GET_COMMAND_ARGUMENT(0, value=tmp, status=ios)
-#:def strip(PATH_SLASH)
-$:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
-#:enddef
-    this%script_name = tmp(${strip(PATH_SLASH)}$:)
-    deallocate (tmp)
 !
     if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code
     if (PRESENT(tap_support)) then
@@ -223,13 +221,45 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
     if (PRESENT(dump_line_limit)) this%dump_line_limit = dump_line_limit
     this%verbose = MERGE(1, 0, this%dump_line_limit < 0)
 !
-    if (PRESENT(argparse)) then
-      if(argparse) call argparse_(this)
-    else
-      call argparse_(this)
+    if (.not. ALLOCATED(this%script_name)) then
+      block
+        integer                   :: lna, ios
+        character(:), allocatable :: tmp
+        call GET_COMMAND_ARGUMENT(0, length=lna, status=ios)
+        if (ios /= 0) return
+        allocate (character(0) :: this%script_name)
+        allocate (character(lna) :: tmp)
+        call GET_COMMAND_ARGUMENT(0, value=tmp, status=ios)
+#:def strip(PATH_SLASH)
+$:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
+#:enddef
+        this%script_name = tmp(${strip(PATH_SLASH)}$:)
+        deallocate (tmp)
+!
+        if (PRESENT(argparse)) then
+          if (argparse) call argparse_(this)
+        else
+          call argparse_(this)
+        end if
+      end block
     end if
 !
-    ALLOCATE(this%errors(0))
+    call timestamp_append(this%times)
+!
+    if (ALLOCATED(this%results)) then
+      block
+        integer                        :: n
+        type(test_result), allocatable :: tmp(:)
+        n = SIZE(this%results)
+        allocate (tmp(n + 1))
+        if (n > 0) tmp(:n) = this%results(:n)
+        tmp(n + 1) = test_result(0, .false.)
+        call MOVE_ALLOC(from=tmp, to=this%results)
+      end block
+    else
+      ALLOCATE(this%results(1))
+      this%results(1) = test_result(0, .false.)
+    end if
 !
     if (this%verbose > 0) then
       write (this%dev, '(A)', err=100) SEP2
@@ -264,29 +294,21 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
 !
   subroutine utest_finish(this)
     class(unittest), intent(inout) :: this
-    integer(INT64)                 :: finish_time, t_rate, t_max
-    real(RK)                       :: finish_cpu_time, time
+    real(RK)                       :: cputime, time
 !
-    call SYSTEM_CLOCK(finish_time, t_rate, t_max)
-    call CPU_TIME(finish_cpu_time)
+    call timestamp_append(this%times)
+    time = elappes_time(this%times)
+    cputime = elappes_cputime(this%times)
 !
-    if (finish_time < this%start_time) then
-      time = REAL(t_max - this%start_time + finish_time + 1, RK) / REAL(t_rate, RK)
-    else
-      time = REAL(finish_time - this%start_time, RK) / REAL(t_rate, RK)
-    end if
-!
-    finish_cpu_time = finish_cpu_time - this%start_cpu_time
-!
-    if (SIZE(this%errors) > 0) then
+    if (n_test(this%results) > 0) then
       write (this%dev, '(A)', err=100) SEP1
       write (this%dev, '(A,I0,A,F9.3,A,F9.3,A)', ADVANCE='NO', err=100)    &
-   &  '# Run ', SIZE(this%errors), ' tests in ', time / DBLE(t_rate), ' / ', &
-   &  finish_cpu_time, ' s (sys/cpu)'
-      if (COUNT(this%errors) < 1) then
+   &  '# Run ', n_test(this%results), ' tests in ', time, ' / ', &
+   &  cputime, ' s (sys/cpu)'
+      if (n_error(this%results) < 1) then
         write (this%dev, '(A,I0,A,F9.3,A)', err=100) ' ----> Passed'
       else
-        write (this%dev, '(A,I0,A)', err=100) NEW_LINE('')//'         ----> ', COUNT(this%errors), ' error detected.'
+        write (this%dev, '(A,I0,A)', err=100) NEW_LINE('')//'         ----> ', n_error(this%results), ' error detected.'
       end if
     else
       write (this%dev, '(A)', err=100) '# No Test executed'
@@ -300,7 +322,7 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
   subroutine utest_finish_and_terminate(this)
     class(unittest), intent(inout) :: this
     logical                        :: error_terminate
-    error_terminate = this%terminate_with_error_code .and. (COUNT(this%errors) > 0)
+    error_terminate = this%terminate_with_error_code .and. (COUNT(this%results(:)%err) > 0)
     call this%finish()
     if (error_terminate) then
       call error_stop('TESTS WERE TERMINATED', 1)
@@ -312,7 +334,9 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
   pure subroutine utest_free(this)
     type(unittest), intent(inout) :: this
     if (ALLOCATED(this%script_name)) deallocate (this%script_name)
-    if (ALLOCATED(this%errors)) deallocate (this%errors)
+    if (ALLOCATED(this%tap_string)) deallocate (this%tap_string)
+    if (ALLOCATED(this%times)) deallocate (this%times)
+    if (ALLOCATED(this%results)) deallocate (this%results)
     this%terminate_with_error_code = .true.
     this%tap_support = .true.
     this%dump_line_limit = 10
@@ -324,4 +348,70 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
     call utest_free(this)
   end subroutine utest_destroy
 !
+! --- private functions
+!
+  subroutine timestamp_append(times)
+    type(timestamp), intent(inout), allocatable :: times(:)
+    type(timestamp), allocatable                :: temp(:)
+    integer                                      :: n
+    if (ALLOCATED(times)) then
+      n = SIZE(times)
+      allocate (temp(n + 1))
+      temp(:n) = times(:)
+      call SYSTEM_CLOCK(temp(n + 1)%time)
+      call CPU_TIME(temp(n + 1)%ctime)
+    else
+      allocate (temp(1))
+      call SYSTEM_CLOCK(temp(1)%time)
+      call CPU_TIME(temp(1)%ctime)
+    end if
+    call MOVE_ALLOC(from=temp, to=times)
+  end subroutine timestamp_append
+!
+  function elappes_time(times) result(res)
+    type(timestamp), intent(in) :: times(:)
+    integer(INT64)               :: t_rate, t_max
+    real(RK)                     :: res
+    integer                      :: n
+    call SYSTEM_CLOCK(count_rate=t_rate, count_max=t_max)
+    n = SIZE(times)
+    if (n > 1) then
+      if (times(n)%time < times(n - 1)%time) then
+        res = real(t_max + times(n)%time - times(n - 1)%time + 1, RK) / real(t_rate, RK)
+      else
+        res = real(times(n)%time - times(n - 1)%time, RK) / real(t_rate, RK)
+      end if
+    else
+      res = 0.0_RK
+    end if
+  end function elappes_time
+!
+  pure function elappes_cputime(times) result(res)
+    type(timestamp), intent(in) :: times(:)
+    real(RK)                     :: res
+    integer                      :: n
+    n = SIZE(times)
+    if (n > 1) then
+      res = times(n)%ctime - times(n - 1)%ctime
+    else
+      res = 0.0_RK
+    end if
+  end function elappes_cputime
+!
+  pure function n_test(results) result(res)
+    type(test_result), intent(in) :: results(:)
+    integer                       :: n, res
+    n = SIZE(results)
+    res = results(n)%id
+  end function n_test
+!
+  pure function n_error(results) result(res)
+    type(test_result), intent(in) :: results(:)
+    integer                       :: l, u, res
+    u = SIZE(results)
+    l = u - results(u)%id + 1
+    res = COUNT(results(l:u)%err)
+  end function n_error
+!
 end module mod_unittest
+
