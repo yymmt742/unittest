@@ -1,5 +1,5 @@
 #:include "common.fypp"
-#:set fmts = ["A,G16.9,A,G16.9,A", "A,2(ES9.2,1X),A,2(ES9.2,1X),A"]
+#:set fmts = [REAL_FORMAT, COMPLEX_FORMAT]
 #:set ktps = [REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:def erff(s, erf_t)
 $:"REAL("+s+", RK)" if erf_t==0 else "REAL(ABS("+s+"), RK)"

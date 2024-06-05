@@ -2,7 +2,7 @@
 #:set routines = ["assert_equal", "assert_not_equal"]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, LOGICAL_KIND_TYPE_POSTS]
 #:set neqlists = [["!=", "=="], ["noteq", "equiv"]]
-#:set fmts = ["A,1X,I0,1X,A,1X,I0,1X,A", "A,1X,L,1X,A,1X,L,1X,A"]
+#:set fmts = [INTEGER_FORMAT, LOGICAL_FORMAT]
 #:def error_rate(type, no)
 $:"MERGE(MERGE(1.0_RK,-1.0_RK,a), 0.0_RK, "+no+"a.eqv.b)" if "logical" in type else "MERGE(1.0_RK, 0.0_RK, "+no+"(a==b))"
 #:enddef

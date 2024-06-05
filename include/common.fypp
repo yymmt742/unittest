@@ -29,9 +29,11 @@
 
 #:set INTEGER_KINDS = ["INT8", "INT16", "INT32", "INT64"]
 #:set INTEGER_POSTFIX = ["i8", "i16", "i32", "i64"]
+
 #:set REAL_KINDS = ["sp", "dp"]
 #:set REAL_POSTFIX = ["r32", "r64"]
 #:set COMPLEX_POSTFIX = ["c32", "c64"]
+
 #:if XDP_SUPPORT
 #:set REAL_KINDS = REAL_KINDS + ["xdp"]
 #:set REAL_POSTFIX = REAL_POSTFIX + ["r80"]
@@ -50,6 +52,11 @@
 #:set LOGICAL_KINDS = [""]
 #:set LOGICAL_TYPES = ["logical"]
 #:set LOGICAL_POSTFIX = ["logical"]
+
+#:set LOGICAL_FORMAT = "A,1X,L,1X,A,1X,L,1X,A"
+#:set INTEGER_FORMAT = "A,1X,I0,1X,A,1X,I0,1X,A"
+#:set REAL_FORMAT = "A,G16.9,A,G16.9,A"
+#:set COMPLEX_FORMAT = "A,2(ES9.2,1X),A,2(ES9.2,1X),A"
 
 #:set INTEGER_TYPES = [f"integer({k})" for k in INTEGER_KINDS]
 #:set REAL_TYPES = [f"real({k})" for k in REAL_KINDS]

@@ -1,5 +1,5 @@
 #:include "common.fypp"
-#:set fmts = ["A,1X,I0,1X,A,1X,I0,1X,A", "A,G16.9,A,G16.9,A", "A,2(ES9.2,1X),A,2(ES9.2,1X),A"]
+#:set fmts = [INTEGER_FORMAT, REAL_FORMAT, COMPLEX_FORMAT]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:def error_list(fm)
     if (err) then
