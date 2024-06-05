@@ -74,5 +74,5 @@ ${error_list(fm) if no == "" else "!"}$
 #:endfor
 #:endfor
 include "report_functions.f90"
-${image_functions()}$
+include "image_functions.f90"
 end submodule is_symmetric

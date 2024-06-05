@@ -43,4 +43,5 @@ ${error_list_loop(rank, no, neq) if rank>0 else error_list_scalar(neq)}$
 #:endfor
 #:endfor
 include "report_functions.f90"
+include "image_functions.f90"
 end submodule bool

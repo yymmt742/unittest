@@ -8,7 +8,7 @@ check_fortran_source_runs(
   f18errorstop
   )
 
-function(fypp_generate_includes src target opts list newlist)
+function(fypp_generate src target opts depends list newlist)
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}
     COMMAND fypp ${opts}
@@ -16,6 +16,7 @@ function(fypp_generate_includes src target opts list newlist)
             ${CMAKE_CURRENT_BINARY_DIR}/${target}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${src}
             ${CMAKE_CURRENT_SOURCE_DIR}/../include/common.fypp
+            ${depends}
     )
   set(list_)
   foreach(t IN LISTS list)
@@ -25,37 +26,12 @@ function(fypp_generate_includes src target opts list newlist)
   set(${newlist} ${list_} PARENT_SCOPE)
 endfunction()
 
-function(fypp_generate src target opts inclist list newlist)
-  add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}
-    COMMAND fypp ${opts}
-            ${CMAKE_CURRENT_SOURCE_DIR}/${src}
-            ${CMAKE_CURRENT_BINARY_DIR}/${target}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${src}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../include/common.fypp
-            ${inclist}
-    )
-  set(list_)
-  foreach(t IN LISTS list)
-    list(APPEND list_ ${t})
-  endforeach()
-  list(APPEND list_ ${CMAKE_CURRENT_BINARY_DIR}/${target})
-  set(${newlist} ${list_} PARENT_SCOPE)
-endfunction()
+list(APPEND fyppIncludes
+   report_functions.fypp
+   image_functions.fypp
+   )
 
-set(f90files)
-set(incfiles)
-
-fypp_generate_includes("report_functions.fypp" "report_functions.f90" "${fyppFlags}" "${incfiles}" incfiles)
-message(STATUS ${incfiles})
-
-if(f18errorstop)
-  fypp_generate("error_stop_f18.fypp" "error_stop.f90" "${fyppFlags}" "${incfiles}" "${f90files}" f90files)
-else()
-  fypp_generate("error_stop_f08.fypp" "error_stop.f90" "${fyppFlags}" "${incfiles}" "${f90files}" f90files)
-endif()
-
-list(APPEND fyppFiles
+list(APPEND fyppSources
    mod_unittest_kinds.fypp
    mod_unittest_tap14_yaml.fypp
    bool.fypp
@@ -69,7 +45,19 @@ list(APPEND fyppFiles
    mod_unittest.fypp
    )
 
-foreach(fyppFile ${fyppFiles})
+set(f90files)
+set(incfiles)
+
+if(f18errorstop)
+  fypp_generate("error_stop_f18.fypp" "error_stop.f90" "${fyppFlags}" "" "${f90files}" f90files)
+else()
+  fypp_generate("error_stop_f08.fypp" "error_stop.f90" "${fyppFlags}" "" "${f90files}" f90files)
+endif()
+foreach(fyppFile ${fyppIncludes})
+  string(REGEX REPLACE "\\.fypp" ".f90" f90Target ${fyppFile})
+  fypp_generate("${fyppFile}" "${f90Target}" "${fyppFlags}" "" "${incfiles}" incfiles)
+endforeach()
+foreach(fyppFile ${fyppSources})
   string(REGEX REPLACE "\\.fypp" ".f90" f90Target ${fyppFile})
   fypp_generate("${fyppFile}" "${f90Target}" "${fyppFlags}" "${incfiles}" "${f90files}" f90files)
 endforeach()
