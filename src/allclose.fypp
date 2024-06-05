@@ -51,10 +51,10 @@ ${common_check(rank1, rank2, routine)}$
     else; tol = tol + 1E-5_${kind}$ * MAXVAL([ABS(a), ABS(b)])
     end if
     err = ${no}$${"ALL" if rank1>0 else ""}$(ABS(a - b) < tol)
+    this%errors = [this%errors, err]
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
+    call report_result(this%dev, SIZE(this%errors), err, "${routine}$", unitname)
     if (err) then
-      this%num_error = this%num_error + 1
 ${error_list_loop(op, rank1, rank2, erf_t, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
     end if
     FLUSH (this%dev)

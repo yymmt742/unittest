@@ -47,10 +47,10 @@ ${common_check(rank1, rank2, routine)}$
     else; mp = 10**DEF_PLACE
     end if
     err = ${no}$${"ALL" if rank1>0 else ""}$(INT(mp * ABS(a - b)) < 1)
+    this%errors = [this%errors, err]
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
+    call report_result(this%dev, SIZE(this%errors), err, "${routine}$", unitname)
     if (err) then
-      this%num_error = this%num_error + 1
 ${error_list_loop(op, rank1, rank2, fm, neq) if rank1>0 else error_list_scalar(fm, neq)}$
     end if
   end procedure ${routine_name(routine, post, rank1, rank2)}$

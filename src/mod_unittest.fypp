@@ -17,14 +17,12 @@ module mod_unittest
   type unittest
     private
     integer                   :: dev
-    integer                   :: num_test
-    integer                   :: num_error
     integer                   :: verbose
     integer                   :: dump_line_limit
     integer(INT64)            :: start_time
     real(RK)                  :: start_cpu_time
     character(:), allocatable :: script_name
-    logical, allocatable      :: results(:)
+    logical, allocatable      :: errors(:)
     logical                   :: terminate_with_error_code = .true.
     logical                   :: tap_support = .true.
   contains
@@ -221,7 +219,7 @@ contains
     if (PRESENT(dump_line_limit)) this%dump_line_limit = dump_line_limit
     this%verbose = MERGE(1, 0, this%dump_line_limit < 0)
 !
-    ALLOCATE(this%results(0))
+    ALLOCATE(this%errors(0))
 !
     if (this%verbose > 0) then
       write (this%dev, '(A)', err=100) SEP2
@@ -251,15 +249,15 @@ contains
 !
     finish_cpu_time = finish_cpu_time - this%start_cpu_time
 !
-    if (this%num_test > 0) then
+    if (SIZE(this%errors) > 0) then
       write (this%dev, '(A)', err=100) SEP1
       write (this%dev, '(A,I0,A,F9.3,A,F9.3,A)', ADVANCE='NO', err=100)    &
-   &  '# Run ', this%num_test, ' tests in ', time / DBLE(t_rate), ' / ', &
+   &  '# Run ', SIZE(this%errors), ' tests in ', time / DBLE(t_rate), ' / ', &
    &  finish_cpu_time, ' s (sys/cpu)'
-      if (this%num_error < 1) then
+      if (COUNT(this%errors) < 1) then
         write (this%dev, '(A,I0,A,F9.3,A)', err=100) ' ----> Passed'
       else
-        write (this%dev, '(A,I0,A)', err=100) NEW_LINE('')//'         ----> ', this%num_error, ' error detected.'
+        write (this%dev, '(A,I0,A)', err=100) NEW_LINE('')//'         ----> ', COUNT(this%errors), ' error detected.'
       end if
     else
       write (this%dev, '(A)', err=100) '# No Test executed'
@@ -273,7 +271,7 @@ contains
   subroutine utest_finish_and_terminate(this)
     class(unittest), intent(inout) :: this
     logical                        :: error_terminate
-    error_terminate = this%terminate_with_error_code .and. (this%num_error > 0)
+    error_terminate = this%terminate_with_error_code .and. (COUNT(this%errors) > 0)
     call this%finish()
     if (error_terminate) then
       call error_stop('TESTS WERE TERMINATED', 1)
@@ -285,9 +283,7 @@ contains
   pure subroutine utest_free(this)
     type(unittest), intent(inout) :: this
     if (ALLOCATED(this%script_name)) deallocate (this%script_name)
-    if (ALLOCATED(this%results)) deallocate (this%results)
-    this%num_test = 0
-    this%num_error = 0
+    if (ALLOCATED(this%errors)) deallocate (this%errors)
     this%terminate_with_error_code = .true.
     this%tap_support = .true.
     this%dump_line_limit = 10

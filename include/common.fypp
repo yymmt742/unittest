@@ -89,17 +89,15 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
 
 #:def common_check_0()
     logical :: err
-    this%num_test = this%num_test + 1
 #:enddef
 
 #:def common_check_1(routine)
     logical :: err
-    this%num_test = this%num_test + 1
     err = ANY(SHAPE(a) /= SHAPE(b))
     if(PRESENT(is_failed)) is_failed = err
     if (err) then
-      this%num_error = this%num_error + 1
-      call report_rank_error(this%dev, this%num_test, SHAPE(a), SHAPE(b), "${routine}$", unitname)
+      this%errors = [this%errors, err]
+      call report_rank_error(this%dev, SIZE(this%errors), SHAPE(a), SHAPE(b), "${routine}$", unitname)
       return
     end if
 #:enddef

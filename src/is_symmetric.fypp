@@ -48,8 +48,8 @@ ${common_check(2, None, routine)}$
     err = s1 /= s2
     if (PRESENT(is_failed)) is_failed = err
     if (err)then
-      this%num_error = this%num_error + 1
-      call report_rank_error(this%dev, this%num_test, [s1], [s2], unitname)
+      this%errors = [this%errors, err]
+      call report_rank_error(this%dev, SIZE(this%errors), [s1], [s2], unitname)
       return
     endif
     if (PRESENT(place)) then; mp = 10**place
@@ -63,9 +63,10 @@ ${common_check(2, None, routine)}$
       end do
       if(err) exit
     end do
+    this%errors = [this%errors, err]
 ${"!" if no == "" else "    err = .not.err"}$
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, this%num_test, err, "${routine}$", unitname)
+    call report_result(this%dev, SIZE(this%errors), err, "${routine}$", unitname)
 ${error_list(fm) if no == "" else "!"}$
   end procedure ${routine_name(routine, post, 2)}$
 !
