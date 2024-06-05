@@ -1,19 +1,27 @@
 #:mute
-
+#:if not defined("WIN32")
+#:set WIN32 = False
+#:endif
+#:if not defined("UNIX")
+#:set UNIX = True
+#:endif
 #:if not defined("XDP_SUPPORT")
 #:set XDP_SUPPORT = False
 #:endif
-
 #:if not defined("QP_SUPPORT")
 #:set QP_SUPPORT = False
 #:endif
-
 #:if not defined("HP_SUPPORT")
 #:set HP_SUPPORT = False
 #:endif
-
 #:if not defined("MAXIMUM_RANK")
 #:set MAXIMUM_RANK = 1
+#:endif
+
+#:if WIN32
+#:set PATH_SLASH = "'\'"
+#:elif UNIX
+#:set PATH_SLASH = "'/'"
 #:endif
 
 #:set RANK_ITERi  = [(i, None) for i in range(MAXIMUM_RANK + 1)]

@@ -185,7 +185,7 @@ contains
     logical, intent(in), optional      :: tap_support
     logical, intent(in), optional      :: argparse
     type(unittest)                     :: res
-    call utest_init(res, section, terminate_with_error_code, dump_line_limit)
+    call utest_init(res, section, terminate_with_error_code, dump_line_limit, tap_support, argparse)
   end function utest_new
 !
   subroutine utest_init(this, section, terminate_with_error_code, dump_line_limit, tap_support, argparse)
@@ -209,8 +209,10 @@ contains
     allocate (character(lna) :: tmp)
     allocate (character(0) :: this%script_name)
     call GET_COMMAND_ARGUMENT(0, value=tmp, status=ios)
-    lna = INDEX(tmp, '/', .true.) + 1
-    this%script_name = tmp(lna:)
+#:def strip(PATH_SLASH)
+$:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
+#:enddef
+    this%script_name = tmp(${strip(PATH_SLASH)}$:)
     deallocate (tmp)
 !
     if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code

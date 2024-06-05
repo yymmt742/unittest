@@ -114,6 +114,17 @@ target_compile_options(
      $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-debug>>
      $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:-warn all>>
      )
+elseif(WIN32)
+  target_compile_options(
+  ${PROJECT_NAME}
+  PRIVATE
+    $<$<COMPILE_LANG_AND_ID:Fortran,IntelLLVM>:/free>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,IntelLLVM>:/traceback>>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,IntelLLVM>:/debug:full>>
+    $<$<COMPILE_LANG_AND_ID:Fortran,Intel>:/free>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:/traceback>>
+    $<$<CONFIG:Debug>:$<$<COMPILE_LANG_AND_ID:Fortran,Intel>:/debug:full>>
+    )
  endif()
 
 install(
