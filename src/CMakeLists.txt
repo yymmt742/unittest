@@ -37,6 +37,7 @@ endif()
 fypp_generate("mod_unittest_kinds.fypp" "mod_unittest_kinds.f90" "${fyppFlags}" "${f90files}" f90files)
 
 list(APPEND fyppFiles
+   mod_unittest_tap14_yaml.fypp
    bool.fypp
    equal.fypp
    almost_equal.fypp

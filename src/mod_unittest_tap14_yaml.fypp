@@ -1,0 +1,44 @@
+#:include "common.fypp"
+module mod_unittest_tap14_yaml
+  !! yaml string functions TAP 14 style
+  implicit none
+  private
+  public :: tap14_yaml_decorator
+  public :: tap14_yaml_message
+  public :: tap14_yaml_list
+!
+  character(*), parameter :: TAP14_YAML_SEPARATOR = "  ---"//NEW_LINE("")
+!
+contains
+!
+  pure function tap14_yaml_decorator(s) result(res)
+    character(*), intent(in)  :: s
+    character(:), allocatable :: res
+    res = TAP14_YAML_SEPARATOR//s//TAP14_YAML_SEPARATOR
+  end function tap14_yaml_decorator
+!
+  pure function tap14_yaml_message(var, s, nest) result(res)
+    character(*), intent(in)      :: var
+    character(*), intent(in)      :: s
+    integer, intent(in), optional :: nest
+    character(:), allocatable     :: res
+    if (PRESENT(nest)) then
+      res = REPEAT("  ", MAX(1 + nest, 1))//var//": "//s//NEW_LINE("")
+    else
+      res = "  "//var//": "//s//NEW_LINE("")
+    end if
+  end function tap14_yaml_message
+!
+  pure function tap14_yaml_list(s, nest) result(res)
+    character(*), intent(in)      :: s
+    integer, intent(in), optional :: nest
+    character(:), allocatable     :: res
+    if (PRESENT(nest)) then
+      res = REPEAT("  ", MAX(2 + nest, 2))//"- "//s//NEW_LINE("")
+    else
+      res = "    - "//s//NEW_LINE("")
+    end if
+  end function tap14_yaml_list
+!
+end module mod_unittest_tap14_yaml
+

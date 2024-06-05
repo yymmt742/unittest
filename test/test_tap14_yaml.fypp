@@ -1,0 +1,21 @@
+program main
+  use mod_unittest_tap14_yaml
+  implicit none
+  block
+    character(:), allocatable :: msg
+    msg = tap14_yaml_message("var1", "hogehoge") &
+   &   // tap14_yaml_message("var2", "") &
+   &   // tap14_yaml_message("nested1", "fuga", nest=1) &
+   &   // tap14_yaml_message("nested2", "bar", nest=1) &
+   &   // tap14_yaml_message("var3", "") &
+   &   // tap14_yaml_list("") &
+   &   // tap14_yaml_list("10", nest=1) &
+   &   // tap14_yaml_list("20", nest=1) &
+   &   // tap14_yaml_list("30", nest=1) &
+   &   // tap14_yaml_list("") &
+   &   // tap14_yaml_list("40", nest=1) &
+   &   // tap14_yaml_list("50", nest=1) &
+   &   // tap14_yaml_list("60", nest=1)
+    print'(A)', tap14_yaml_decorator(msg)
+  end block
+end program main
