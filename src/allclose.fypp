@@ -64,6 +64,6 @@ ${error_list_loop(op, rank1, rank2, erf_t, fm, neq) if rank1>0 else error_list_s
 #:endfor
 #:endfor
 #:endfor
-${report_functions()}$
+include "report_functions.f90"
 ${image_functions()}$
 end submodule allclose

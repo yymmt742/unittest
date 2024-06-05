@@ -8,7 +8,7 @@ check_fortran_source_runs(
   f18errorstop
   )
 
-function(fypp_generate src target opts list newlist)
+function(fypp_generate_includes src target opts list newlist)
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}
     COMMAND fypp ${opts}
@@ -25,18 +25,38 @@ function(fypp_generate src target opts list newlist)
   set(${newlist} ${list_} PARENT_SCOPE)
 endfunction()
 
+function(fypp_generate src target opts inclist list newlist)
+  add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}
+    COMMAND fypp ${opts}
+            ${CMAKE_CURRENT_SOURCE_DIR}/${src}
+            ${CMAKE_CURRENT_BINARY_DIR}/${target}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${src}
+            ${CMAKE_CURRENT_SOURCE_DIR}/../include/common.fypp
+            ${inclist}
+    )
+  set(list_)
+  foreach(t IN LISTS list)
+    list(APPEND list_ ${t})
+  endforeach()
+  list(APPEND list_ ${CMAKE_CURRENT_BINARY_DIR}/${target})
+  set(${newlist} ${list_} PARENT_SCOPE)
+endfunction()
+
 set(f90files)
 set(incfiles)
 
+fypp_generate_includes("report_functions.fypp" "report_functions.f90" "${fyppFlags}" "${incfiles}" incfiles)
+message(STATUS ${incfiles})
+
 if(f18errorstop)
-  fypp_generate("error_stop_f18.fypp" "error_stop.f90" "${fyppFlags}" "${f90files}" f90files)
+  fypp_generate("error_stop_f18.fypp" "error_stop.f90" "${fyppFlags}" "${incfiles}" "${f90files}" f90files)
 else()
-  fypp_generate("error_stop_f08.fypp" "error_stop.f90" "${fyppFlags}" "${f90files}" f90files)
+  fypp_generate("error_stop_f08.fypp" "error_stop.f90" "${fyppFlags}" "${incfiles}" "${f90files}" f90files)
 endif()
 
-fypp_generate("mod_unittest_kinds.fypp" "mod_unittest_kinds.f90" "${fyppFlags}" "${f90files}" f90files)
-
 list(APPEND fyppFiles
+   mod_unittest_kinds.fypp
    mod_unittest_tap14_yaml.fypp
    bool.fypp
    equal.fypp
@@ -51,7 +71,7 @@ list(APPEND fyppFiles
 
 foreach(fyppFile ${fyppFiles})
   string(REGEX REPLACE "\\.fypp" ".f90" f90Target ${fyppFile})
-  fypp_generate("${fyppFile}" "${f90Target}" "${fyppFlags}" "${f90files}" f90files)
+  fypp_generate("${fyppFile}" "${f90Target}" "${fyppFlags}" "${incfiles}" "${f90files}" f90files)
 endforeach()
 
 add_library(
@@ -61,7 +81,11 @@ add_library(
 target_include_directories(
   ${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${LIB_MOD_DIR}
+  )
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${LIB_MOD_DIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_MODULEDIR}>
   )
 set_target_properties(
   ${PROJECT_NAME} PROPERTIES
@@ -72,11 +96,6 @@ set_target_properties(
   ${PROJECT_NAME} PROPERTIES
   Fortran_MODULE_DIRECTORY
   ${LIB_MOD_DIR}
-  )
-target_include_directories(
-  ${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${LIB_MOD_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_MODULEDIR}>
   )
 target_compile_options(
   ${PROJECT_NAME}
