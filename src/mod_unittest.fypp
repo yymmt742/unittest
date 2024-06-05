@@ -11,8 +11,8 @@ module mod_unittest
   public  :: unittest
   public  :: error_stop
 !
-  character(*), parameter :: SEP1 = REPEAT('-', 64)
-  character(*), parameter :: SEP2 = REPEAT('=', 64)
+  character(*), parameter :: SEP1 = "# "//REPEAT('-', 62)
+  character(*), parameter :: SEP2 = "# "//REPEAT('=', 62)
 !
   type unittest
     private
@@ -24,7 +24,9 @@ module mod_unittest
     integer(INT64)            :: start_time
     real(RK)                  :: start_cpu_time
     character(:), allocatable :: script_name
+    logical, allocatable      :: results(:)
     logical                   :: terminate_with_error_code = .true.
+    logical                   :: tap_support = .true.
   contains
     procedure         :: init => utest_init
 #:for routine in ["assert", "assert_true", "assert_false"]
@@ -178,18 +180,21 @@ ${generic_procedure(routine, REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RAN
 !
 contains
 !
-  function utest_new(section, terminate_with_error_code) result(res)
+  function utest_new(section, terminate_with_error_code, dump_line_limit, tap_support) result(res)
     character(*), intent(in), optional :: section
     logical, intent(in), optional      :: terminate_with_error_code
+    integer, intent(in), optional      :: dump_line_limit
+    logical, intent(in), optional      :: tap_support
     type(unittest)                     :: res
-    call utest_init(res, section, terminate_with_error_code)
+    call utest_init(res, section, terminate_with_error_code, dump_line_limit)
   end function utest_new
 !
-  subroutine utest_init(this, section, terminate_with_error_code, dump_line_limit)
+  subroutine utest_init(this, section, terminate_with_error_code, dump_line_limit, tap_support)
     class(unittest), intent(inout)     :: this
     character(*), intent(in), optional :: section
     logical, intent(in), optional      :: terminate_with_error_code
     integer, intent(in), optional      :: dump_line_limit
+    logical, intent(in), optional      :: tap_support
     integer                            :: lna, ios
     character(:), allocatable          :: tmp
     call utest_destroy(this)
@@ -208,16 +213,24 @@ contains
     this%script_name = tmp(lna:)
     deallocate (tmp)
 !
-    write (this%dev, '(A)', err=100) SEP2
-    write (this%dev, '(A)', err=100) 'Test command :: '//this%script_name
-    if (PRESENT(section)) then
-      write (this%dev, '(A)', err=100) SEP1
-      write (this%dev, '(A)', err=100) '  Section ----> '//section
-    end if
-!
     if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code
+    if (PRESENT(tap_support)) then
+      this%dump_line_limit = 0
+      this%tap_support = tap_support
+    end if
     if (PRESENT(dump_line_limit)) this%dump_line_limit = dump_line_limit
-    this%verbose = MERGE(1, 0, this%dump_line_limit<0)
+    this%verbose = MERGE(1, 0, this%dump_line_limit < 0)
+!
+    ALLOCATE(this%results(0))
+!
+    if (this%verbose > 0) then
+      write (this%dev, '(A)', err=100) SEP2
+      write (this%dev, '(A)', err=100) '# Test command :: '//this%script_name
+      if (PRESENT(section)) then
+        write (this%dev, '(A)', err=100) SEP1
+        write (this%dev, '(A)', err=100) '#   Section ----> '//section
+      end if
+    end if
 !
 100 return
   end subroutine utest_init
@@ -241,7 +254,7 @@ contains
     if (this%num_test > 0) then
       write (this%dev, '(A)', err=100) SEP1
       write (this%dev, '(A,I0,A,F9.3,A,F9.3,A)', ADVANCE='NO', err=100)    &
-   &  ' Run ', this%num_test, ' tests in ', time / DBLE(t_rate), ' / ', &
+   &  '# Run ', this%num_test, ' tests in ', time / DBLE(t_rate), ' / ', &
    &  finish_cpu_time, ' s (sys/cpu)'
       if (this%num_error < 1) then
         write (this%dev, '(A,I0,A,F9.3,A)', err=100) ' ----> Passed'
@@ -249,7 +262,7 @@ contains
         write (this%dev, '(A,I0,A)', err=100) NEW_LINE('')//'         ----> ', this%num_error, ' error detected.'
       end if
     else
-      write (this%dev, '(A)', err=100) 'No Test executed'
+      write (this%dev, '(A)', err=100) '# No Test executed'
     end if
     write (this%dev, '(A)', err=100) SEP2
 !
@@ -272,9 +285,11 @@ contains
   pure subroutine utest_free(this)
     type(unittest), intent(inout) :: this
     if (ALLOCATED(this%script_name)) deallocate (this%script_name)
+    if (ALLOCATED(this%results)) deallocate (this%results)
     this%num_test = 0
     this%num_error = 0
     this%terminate_with_error_code = .true.
+    this%tap_support = .true.
     this%dump_line_limit = 10
   end subroutine utest_free
 !
