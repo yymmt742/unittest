@@ -49,6 +49,18 @@ list(APPEND fyppSources
 set(f90files)
 set(incfiles)
 
+add_executable(
+  get_constants
+  ${CMAKE_CURRENT_SOURCE_DIR}/get_constants.f90
+  )
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/constants.f90
+  COMMAND get_constants
+          ${CMAKE_CURRENT_BINARY_DIR}/constants.f90
+  )
+
+list(APPEND incfiles ${CMAKE_CURRENT_BINARY_DIR}/constants.f90)
+
 if(f18errorstop)
   fypp_generate("error_stop_f18.fypp" "error_stop.f90" "${fyppFlags}" "" "${f90files}" f90files)
 else()

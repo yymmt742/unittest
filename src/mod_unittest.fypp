@@ -13,6 +13,7 @@ module mod_unittest
 !
   character(*), parameter :: SEP1 = "# "//REPEAT('-', 62)
   character(*), parameter :: SEP2 = "# "//REPEAT('=', 62)
+  include "constants.f90"
 !
   type timestamp
     sequence
@@ -368,18 +369,16 @@ $:"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"
     call MOVE_ALLOC(from=temp, to=times)
   end subroutine timestamp_append
 !
-  function elappes_time(times) result(res)
+  pure function elappes_time(times) result(res)
     type(timestamp), intent(in) :: times(:)
-    integer(INT64)               :: t_rate, t_max
-    real(RK)                     :: res
-    integer                      :: n
-    call SYSTEM_CLOCK(count_rate=t_rate, count_max=t_max)
+    real(RK)                    :: res
+    integer                     :: n
     n = SIZE(times)
     if (n > 1) then
       if (times(n)%time < times(n - 1)%time) then
-        res = real(t_max + times(n)%time - times(n - 1)%time + 1, RK) / real(t_rate, RK)
+        res = real(COUNT_MAX + times(n)%time - times(n - 1)%time + 1, RK) * COUNT_RATE
       else
-        res = real(times(n)%time - times(n - 1)%time, RK) / real(t_rate, RK)
+        res = real(times(n)%time - times(n - 1)%time, RK) * COUNT_RATE
       end if
     else
       res = 0.0_RK
