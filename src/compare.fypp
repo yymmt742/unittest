@@ -3,46 +3,24 @@
 #:set fmts = [INTEGER_FORMAT, REAL_FORMAT]
 #:set routines = ["less", "less_equal", "greater", "greater_equal"]
 #:set ops = ["<", "<=", ">", ">="]
-#:def error_list_scalar(fm, neq)
-      block
-        integer  :: ios
-        write (this%dev, '(${fm}$)', IOSTAT=ios)  " [", a, "] ${neq}$ [", b, "]"
-      end block
-#:enddef
-#:def error_list_loop(op, rank1, rank2, fm, neq)
-      block
-        integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
-        if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
-          nerror = 0
-${do_start(rank1)}$
-            if (a${counter_suffix(rank1)}$ ${op}$ b${counter_suffix(rank2)}$) cycle
-            nerror = nerror + 1
-            write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
-            write (this%dev, '(${fm}$)', IOSTAT=ios)  " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
-${do_end(rank1)}$
-        else
-          nerror = COUNT([.not.(a ${op}$ b)])
-          call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [REAL(a - b, RK)])
-        end if
-        call report_error_rate(this%dev, SIZE(a), nerror)
-      end block
+#:def success(rank1, rank2, op)
+          success = a${counter_suffix(rank1)}$${op}$b${counter_suffix(rank2)}$
 #:enddef
 submodule(mod_unittest) compare
   implicit none
 contains
+#:include "report_functions.fypp"
 #:for ktp, fm in zip(ktps, fmts)
 #:for kind, type, post in ktp
-#:for routine, op, rate in zip(routines, ops, ["a - b", "a - b", "b - a", "b - a"])
+#:for routine, op, rate in zip(routines, ops, ["REAL(a - b, RK)", "REAL(a - b, RK)", "REAL(b - a, RK)", "REAL(b - a, RK)"])
 #:for rank1, rank2 in RANK_ITERii
   module procedure ${routine_name(routine, post, rank1, rank2)}$
 ${common_check(rank1, rank2, routine)}$
-    err = .not.${"ALL" if rank1>0 else ""}$(a ${op}$ b)
+    err = ${"ALL" if rank1>0 else ""}$(a ${negation(op)}$ b)
     call test_result_append(this%results, err)
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, this%results(SIZE(this%results))%id, err, "${routine}$", unitname)
-    if (err) then
-${error_list_loop(op, rank1, rank2, fm, strnop(op)) if rank1>0 else error_list_scalar(fm, strnop(op))}$
-    end if
+${report_result(routine)}$
+${error_list(op, fm, rank1, rank2, rate, success(rank1, rank2, op))}$
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
@@ -50,6 +28,5 @@ ${error_list_loop(op, rank1, rank2, fm, strnop(op)) if rank1>0 else error_list_s
 #:endfor
 #:endfor
 include "result_functions.f90"
-include "report_functions.f90"
 include "image_functions.f90"
 end submodule compare

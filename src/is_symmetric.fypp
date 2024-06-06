@@ -49,7 +49,7 @@ ${common_check(2, None, routine)}$
     if (PRESENT(is_failed)) is_failed = err
     if (err)then
       call test_result_append(this%results, err)
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, [s1], [s2], unitname)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, [s1], [s2], this%tap_support, unitname)
       return
     endif
     if (PRESENT(place)) then; mp = 10**place
@@ -66,7 +66,7 @@ ${common_check(2, None, routine)}$
     call test_result_append(this%results, err)
 ${"!" if no == "" else "    err = .not.err"}$
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, this%results(SIZE(this%results))%id, err, "${routine}$", unitname)
+${report_result(routine)}$
 ${error_list(fm) if no == "" else "!"}$
   end procedure ${routine_name(routine, post, 2)}$
 !

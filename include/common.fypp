@@ -70,10 +70,10 @@
 #:set COMPLEX_KIND_TYPE_POSTS = list(zip(REAL_KINDS, COMPLEX_TYPES, COMPLEX_POSTFIX))
 #:set LOGICAL_KIND_TYPE_POSTS = list(zip(LOGICAL_KINDS, LOGICAL_TYPES, LOGICAL_POSTFIX))
 
-#:set OPERATORS = ["==", "/=", "<", "<=", ">", ">=", ".eqv.", ".neqv.", "~", "!~"]
-#:set NEGA_OPRS = ["/=", "==", ">=", ">", "<=", "<", ".neqv.", ".eqv.", "!~", "~"]
-#:set OPERATOR_STRINGS = ["==", "!=", "< ", "<=", "> ", ">=", "equiv", "noteq", "~", "!~"]
-#:set NEGA_OPR_STRINGS = ["!=", "==", ">=", "> ", "<=", "< ", "noteq", "equiv", "!~", "~"]
+#:set OPERATORS = ["==", "/=", "<", "<=", ">", ">=", ".eqv.", ".neqv.", "~", "!~", "", ".not."]
+#:set NEGA_OPRS = ["/=", "==", ">=", ">", "<=", "<", ".neqv.", ".eqv.", "!~", "~", ".not.", ""]
+#:set OPERATOR_STRINGS = ["==", "!=", "< ", "<=", "> ", ">=", "equiv", "noteq", "~", "!~", "true", "false"]
+#:set NEGA_OPR_STRINGS = ["!=", "==", ">=", "> ", "<=", "< ", "noteq", "equiv", "!~", "~", "false", "true"]
 #:def negation(op)
 $:NEGA_OPRS[OPERATORS.index(op)]
 #:enddef
@@ -84,14 +84,13 @@ $:OPERATOR_STRINGS[OPERATORS.index(op)]
 $:NEGA_OPR_STRINGS[OPERATORS.index(op)]
 #:enddef
 
-#:def decimal_suffix(i, kind)
-$:f"{i}.0_" + kind if "REAL" in kind else f"{i}_" + kind
-#:enddef
-
 #:def routine_name(g, post, rank1, rank2=None)
 $:f"unittest_assert_" + ("" if g == "" else g + "_") + f"{post}_{rank1}" if rank2 is None else f"unittest_assert_" + ("" if g == "" else g + "_") + f"{post}_{rank1}{rank2}"
 #:enddef
 
+#:def decimal_suffix(i, kind)
+$:f"{i}.0_" + kind if "REAL" in kind else f"{i}_" + kind
+#:enddef
 #:def rank_suffix(rank)
 #{if rank>0}#(${",".join([":" for i in range(rank)])}$)#{endif}#
 #:enddef
@@ -100,12 +99,12 @@ $:f"unittest_assert_" + ("" if g == "" else g + "_") + f"{post}_{rank1}" if rank
 #:enddef
 #:def do_start(rank, var=None)
 #:for i in range(rank,0,-1)
-          do i${i}$ = 1, SIZE(${"a" if var is None else var}$, ${i}$)
+        do i${i}$ = 1, SIZE(${"a" if var is None else var}$, ${i}$)
 #:endfor
 #:enddef
 #:def do_end(rank)
 #:for i in range(rank)
-          end do
+        end do
 #:endfor
 #:enddef
 
@@ -130,21 +129,23 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
 #:def common_check_0()
     logical :: err
 #:enddef
-
 #:def common_check_1(routine)
     logical :: err
     err = ANY(SHAPE(a) /= SHAPE(b))
     if(PRESENT(is_failed)) is_failed = err
     if (err) then
       call test_result_append(this%results, err)
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, SHAPE(a), SHAPE(b), "${routine}$", unitname)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, SHAPE(a), SHAPE(b), this%tap_support, "${routine}$", unitname)
       return
     end if
+#:enddef
+#:def report_result(routine)
+    call report_result(this%dev, this%results(SIZE(this%results))%id, err, this%tap_support, "${routine}$", unitname)
 #:enddef
 
 #:set L_MSG = 56
 #:set L_WDH = L_MSG - 12
-#:set WSPC = "REPEAT(' ', 8)"
+#:set WSPC = '"#"' + "//REPEAT(' ', 7)"
 #:set SEP3 = WSPC + "//REPEAT('-', " + str(L_MSG) + ")"
 
 #:endmute

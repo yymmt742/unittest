@@ -1,41 +1,25 @@
 #:include "common.fypp"
 #:set fmts = [REAL_FORMAT, COMPLEX_FORMAT]
 #:set ktps = [REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
-#:def erff(s, erf_t)
-$:"REAL("+s+", RK)" if erf_t==0 else "REAL(ABS("+s+"), RK)"
+#:set subvar = "        real(RK) :: diff"
+#:def success(rank1, rank2, op)
+          diff = ABS(${"a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2)}$)
+          success = diff ${"<=" if op == "~" else ">"}$ tol
 #:enddef
-#:def error_list_scalar(fm, neq)
-      block
-        integer  :: ios
-        write (this%dev, '(16X,${fm}$)', IOSTAT=ios)  " [", a, "] ${neq}$ [", b, "]"
-      end block
-#:enddef
-#:def error_list_loop(op, rank1, rank2, erf_t, fm, neq)
-        block
-        integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
-        real(RK) :: diff
-        if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
-          nerror = 0
-${do_start(rank1)}$
-            diff = ${erff("a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2), erf_t)}$
-            if (diff ${op}$ tol) cycle
-            nerror = nerror + 1
-            write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
-            write (this%dev, '(${fm}$)', IOSTAT=ios)  " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b${counter_suffix(rank2)}$, "]"
-${do_end(rank1)}$
-        else
-          nerror = COUNT([.not.(${erff("a - b", erf_t)}$ ${op}$ tol)])
-          call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [${erff("a - b", erf_t)}$])
-        end if
-        call report_error_rate(this%dev, SIZE(a), nerror)
-        end block
+#:def error_rate(type, op)
+#:if op == "~"
+${"REAL(ABS(a) - ABS(b), RK)" if "complex" in type else "REAL(a - b, RK)"}$
+#:else
+${"MERGE(1.0_RK, 0.0_RK, INT(ABS(a - b)) <= tol)"}$
+#:endif
 #:enddef
 submodule(mod_unittest) allclose
   implicit none
 contains
+#:include "report_functions.fypp"
 #:for ktp, fm, erf_t in zip(ktps, fmts, [0, 1])
 #:for kind, type, post in ktp
-#:for routine, op, no in zip(["allclose", "not_allclose"], ["<", ">="], [".not.", ""])
+#:for routine, op, no in zip(["allclose", "not_allclose"], ["~", "!~"], [".not.", ""])
 #:for rank1, rank2 in RANK_ITERii
   module procedure ${routine_name(routine, post, rank1, rank2)}$
     real(${kind}$) :: tol
@@ -49,11 +33,8 @@ ${common_check(rank1, rank2, routine)}$
     err = ${no}$${"ALL" if rank1>0 else ""}$(ABS(a - b) < tol)
     call test_result_append(this%results, err)
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, this%results(SIZE(this%results))%id, err, "${routine}$", unitname)
-    if (err) then
-${error_list_loop(op, rank1, rank2, erf_t, fm, strnop(op)) if rank1>0 else error_list_scalar(fm, strnop(op))}$
-    end if
-    FLUSH (this%dev)
+${report_result(routine)}$
+${error_list(op, fm, rank1, rank2, error_rate(type, op), success(rank1, rank2, op), subvar)}$
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
@@ -61,6 +42,5 @@ ${error_list_loop(op, rank1, rank2, erf_t, fm, strnop(op)) if rank1>0 else error
 #:endfor
 #:endfor
 include "result_functions.f90"
-include "report_functions.f90"
 include "image_functions.f90"
 end submodule allclose

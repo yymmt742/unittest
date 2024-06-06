@@ -11,8 +11,8 @@ module mod_unittest
   public  :: unittest
   public  :: error_stop
 !
-  character(*), parameter :: SEP1 = REPEAT('-', 64)
-  character(*), parameter :: SEP2 = REPEAT('=', 64)
+  character(*), parameter :: SEP1 = "# "//REPEAT('-', 62)
+  character(*), parameter :: SEP2 = "# "//REPEAT('=', 62)
   include "constants.f90"
 !
   type timestamp
@@ -193,6 +193,7 @@ contains
     integer, intent(in), optional      :: dump_line_limit
     logical, intent(in), optional      :: tap_support
     logical, intent(in), optional      :: argparse
+    integer                            :: ios
 !
     if (.not. ALLOCATED(this%script_name)) then
       this%terminate_with_error_code = .true.
@@ -203,8 +204,9 @@ contains
         this%dump_line_limit = 0
         this%tap_support = tap_support
       end if
+      call argparse_(this, argparse)
       block
-        integer                   :: lna, ios
+        integer                   :: lna
         character(:), allocatable :: tmp
         call GET_COMMAND_ARGUMENT(0, length=lna, status=ios)
         if (ios /= 0) return
@@ -213,12 +215,10 @@ contains
         call GET_COMMAND_ARGUMENT(0, value=tmp, status=ios)
         this%script_name = tmp(${"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"}$:)
         deallocate (tmp)
-        if (PRESENT(argparse)) then
-          if (argparse) call argparse_(this)
-        else
-          call argparse_(this)
-        end if
       end block
+      if (this%tap_support) then
+        write(STDOUT, '(A)', iostat=ios) "TAP version 14"
+      end if
     end if
 !
     if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code
@@ -254,10 +254,14 @@ contains
 100 return
   end subroutine utest_init
 !
-  subroutine argparse_(this)
+  subroutine argparse_(this, argparse)
     class(unittest), intent(inout) :: this
+    logical, intent(in), optional  :: argparse
     character(:), allocatable      :: argv
     integer                        :: i, narg, length, ios
+    if (PRESENT(argparse)) then
+      if (.not. argparse) return
+    end if
     argv = ""
     narg = COMMAND_ARGUMENT_COUNT()
     do i = 1, narg
@@ -291,7 +295,7 @@ contains
         if (n_error(this%results) < 1) then
           write (this%dev, '(A,I0,A,F9.3,A)', err=100) ' ----> Passed'
         else
-          write (this%dev, '(A,I0,A)', err=100) NEW_LINE('')//'         ----> ', n_error(this%results), ' error detected.'
+          write (this%dev, '(A,I0,A)', err=100) NEW_LINE('')//'#        ----> ', n_error(this%results), ' error detected.'
         end if
       else
         write (this%dev, '(A)', err=100) '# No Test executed'

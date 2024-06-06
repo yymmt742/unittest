@@ -1,6 +1,18 @@
 #:include "common.fypp"
 #:set fmts = [INTEGER_FORMAT, REAL_FORMAT, COMPLEX_FORMAT]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+#:set subvar = "        real(RK) :: diff"
+#:def success(rank1, rank2, op)
+          diff = ABS(${"a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2)}$) * mp
+          success = INT(diff) ${"<=" if op == "~" else ">"}$ 1
+#:enddef
+#:def error_rate(type, op)
+#:if op == "~"
+${"REAL(ABS(a) - ABS(b), RK)" if "COMPLEX" in type else "REAL(a - b, RK)"}$
+#:else
+${"MERGE(1.0_RK, 0.0_RK, INT(ABS(a - b) * mp) <= 1)"}$
+#:endif
+#:enddef
 #:def error_list(fm)
     if (err) then
       block
@@ -52,7 +64,7 @@ ${common_check(2, None, routine)}$
     if (PRESENT(is_failed)) is_failed = err
     if (err)then
       call test_result_append(this%results, err)
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, [s1], [s2], unitname)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, [s1], [s2], this%tap_support, unitname)
       return
     endif
     if (PRESENT(place)) then; mp = 10**place
@@ -70,7 +82,7 @@ ${common_check(2, None, routine)}$
     call test_result_append(this%results, err)
 ${"!" if no == "" else "    err = .not.err"}$
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, this%results(SIZE(this%results))%id, err, "${routine}$", unitname)
+${report_result(routine)}$
 ${error_list(fm) if no == "" else "!"}$
   end procedure ${routine_name(routine, post, 2)}$
 !

@@ -4,15 +4,15 @@
     real(RK), intent(in)    :: error_rate(ndat)
     character(*), parameter :: SEP3 = ${SEP3}$
     character(*), parameter :: CDIV(21) = ["165", "129", "093", "057", "021", &
-                             &               "020", "019", "018", "017", "016", &
-                             &               "000", "052", "088", "124", "160", &
-                             &               "196", "202", "208", "214", "220", &
-                             &               "226"]
+                             &             "020", "019", "018", "017", "016", &
+                             &             "000", "052", "088", "124", "160", &
+                             &             "196", "202", "208", "214", "220", &
+                             &             "226"]
     character(*), parameter :: CSEQ(21) = ["232", "233", "234", "235", "236", &
-                             &               "237", "238", "239", "240", "241", &
-                             &               "242", "243", "244", "245", "246", &
-                             &               "247", "248", "249", "251", "253", &
-                             &               "255"]
+                             &             "237", "238", "239", "240", "241", &
+                             &             "242", "243", "244", "245", "246", &
+                             &             "247", "248", "249", "251", "253", &
+                             &             "255"]
     character(*), parameter :: CSEQ_R(21) = ["255", "253", "251", "249", "248", &
                              &               "247", "246", "245", "244", "243", &
                              &               "242", "241", "240", "239", "238", &
@@ -38,16 +38,16 @@
     character(:), allocatable :: cb
     integer                   :: i, j, n, ios
     call colorbar(nmap, cmap, cb)
-    write (dev, '(2X,G12.3,2A,G12.3)', IOSTAT=ios) mmin, cb, RESET, mmax
+    write (dev, '(A,4X,G10.2,2A,G10.2)', IOSTAT=ios) "# ", mmin, cb, RESET, mmax
     n = MIN(nbreak, ndat)
-    write (dev, '(14X, A)', IOSTAT=ios) ANSI//REPEAT("_", n)//RESET
+    write (dev, '(A,14X,A)', IOSTAT=ios) "# ", ANSI//REPEAT("_", n)//RESET
     do i = 1, ndat, nbreak
       n = MIN(i + nbreak - 1, ndat)
-      write (dev, '(I5,A,I5, 2X, A)', ADVANCE="NO", IOSTAT=ios) i, " -", n, ANSI
+      write (dev, '(A,14X,A)', ADVANCE="NO", IOSTAT=ios) "# ", ANSI
       do j = i, n
         write (dev, '(A)', ADVANCE="NO", IOSTAT=ios) colorpiece(dat(j), mmin, mmax, nmap, cmap)
       end do
-      write (dev, '(A)', IOSTAT=ios) RESET
+      write (dev, '(A,1X,I0,A,I0)', IOSTAT=ios) RESET, i, " - ", n
     end do
   end subroutine dump_image
 !

@@ -1,57 +1,30 @@
 #:include "common.fypp"
-#:def error_list_scalar(neq)
-      block
-        integer  :: ios
-        write (this%dev, '(8X,A)', IOSTAT=ios) " Assertion Error :: [ ${neq}$ ]"
-      end block
+#:def success(rank1, op)
+          success = ${op + "expr" + counter_suffix(rank1)}$
 #:enddef
-#:def error_list_loop(rank, no, neq)
-      block
-        integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank+1)])}$
-        nerror = 0
-${do_start(rank, "expr")}$
-          if (${no}$expr${counter_suffix(rank)}$) cycle
-          nerror = nerror + 1
-          write (this%dev, '(8X,*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank+1)])}$
-          write (this%dev, '(A)', IOSTAT=ios) " Assertion Error :: [ ${neq}$ ]"
-${do_end(rank)}$
-        call report_error_rate(this%dev, SIZE(expr), nerror)
-      end block
+#:def error_rate(op)
+${"MERGE(1.0_RK, 0.0_RK, " + op + "expr)"}$
 #:enddef
 submodule(mod_unittest) bool
   implicit none
 contains
+#:include "report_functions.fypp"
+#:for routine, op, rank in zip(["", "true", "false"], ["", "", ".not."], [RANK_SCALAR, RANK_ITERi, RANK_ITERi])
 #:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
-  module procedure ${routine_name("", post, 0)}$
-${common_check(0, None, "")}$
-    err = .not.expr
+#:for rank1, rank2 in rank
+  module procedure ${routine_name(routine, post, rank1)}$
+${common_check(rank1, rank2, routine)}$
+    err = ${".not.ALL("+op+"expr)" if rank1>0 else negation(op)+"expr"}$
     call test_result_append(this%results, err)
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, this%results(SIZE(this%results))%id, err, "", unitname)
-    if (err) then
-${error_list_scalar("FAILED")}$
-    end if
-  end procedure ${routine_name("", post, 0)}$
-!
-#:endfor
-#:for routine, no, neq in zip(["true", "false"], ["", ".not."], ["FALSE", "TRUE"])
-#:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
-#:for rank in range(MAXIMUM_RANK + 1)
-  module procedure ${routine_name(routine, post, rank)}$
-${common_check(rank, None, routine)}$
-    err = .not.${"ALL" if rank>0 else ""}$(${no}$expr)
-    call test_result_append(this%results, err)
-    if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, this%results(SIZE(this%results))%id, err, "${routine}$", unitname)
-    if (err) then
-${error_list_loop(rank, no, neq) if rank>0 else error_list_scalar(neq)}$
-    end if
-  end procedure ${routine_name(routine, post, rank)}$
+${report_result(routine)}$
+${error_list(op, "A,L,A", rank1, rank2, error_rate(op), success(rank1, op), vname_a="expr")}$
+  end procedure ${routine_name(routine, post, rank1)}$
 !
 #:endfor
 #:endfor
 #:endfor
 include "result_functions.f90"
-include "report_functions.f90"
 include "image_functions.f90"
 end submodule bool
+
