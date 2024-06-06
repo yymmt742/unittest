@@ -2,54 +2,32 @@
 #:set tors = ["REAL(a, RK)", "REAL(a, RK)", "REAL(ABS(a), RK)"]
 #:set fmts = [INTEGER_FORMAT, REAL_FORMAT, COMPLEX_FORMAT]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
-#:def error_list_scalar(fm, neq)
-      block
-        integer  :: ios
-        write (this%dev, '(16X,${fm}$)', IOSTAT=ios)  " [", a, "] ${neq}$ [", b, "]"
-      end block
+#:def success(rank1)
+          success = INT(ABS(a${counter_suffix(rank1)}$) * mp) <= 1
 #:enddef
-#:def error_list_loop(op, rank1, fm, neq, tor)
-      block
-        integer  :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$
-        real(RK) :: diff
-        if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
-          nerror = 0
-${do_start(rank1)}$
-            diff = ABS(${"a" + counter_suffix(rank1)}$) * mp
-            if (INT(diff) ${op}$ 1) cycle
-            nerror = nerror + 1
-            write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
-            write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a${counter_suffix(rank1)}$, "] ${neq}$ [", b, "]"
-${do_end(rank1)}$
-        else
-          nerror = COUNT([.not.(INT(ABS(a) * mp) ${op}$ 1)])
-          call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [${tor}$])
-        end if
-        call report_error_rate(this%dev, SIZE(a), nerror)
-      end block
+#:def error_rate(type)
+${"REAL(ABS(a), RK)" if "complex" in type else "REAL(a, RK)"}$
 #:enddef
 submodule(mod_unittest) is_zero
   implicit none
   integer, parameter :: DEF_PLACE = 7
 contains
+#:include "report_functions.fypp"
 #:for ktp, fm, tor in zip(ktps, fmts, tors)
 #:for kind, type, post in ktp
-#:for routine, op, no in zip(["is_zero", "isnot_zero"], ["<", ">="], [".not.", ""])
+#:for routine, op in zip(["is_zero"], ["~"])
 #:for rank1, rank2 in RANK_ITERi
   module procedure ${routine_name(routine, post, rank1)}$
-    ${type}$, parameter :: b = 0
     ${"real(RK)" if "INT" in kind else "real("+kind+")"}$ :: mp
 ${common_check(rank1, rank2, routine)}$
     if (PRESENT(place)) then; mp = 10**place
     else; mp = 10**DEF_PLACE
     end if
-    err = ${no}$${"ALL" if rank1>0 else ""}$((mp * ABS(a - b)) < 1)
+    err = .not.${"ALL((mp * ABS(a)) < 1)" if rank1>0 else "((mp * ABS(a)) < 1)"}$
     call test_result_append(this%results, err)
     if (PRESENT(is_failed)) is_failed = err
 ${report_result(routine)}$
-    if (err) then
-${error_list_loop(op, rank1, fm, strnop(op), tor) if rank1>0 else error_list_scalar(fm, strnop(op))}$
-    end if
+${error_list(op, fm, rank1, rank2, error_rate(type), success(rank1))}$
   end procedure ${routine_name(routine, post, rank1)}$
 !
 #:endfor
@@ -57,6 +35,6 @@ ${error_list_loop(op, rank1, fm, strnop(op), tor) if rank1>0 else error_list_sca
 #:endfor
 #:endfor
 include "result_functions.f90"
-include "report_functions.f90"
 include "image_functions.f90"
 end submodule is_zero
+

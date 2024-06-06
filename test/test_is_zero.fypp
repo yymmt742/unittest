@@ -30,18 +30,9 @@ contains
     call u%assert_is_zero(j${rank1}$, 'is_zero ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
     if (.not.is_failed) call error_stop(code=1)
 #:endfor
-!
-    call u%init('isnot_zero ${post}$', terminate_with_error_code=.false.)
-!
-#:for rank1, rank2 in RANK_ITERi
-    call u%assert_isnot_zero(i${rank1}$, 'isnot_zero ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
-    if (.not.is_failed) call error_stop(code=1)
-    call u%assert_isnot_zero(j${rank1}$, 'isnot_zero ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
-    if (is_failed) call error_stop(code=1)
-#:endfor
-!&>
   end subroutine ${routine + post}$
 !
 #:endfor
 #:endfor
 end program main
+
