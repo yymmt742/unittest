@@ -17,20 +17,25 @@ contains
 #:for kind, type, post in ktp
   subroutine ${routine + post}$(u)
     type(unittest), intent(inout) :: u
-    ${type}$, parameter :: i2(4, 4) = RESHAPE([0, 1, 2, 3, 4, 3, 2, 1, 1, 3, 4, 2, 4, 3, 2, 1], [4, 4])
-    ${type}$, parameter :: j2(4, 4) = RESHAPE([0, 1, 2, 3, 1, 2, 3, 4, 2, 3, 4, 5, 3, 4, 5, 6], [4, 4])
+    ${type}$ :: i2(4, 4)
+    ${type}$ :: j2(4, 4)
+    ${type}$ :: k2(4, 6)
+    real    :: rn(4, 4)
     logical :: is_failed
 !<&
-    call u%init('is_symmetric ${post}$', terminate_with_error_code=.false.)
+    call u%init('is_eye ${post}$', terminate_with_error_code=.false.)
 !
-    call u%assert_is_symmetric(i2, 'is_symmetric ${post}$', is_failed=is_failed)
-    if (.not.is_failed) call error_stop(code=1)
-    call u%assert_is_symmetric(j2, 'is_symmetric ${post}$', is_failed=is_failed)
+    call RANDOM_NUMBER(rn)
+    j2 = rn * 10.0
+    i2 = j2 + TRANSPOSE(j2)
+    k2 = 0
+!
+    call u%assert_is_symmetric(i2, 'is_eye_I_${post}$', is_failed=is_failed)
     if (is_failed) call error_stop(code=1)
-    call u%assert_isnot_symmetric(j2, 'isnot_symmetric ${post}$', is_failed=is_failed)
+    call u%assert_is_symmetric(j2, 'is_eye_J_${post}$', is_failed=is_failed)
     if (.not.is_failed) call error_stop(code=1)
-    call u%assert_isnot_symmetric(i2, 'isnot_symmetric ${post}$', is_failed=is_failed)
-    if (is_failed) call error_stop(code=1)
+    call u%assert_is_symmetric(k2, 'is_eye_K_${post}$', is_failed=is_failed)
+    if (.not.is_failed) call error_stop(code=1)
 !
 !&>
   end subroutine ${routine + post}$
