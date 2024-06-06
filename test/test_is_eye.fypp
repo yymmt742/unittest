@@ -18,7 +18,8 @@ contains
   subroutine ${routine + post}$(u)
     type(unittest), intent(inout) :: u
     ${type}$            :: i2(4, 4)
-    ${type}$, parameter :: j2(4, 4) = 0
+    ${type}$            :: j2(4, 4) = 0
+    ${type}$, parameter :: k2(4, 6) = 0
     integer :: i, j
     logical :: is_failed
 !<&
@@ -27,14 +28,14 @@ contains
     do concurrent(i=1:SIZE(i2, 1), j=1:SIZE(i2, 2))
       i2(i, j) = MERGE(1, 0, i==j)
     end do
+    j2(:, :2) = 1
+    j2(:, 3:) = i2(:, 3:)
 !
-    call u%assert_is_eye(i2, 'is_eye ${post}$', is_failed=is_failed)
+    call u%assert_is_eye(i2, 'is_eye_I_${post}$', is_failed=is_failed)
     if (is_failed) call error_stop(code=1)
-    call u%assert_is_eye(j2, 'is_eye ${post}$', is_failed=is_failed)
+    call u%assert_is_eye(j2, 'is_eye_J_${post}$', is_failed=is_failed)
     if (.not.is_failed) call error_stop(code=1)
-    call u%assert_isnot_eye(j2, 'isnot_eye ${post}$', is_failed=is_failed)
-    if (is_failed) call error_stop(code=1)
-    call u%assert_isnot_eye(i2, 'isnot_eye ${post}$', is_failed=is_failed)
+    call u%assert_is_eye(k2, 'is_eye_K_${post}$', is_failed=is_failed)
     if (.not.is_failed) call error_stop(code=1)
 !
 !&>
