@@ -18,31 +18,37 @@ contains
   subroutine ${routine + post}$(u)
     type(unittest), intent(inout) :: u
 #:for rank1, rank2 in RANK_ITERi
-    ${type}$, parameter :: i${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 0, j${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 1
+    ${type}$, parameter :: i${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 10
+    ${type}$            :: j${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$
+    real                :: k${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$
 #:endfor
     logical             :: is_failed
 !<&
+#:for rank1, rank2 in RANK_ITERi
+    call RANDOM_NUMBER(k${rank1}$)
+    j${rank1}$ = k${rank1}$ * 9.0
+#:endfor
     call u%init('almost_equal ${post}$', terminate_with_error_code=.false.)
 !
 #:for rank1, rank2 in RANK_ITERii
-    call u%assert_almost_equal(i${rank1}$, i${rank2}$, 'almost_equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    call u%assert_almost_equal(i${rank1}$, i${rank2}$, 'almost_equal_II_${post}$_${rank1}$${rank2}$', is_failed=is_failed)
     if (is_failed) call error_stop(code=1)
 #:endfor
 !
 #:for rank1, rank2 in RANK_ITERii
-    call u%assert_almost_equal(i${rank1}$, j${rank2}$, 'almost_equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    call u%assert_almost_equal(i${rank1}$, j${rank2}$, 'almost_equal_IJ_${post}$_${rank1}$${rank2}$', is_failed=is_failed)
     if (.not.is_failed) call error_stop(code=1)
 #:endfor
 !
     call u%init('not almost_equal ${post}$', terminate_with_error_code=.false.)
 !
 #:for rank1, rank2 in RANK_ITERii
-    call u%assert_not_almost_equal(i${rank1}$, i${rank2}$, 'not almost_equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    call u%assert_not_almost_equal(i${rank1}$, i${rank2}$, 'not_almost_equal_II_${post}$_${rank1}$${rank2}$', is_failed=is_failed)
     if (.not.is_failed) call error_stop(code=1)
 #:endfor
 !
 #:for rank1, rank2 in RANK_ITERii
-    call u%assert_not_almost_equal(i${rank1}$, j${rank2}$, 'not almost_equal ${post}$ ${rank1}$${rank2}$', is_failed=is_failed)
+    call u%assert_not_almost_equal(i${rank1}$, j${rank2}$, 'not_almost_equal_JJ_${post}$_${rank1}$${rank2}$', is_failed=is_failed)
     if (is_failed) call error_stop(code=1)
 #:endfor
 !&>
