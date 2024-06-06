@@ -1,44 +1,145 @@
 #:include "common.fypp"
 module mod_unittest_tap14_yaml
   !! yaml string functions TAP 14 style
+  use mod_unittest_kinds
   implicit none
   private
+  public :: tap14_yaml_document_start
+  public :: tap14_yaml_document_end
   public :: tap14_yaml_decorator
-  public :: tap14_yaml_message
+  public :: tap14_yaml_body
   public :: tap14_yaml_list
 !
-  character(*), parameter :: TAP14_YAML_SEPARATOR = "  ---"//NEW_LINE("")
+  interface tap14_yaml_list
+    module procedure tap14_yaml_list_ch
+#:for ktp in [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS, LOGICAL_KIND_TYPE_POSTS]
+#:for kind, type, post in ktp
+    module procedure tap14_yaml_list_${post}$
+#:endfor
+#:endfor
+  end interface tap14_yaml_list
 !
 contains
-!
-  pure function tap14_yaml_decorator(s) result(res)
-    character(*), intent(in)  :: s
+  pure function tap14_yaml_document_start(s, comment) result(res)
+    character(*), intent(in)           :: s
+    character(*), intent(in), optional :: comment
     character(:), allocatable :: res
-    res = TAP14_YAML_SEPARATOR//s//TAP14_YAML_SEPARATOR
+    if (PRESENT(comment)) then
+      res = "  --- # "//comment//NEW_LINE("")
+    else
+      res = "  ---"//NEW_LINE("")
+    end if
+  end function tap14_yaml_document_start
+!
+  pure function tap14_yaml_document_end(s, comment) result(res)
+    character(*), intent(in)           :: s
+    character(*), intent(in), optional :: comment
+    character(:), allocatable :: res
+    if (PRESENT(comment)) then
+      res = "  ... # "//comment//NEW_LINE("")
+    else
+      res = "  ..."//NEW_LINE("")
+    end if
+  end function tap14_yaml_document_end
+!
+  pure function tap14_yaml_decorator(s, comment) result(res)
+    character(*), intent(in)           :: s
+    character(*), intent(in), optional :: comment
+    character(:), allocatable :: res
+    if (PRESENT(comment)) then
+      res = "  --- # "//comment//NEW_LINE("")//s//"  ..."//NEW_LINE("")
+    else
+      res = "  ---"//NEW_LINE("")//s//"  ..."//NEW_LINE("")
+    end if
   end function tap14_yaml_decorator
 !
-  pure function tap14_yaml_message(var, s, nest) result(res)
-    character(*), intent(in)      :: var
-    character(*), intent(in)      :: s
+  pure function tap14_yaml_body(var, s, nest, comment) result(res)
+    character(*), intent(in)           :: var
+    character(*), intent(in)           :: s
+    integer, intent(in), optional      :: nest
+    character(*), intent(in), optional :: comment
+    character(:), allocatable          :: res
+    if (PRESENT(nest)) then
+      res = REPEAT("  ", 1 + MAX(nest, 0))//TRIM(ADJUSTL(var))//": "//s
+    else
+      res = "  "//TRIM(ADJUSTL(var))//": "//s
+    end if
+    if(PRESENT(comment))then
+      res = res//" # "//NEW_LINE("")
+    else
+      res = res//NEW_LINE("")
+    endif
+  end function tap14_yaml_body
+!
+  pure function tap14_yaml_list_ch(var, s, nest) result(res)
+    character(*), intent(in), optional :: var
+    character(*), intent(in), optional :: s
+    integer, intent(in), optional      :: nest
+    character(:), allocatable          :: res
+    character(:), allocatable          :: tmp
+    tmp = "-"
+    if (PRESENT(var)) then
+      if (var /= "") tmp = tmp//" "//TRIM(ADJUSTL(var))//":"
+    end if
+    if (PRESENT(s)) then
+      if (s /= "") tmp = tmp//" "//s
+    end if
+    if (PRESENT(nest)) then
+      res = REPEAT("  ", MAX(2 + nest, 2))//tmp//NEW_LINE("")
+    else
+      res = "    "//tmp//NEW_LINE("")
+    end if
+  end function tap14_yaml_list_ch
+!
+#:for ktp, fm in zip([INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS], ['I32', 'G32.9'])
+#:for kind, type, post in ktp
+  pure function tap14_yaml_list_${post}$(a, nest) result(res)
+    ${type}$, intent(in)          :: a
     integer, intent(in), optional :: nest
     character(:), allocatable     :: res
+    character(32)                 :: tmp
+    write (tmp, '(${fm}$)') a
     if (PRESENT(nest)) then
-      res = REPEAT("  ", MAX(1 + nest, 1))//var//": "//s//NEW_LINE("")
+      res = REPEAT("  ", MAX(2 + nest, 2))//"- "//TRIM(ADJUSTL(tmp))//NEW_LINE("")
     else
-      res = "  "//var//": "//s//NEW_LINE("")
+      res = "    - "//TRIM(ADJUSTL(tmp))//NEW_LINE("")
     end if
-  end function tap14_yaml_message
+  end function tap14_yaml_list_${post}$
 !
-  pure function tap14_yaml_list(s, nest) result(res)
-    character(*), intent(in)      :: s
+#:endfor
+#:endfor
+#:for kind, type, post in COMPLEX_KIND_TYPE_POSTS
+  pure function tap14_yaml_list_${post}$(a, nest) result(res)
+    ${type}$, intent(in)          :: a
     integer, intent(in), optional :: nest
     character(:), allocatable     :: res
-    if (PRESENT(nest)) then
-      res = REPEAT("  ", MAX(2 + nest, 2))//"- "//s//NEW_LINE("")
-    else
-      res = "    - "//s//NEW_LINE("")
-    end if
-  end function tap14_yaml_list
+    character(32)                 :: re, im
+    integer                       :: nest_
+    nest_ = 2
+    if (PRESENT(nest)) nest_ = nest_ + MAX(nest, 0)
+    write (re, '(G32.9)') REAL(a, ${kind}$)
+    write (im, '(G32.9)') AIMAG(a)
+    res = REPEAT("  ", nest_)//"- "//NEW_LINE("") &
+   &   //REPEAT("  ", nest_ + 1)//"- real: "//TRIM(ADJUSTL(re))//NEW_LINE("") &
+   &   //REPEAT("  ", nest_ + 1)//"- imag: "//TRIM(ADJUSTL(im))//NEW_LINE("")
+  end function tap14_yaml_list_${post}$
 !
+#:endfor
+#:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
+  pure function tap14_yaml_list_${post}$(a, nest) result(res)
+    ${type}$, intent(in)          :: a
+    integer, intent(in), optional :: nest
+    character(:), allocatable     :: res
+    integer                       :: nest_
+    nest_ = 2
+    if (PRESENT(nest)) nest_ = nest_ + MAX(nest, 0)
+    if(a)then
+      res = REPEAT("  ", nest_)//"- true"//NEW_LINE("")
+    else
+      res = REPEAT("  ", nest_)//"- false"//NEW_LINE("")
+    endif
+  end function tap14_yaml_list_${post}$
+!
+#:endfor
 end module mod_unittest_tap14_yaml
 
