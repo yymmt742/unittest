@@ -32,7 +32,7 @@ module mod_unittest
 #:set equal = [["equal", "not_equal"], INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS, RANK_ITERii]
 #:set almost_equal = [["almost_equal", "not_almost_equal"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERii]
 #:set compare = [["less", "less_equal", "greater", "greater_equal"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS, RANK_ITERii]
-#:set is_eye = [["is_eye", "isnot_eye"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_MATRIX]
+#:set is_eye = [["is_eye"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_MATRIX]
 #:set is_symmetric = [["is_symmetric", "isnot_symmetric"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_MATRIX]
 #:set is_zero = [["is_zero", "isnot_zero"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERi]
 #:set allclose = [["allclose", "not_allclose"], REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERii]
@@ -132,7 +132,7 @@ ${arg_type_ab(type, rank1, rank2)}$
 #:endfor
 #:endfor
 #:endfor
-#:for routine in ["is_eye", "isnot_eye"]
+#:for routine in ["is_eye"]
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
     module subroutine ${routine_name(routine, post, 2)}$ (this, a, unitname, place, is_failed)
 ${arg_type_matrix(type)}$

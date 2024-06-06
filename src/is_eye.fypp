@@ -1,77 +1,43 @@
 #:include "common.fypp"
 #:set fmts = [INTEGER_FORMAT, REAL_FORMAT, COMPLEX_FORMAT]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
-#:set subvar = "        real(RK) :: diff"
-#:def success(rank1, rank2, op)
-          diff = ABS(${"a" + counter_suffix(rank1) + " - b" + counter_suffix(rank2)}$) * mp
-          success = INT(diff) ${"<=" if op == "~" else ">"}$ 1
+#:def subvar(type)
+        ${type}$ :: error(SIZE(a, 1), SIZE(a, 2))
+#:enddef
+#:def success(op)
+          b = MERGE(1, 0, i1 == i2)
+          error(i1, i2) = a(i1, i2) - b
+          success = INT(ABS(error(i1, i2)) * mp) <= 1
 #:enddef
 #:def error_rate(type, op)
-#:if op == "~"
-${"REAL(ABS(a) - ABS(b), RK)" if "COMPLEX" in type else "REAL(a - b, RK)"}$
-#:else
-${"MERGE(1.0_RK, 0.0_RK, INT(ABS(a - b) * mp) <= 1)"}$
-#:endif
-#:enddef
-#:def error_list(fm)
-    if (err) then
-      block
-        integer :: ios, nerror
-        nerror = 0
-        if (this%verbose > 0 .or. SIZE(a)<=this%dump_line_limit) then
-          do j = 1, s2
-            do i = 1, s1
-              b = MERGE(1, 0, i == j)
-              diff = ABS(a(i, j) - b) * mp
-              if (INT(diff) < 1) cycle
-              nerror = nerror + 1
-              write (this%dev, '(*(I6))', IOSTAT=ios, ADVANCE='NO') i, j
-              write (this%dev, '(${fm}$)', IOSTAT=ios) " [", a(i, j), "] !~ [", b, "]"
-            end do
-          end do
-        else
-          block
-            real(RK) :: error(s1, s2)
-            do j = 1, s2
-              do i = 1, s1
-                b = MERGE(1, 0, i == j)
-                error(i, j) = a(i, j) - b
-                if (INT(ABS(error(i, j)) * mp) >= 1) nerror = nerror + 1
-              end do
-            end do
-            call report_error_as_image(this%dev, SIZE(a), MIN(SIZE(a, 1), 50), [error])
-          end block
-        end if
-        call report_error_rate(this%dev, SIZE(a), nerror)
-      end block
-    end if
+${"REAL(ABS(error), RK)" if "complex" in type else "REAL(error, RK)"}$
 #:enddef
 submodule(mod_unittest) is_eye
   implicit none
   integer, parameter :: DEF_PLACE = 7
 contains
+#:include "report_functions.fypp"
 #:for ktp, fm in zip(ktps, fmts)
 #:for kind, type, post in ktp
-#:for routine, no in zip(["is_eye", "isnot_eye"], ["", ".not."])
-  module procedure ${routine_name(routine, post, 2)}$
+#:for routine, op in zip(["is_eye"], ["~"])
+#:for rank1, rank2 in RANK_MATRIX
+  module procedure ${routine_name(routine, post, rank1, rank2)}$
     ${"real(RK)" if "INT" in kind else "real("+kind+")"}$ :: mp, diff
     ${type}$ :: b
-    integer :: i, j, s1, s2
-${common_check(2, None, routine)}$
-    s1 = SIZE(a, 1)
-    s2 = SIZE(a, 2)
-    err = s1 /= s2
+    integer :: i, j
+${common_check(rank1, rank2, routine)}$
+    err = SIZE(a, 1) /= SIZE(a, 2)
     if (PRESENT(is_failed)) is_failed = err
     if (err)then
       call test_result_append(this%results, err)
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, [s1], [s2], this%tap_support, unitname)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, [SIZE(a, 1)], [SIZE(a, 2)], this%tap_support, unitname)
       return
     endif
     if (PRESENT(place)) then; mp = 10**place
     else; mp = 10**DEF_PLACE
     end if
-    do j = 1, s2
-      do i = 1, s1
+    do j = 1, SIZE(a, 2)
+      do i = 1, SIZE(a, 1)
         b = MERGE(1, 0, i == j)
         diff = ABS(a(i, j) - b) * mp
         err = INT(diff) >= 1
@@ -80,16 +46,16 @@ ${common_check(2, None, routine)}$
       if(err) exit
     end do
     call test_result_append(this%results, err)
-${"!" if no == "" else "    err = .not.err"}$
     if (PRESENT(is_failed)) is_failed = err
 ${report_result(routine)}$
-${error_list(fm) if no == "" else "!"}$
-  end procedure ${routine_name(routine, post, 2)}$
+${error_list(op, fm, rank1, rank2, error_rate(type, op), success(op), subvar(type))}$
+  end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor
 #:endfor
 #:endfor
+#:endfor
 include "result_functions.f90"
-include "report_functions.f90"
 include "image_functions.f90"
 end submodule is_eye
+
