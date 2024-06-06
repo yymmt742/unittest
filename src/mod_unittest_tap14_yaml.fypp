@@ -20,7 +20,8 @@ module mod_unittest_tap14_yaml
   end interface tap14_yaml_list
 !
 contains
-  pure function tap14_yaml_document_start(comment) result(res)
+  pure function tap14_yaml_document_start(s, comment) result(res)
+    character(*), intent(in)           :: s
     character(*), intent(in), optional :: comment
     character(:), allocatable :: res
     if (PRESENT(comment)) then
@@ -30,7 +31,8 @@ contains
     end if
   end function tap14_yaml_document_start
 !
-  pure function tap14_yaml_document_end(comment) result(res)
+  pure function tap14_yaml_document_end(s, comment) result(res)
+    character(*), intent(in)           :: s
     character(*), intent(in), optional :: comment
     character(:), allocatable :: res
     if (PRESENT(comment)) then
