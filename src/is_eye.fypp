@@ -30,7 +30,8 @@ ${common_check(rank1, rank2, routine)}$
     if (PRESENT(is_failed)) is_failed = err
     if (err)then
       call test_result_append(this%results, err)
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, [SIZE(a, 1)], [SIZE(a, 2)], this%tap_support, unitname)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, &
+     &                       [SIZE(a, 1)], [SIZE(a, 2)], this%tap_support, unitname)
       return
     endif
     if (PRESENT(place)) then; mp = 10**place

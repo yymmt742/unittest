@@ -135,12 +135,12 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
     if(PRESENT(is_failed)) is_failed = err
     if (err) then
       call test_result_append(this%results, err)
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, SHAPE(a), SHAPE(b), this%tap_support, "${routine}$", unitname)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, SHAPE(a), SHAPE(b), this%tap_support, "${routine}$", unitname)
       return
     end if
 #:enddef
 #:def report_result(routine)
-    call report_result(this%dev, this%results(SIZE(this%results))%id, err, this%tap_support, "${routine}$", unitname)
+    call report_result(this%dev, this%results(SIZE(this%results))%id, this%nest, err, this%tap_support, "${routine}$", unitname)
 #:enddef
 
 #:set L_MSG = 56

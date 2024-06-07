@@ -3,11 +3,14 @@
     if (err) then
       block
         integer  :: ios
+        if (this%tap_support) then
+        else
 #:if rank2 is None
-        write (this%dev, '(${fm}$)', IOSTAT=ios)  "#        Assertion Error: [", ${vname_a}$, "]"
+          write (this%dev, '(${fm}$)', IOSTAT=ios)  "#        Assertion Error: [", ${vname_a}$, "]"
 #:else
-        write (this%dev, '(${fm}$)', IOSTAT=ios)  "#        Assertion Error: [", ${vname_a}$, "] ${strnop(op)}$ [", ${vname_b}$, "]"
+          write (this%dev, '(${fm}$)', IOSTAT=ios)  "#        Assertion Error: [", ${vname_a}$, "] ${strnop(op)}$ [", ${vname_b}$, "]"
 #:endif
+        end if
       end block
     end if
 #:enddef
@@ -23,26 +26,33 @@ ${success}$
           if (success) cycle
           nerror = nerror + 1
           if (silent) cycle
-          write (this%dev, '(A,*(I0,1X))', IOSTAT=ios, ADVANCE='NO') "#       ", ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
+          if (this%tap_support) then
+          else
+            write (this%dev, '(A,*(I0,1X))', IOSTAT=ios, ADVANCE='NO') "#       ", ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
 #:if rank2 is None
-          write (this%dev, '(${fm}$)', IOSTAT=ios) " [", ${vname_a}$${counter_suffix(rank1)}$, "]"
+            write (this%dev, '(${fm}$)', IOSTAT=ios) " [", ${vname_a}$${counter_suffix(rank1)}$, "]"
 #:else
-          write (this%dev, '(${fm}$)', IOSTAT=ios) " [", ${vname_a}$${counter_suffix(rank1)}$, "] ${strnop(op)}$ [", ${vname_b}$${counter_suffix(rank2)}$, "]"
+            write (this%dev, '(${fm}$)', IOSTAT=ios) " [", ${vname_a}$${counter_suffix(rank1)}$, "] ${strnop(op)}$ [", ${vname_b}$${counter_suffix(rank2)}$, "]"
 #:endif
+          end if
 ${do_end(rank1)}$
-        if (silent) call report_error_as_image(this%dev, SIZE(${vname_a}$), MIN(SIZE(${vname_a}$, 1), 50), [${error_rate}$])
-        call report_error_rate(this%dev, SIZE(${vname_a}$), nerror)
+        if (this%tap_support) then
+        else
+          if (silent) call report_error_as_image(this%dev, SIZE(${vname_a}$), MIN(SIZE(${vname_a}$, 1), 50), [${error_rate}$])
+          call report_error_rate(this%dev, SIZE(${vname_a}$), nerror)
+        end if
       end block
     end if
 #:enddef
 #:def error_list(op, fm, rank1, rank2, error_rate, success, subvar=None, vname_a="a", vname_b="b")
 ${error_list_loop(op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b) if rank1 > 0 else error_list_scalar(op, fm, rank2, vname_a, vname_b)}$
 #:enddef
-  subroutine report_rank_error(dev, num_test, size_a, size_b, tap, routine, unitname)
+  subroutine report_rank_error(dev, num_test, nest, size_a, size_b, tap, routine, unitname)
     use mod_unittest_tap14_yaml
     !! print rank error
     integer, intent(in)                :: dev
     integer, intent(in)                :: num_test
+    integer, intent(in)                :: nest
     integer, intent(in)                :: size_a(:)
     integer, intent(in)                :: size_b(:)
     character(*), intent(in)           :: routine
@@ -56,26 +66,26 @@ ${error_list_loop(op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vn
     integer                            :: ios
     if (tap) then
       call tap_string(unitname, num_test, routine, ps)
-      write(STDOUT, '(A)', IOSTAT=ios) REPEAT("  ", 2)//"not "//ps
+      write(STDOUT, '(A)', IOSTAT=ios) REPEAT("  ", nest)//"not "//ps
       block
         character(:), allocatable :: unam, asse
         integer                   :: i
         call name_(unitname, routine, num_test, unam)
         call assertion_(routine, asse)
-        write(STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=3)
-        write(STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("name", '"'//unam//'"', nest=3)
-        write(STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("assertion", asse, nest=3)
-        write(STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("values", "", nest=3)
-        write(STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("rank", "false", nest=4)
-        write(STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("shape_a", "", nest=4)
+        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=nest + 1)
+        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("name", '"'//unam//'"', nest=nest + 1)
+        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("assertion", asse, nest=nest + 1)
+        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("values", "", nest=nest + 1)
+        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("rank", "false", nest=nest + 1)
+        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("shape_a", "", nest=nest + 1)
         do i = 1, SIZE(size_a)
-          write(STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(size_a(i), nest=4)
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(size_a(i), nest=nest + 2)
         end do
-        write(STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("shape_b", "", nest=4)
+        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("shape_b", "", nest=nest + 2)
         do i = 1, SIZE(size_b)
-          write(STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(size_b(i), nest=4)
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(size_b(i), nest=nest + 2)
         end do
-        write(STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_end(nest=3)
+        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_end(nest=nest + 1)
       end block
     else
       call padd_string(unitname, num_test, routine, ${L_WDH}$, ps)
@@ -90,10 +100,11 @@ ${error_list_loop(op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vn
     endif
   end subroutine report_rank_error
 !
-  subroutine report_result(dev, num_test, err, tap, routine, unitname)
+  subroutine report_result(dev, num_test, nest, err, tap, routine, unitname)
     !! print test result
     integer, intent(in)                :: dev
     integer, intent(in)                :: num_test
+    integer, intent(in)                :: nest
     logical, intent(in)                :: err
     logical, intent(in)                :: tap
     character(*), intent(in)           :: routine
@@ -106,7 +117,7 @@ ${error_list_loop(op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vn
     if (tap) then
       call tap_string(unitname, num_test, routine, ps)
       if (err) ps = "not "//ps
-      write(STDOUT, '(A)', IOSTAT=ios) REPEAT("  ", 2)//ps
+      write(STDOUT, '(A)', IOSTAT=ios) REPEAT("  ", nest)//ps
     else
       call padd_string(unitname, num_test, routine, ${L_WDH}$, ps)
       if (err) then; ps = ps//FAILED

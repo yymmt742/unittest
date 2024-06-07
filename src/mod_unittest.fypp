@@ -6,6 +6,7 @@ module mod_unittest
                   &                        STDERR => ERROR_UNIT, &
                   &                        RK => REAL64
   use mod_unittest_kinds
+  use mod_unittest_tap14_yaml
   implicit none
   private
   public  :: unittest
@@ -42,6 +43,7 @@ module mod_unittest
     integer                        :: dev
     integer                        :: verbose
     integer                        :: dump_line_limit
+    integer                        :: nest
     character(:), allocatable      :: script_name
     character(:), allocatable      :: section
     type(test_result), allocatable :: results(:)
@@ -196,20 +198,25 @@ contains
     logical, intent(in), optional      :: argparse
     integer                            :: ios
 !
+    call timestamp_append(this%times)
+!
     if (.not. ALLOCATED(this%script_name)) then
       call utest_setup(this, tap_support, argparse)
+      if (PRESENT(section)) this%section = section ! if section name is given, treat as subtest.
     end if
 !
     if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code
     if (PRESENT(dump_line_limit)) this%dump_line_limit = dump_line_limit
     this%verbose = MERGE(1, 0, .not.this%tap_support .or. this%dump_line_limit < 0)
 !
-    call timestamp_append(this%times)
+    if (this%section /= "" .and. PRESENT(section)) then
+      this%nest = 2
+      call tap_report_subtests(this)
+      this%section = section
+      if (this%tap_support) write (STDOUT, '(2A)', iostat=ios) "# Subtest: ", this%section
+    end if
 !
     if (ALLOCATED(this%results)) then
-      call tap_report_subtests(this)
-      this%section = ""
-      if (PRESENT(section)) this%section = section
       block
         integer                        :: n
         type(test_result), allocatable :: tmp(:)
@@ -224,24 +231,15 @@ contains
       this%results(1) = test_result(0, .false.)
     end if
 !
-    if (this%tap_support)then
-      if (this%section=="") then
-        write (STDOUT, '(A)', iostat=ios) "# Subtest: "
-      else
-        write (STDOUT, '(2A)', iostat=ios) "# Subtest: ", this%section
-      end if
-    end if
-!
     if (this%verbose > 0) then
-      write (this%dev, '(A)', err=100) SEP2
-      write (this%dev, '(A)', err=100) '# Test command :: '//this%script_name
+      write (this%dev, '(A)', iostat=ios) SEP2
+      write (this%dev, '(A)', iostat=ios) '# Test command :: '//this%script_name
       if (PRESENT(section)) then
-        write (this%dev, '(A)', err=100) SEP1
-        write (this%dev, '(A)', err=100) '#   Section ----> '//section
+        write (this%dev, '(A)', iostat=ios) SEP1
+        write (this%dev, '(A)', iostat=ios) '#   Section ----> '//section
       end if
     end if
 !
-100 return
   end subroutine utest_init
 !
   subroutine utest_setup(this, tap_support, argparse)
@@ -253,6 +251,7 @@ contains
     this%dump_line_limit = 10
     this%dev = STDERR
     this%tap_support = .false.
+    this%nest = 0
     if (PRESENT(tap_support)) then
       this%dump_line_limit = 0
       this%tap_support = tap_support
@@ -300,6 +299,8 @@ contains
     character(32)               :: csuc, cerr
     integer                     :: ios
     if (.not. this%tap_support) return
+    if (.not. ALLOCATED(this%results)) return
+    if (this%section == "") return
     ntst = n_test(this%results)
     nerr = n_error(this%results)
     write (csuc, '(I0)') ntst - nerr
@@ -308,11 +309,7 @@ contains
     if (nerr > 0) then
       write (STDOUT, '(A)', iostat=ios, ADVANCE="no") "not "
     end if
-    if (this%section == "") then
-      write (STDOUT, '(A)', iostat=ios) "ok"
-    else
-      write (STDOUT, '(2A)', iostat=ios) "ok - ", this%section
-    end if
+    write (STDOUT, '(2A)', iostat=ios) "ok - ", this%section
     if (nerr < 1) return
     write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=1)
     if (this%section /= "") then
@@ -326,11 +323,14 @@ contains
   subroutine tap_report_tests(this)
     use mod_unittest_tap14_yaml
     class(unittest), intent(in) :: this
-    integer                     :: nsec
     integer                     :: ios
     if (.not. this%tap_support) return
-    nsec = n_section(this%results)
-    write (STDOUT, '(A,I0)', iostat=ios) "1..", nsec
+    if (.not. ALLOCATED(this%results)) return
+    if (this%section == "") then
+      write (STDOUT, '(A,I0)', iostat=ios) "1..", n_test(this%results)
+    else
+      write (STDOUT, '(A,I0)', iostat=ios) "1..", n_section(this%results)
+    end if
   end subroutine tap_report_tests
 !
   subroutine utest_finish(this)
