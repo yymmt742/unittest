@@ -17,10 +17,7 @@ contains
   module procedure ${routine_name(routine, post, rank1, rank2)}$
 ${common_check(rank1, rank2, routine)}$
     err = ${"ALL" if rank1>0 else ""}$(a ${negation(op)}$ b)
-    call test_result_append(this%results, err)
-    if (PRESENT(is_failed)) is_failed = err
-${report_result(routine)}$
-${error_list(op, fm, rank1, rank2, rate, success(rank1, rank2, op))}$
+${error_list(routine, op, fm, rank1, rank2, rate, success(rank1, rank2, op))}$
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor

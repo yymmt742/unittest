@@ -124,9 +124,9 @@ contains
     if (PRESENT(nest)) nest_ = nest_ + MAX(nest, 0)
     write (re, '(G32.9)') REAL(a, ${kind}$)
     write (im, '(G32.9)') AIMAG(a)
-    res = REPEAT("  ", nest_)//"- "//NEW_LINE("") &
-   &    //REPEAT("  ", nest_ + 1)//"- real: "//TRIM(ADJUSTL(re))//NEW_LINE("") &
-   &    //REPEAT("  ", nest_ + 1)//"- imag: "//TRIM(ADJUSTL(im))//NEW_LINE("")
+    res = REPEAT("  ", nest_)//"  - "//NEW_LINE("") &
+   &    //REPEAT("  ", nest_ + 1)//"  - real: "//TRIM(ADJUSTL(re))//NEW_LINE("") &
+   &    //REPEAT("  ", nest_ + 1)//"  - imag: "//TRIM(ADJUSTL(im))//NEW_LINE("")
   end function tap14_yaml_list_${post}$
 !
 #:endfor
@@ -139,9 +139,9 @@ contains
     nest_ = 0
     if (PRESENT(nest)) nest_ = nest_ + MAX(nest, 0)
     if(a)then
-      res = REPEAT("  ", nest_)//"- true"//NEW_LINE("")
+      res = REPEAT("  ", nest_)//"  - true"//NEW_LINE("")
     else
-      res = REPEAT("  ", nest_)//"- false"//NEW_LINE("")
+      res = REPEAT("  ", nest_)//"  - false"//NEW_LINE("")
     endif
   end function tap14_yaml_list_${post}$
 !

@@ -31,10 +31,7 @@ ${common_check(rank1, rank2, routine)}$
     else; tol = tol + 1E-5_${kind}$ * MAXVAL([ABS(a), ABS(b)])
     end if
     err = ${no}$${"ALL" if rank1>0 else ""}$(ABS(a - b) < tol)
-    call test_result_append(this%results, err)
-    if (PRESENT(is_failed)) is_failed = err
-${report_result(routine)}$
-${error_list(op, fm, rank1, rank2, error_rate(type, op), success(rank1, rank2, op), subvar)}$
+${error_list(routine, op, fm, rank1, rank2, error_rate(type, op), success(rank1, rank2, op), subvar)}$
   end procedure ${routine_name(routine, post, rank1, rank2)}$
 !
 #:endfor

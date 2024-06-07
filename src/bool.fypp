@@ -15,10 +15,7 @@ contains
   module procedure ${routine_name(routine, post, rank1)}$
 ${common_check(rank1, rank2, routine)}$
     err = ${".not.ALL("+op+"expr)" if rank1>0 else negation(op)+"expr"}$
-    call test_result_append(this%results, err)
-    if (PRESENT(is_failed)) is_failed = err
-${report_result(routine)}$
-${error_list(op, "A,L,A", rank1, rank2, error_rate(op), success(rank1, op), vname_a="expr")}$
+${error_list(routine, op, "A,L,A", rank1, rank2, error_rate(op), success(rank1, op), vname_a="expr")}$
   end procedure ${routine_name(routine, post, rank1)}$
 !
 #:endfor

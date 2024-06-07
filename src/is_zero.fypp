@@ -24,10 +24,7 @@ ${common_check(rank1, rank2, routine)}$
     else; mp = 10**DEF_PLACE
     end if
     err = .not.${"ALL((mp * ABS(a)) < 1)" if rank1>0 else "((mp * ABS(a)) < 1)"}$
-    call test_result_append(this%results, err)
-    if (PRESENT(is_failed)) is_failed = err
-${report_result(routine)}$
-${error_list(op, fm, rank1, rank2, error_rate(type), success(rank1))}$
+${error_list(routine, op, fm, rank1, rank2, error_rate(type), success(rank1))}$
   end procedure ${routine_name(routine, post, rank1)}$
 !
 #:endfor

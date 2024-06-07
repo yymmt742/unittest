@@ -1,9 +1,24 @@
 #:include "common.fypp"
-#:def error_list_scalar(op, fm, rank2, vname_a, vname_b)
+#:def error_list_scalar(routine, op, fm, rank2, vname_a, vname_b)
     if (err) then
       block
+        character(:), allocatable :: unam, asse
         integer  :: ios
         if (this%tap_support) then
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=this%nest + 1)
+          call name_(unitname, "${routine}$", this%results(SIZE(this%results))%id, unam)
+          call assertion_("${routine}$", asse)
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("name", '"'//unam//'"', nest=this%nest + 1)
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("assertion", asse, nest=this%nest + 1)
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("values", "", nest=this%nest + 1)
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(var="variables",nest=this%nest + 1)
+#:if rank2 is None
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_a}$, nest=this%nest + 1)
+#:else
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_a}$, nest=this%nest + 2)
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_b}$, nest=this%nest + 2)
+#:endif
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_end(nest=this%nest + 1)
         else
 #:if rank2 is None
           write (this%dev, '(${fm}$)', IOSTAT=ios)  "#        Assertion Error: [", ${vname_a}$, "]"
@@ -14,29 +29,49 @@
       end block
     end if
 #:enddef
-#:def error_list_loop(op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b)
+#:def error_list_loop(routine, op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b)
     if (err) then
       block
+        character(:), allocatable :: unam, asse
         logical :: success, silent
         integer :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$${"" if subvar is None else "\n"+subvar}$
         silent = this%verbose <= 0 .and. SIZE(${vname_a}$) > this%dump_line_limit
         nerror = 0
+        if (this%tap_support) then
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=this%nest + 1)
+          call name_(unitname, "${routine}$", this%results(SIZE(this%results))%id, unam)
+          call assertion_("${routine}$", asse)
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("name", '"'//unam//'"', nest=this%nest + 1)
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("assertion", asse, nest=this%nest + 1)
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("values", "", nest=this%nest + 1)
+        endif
 ${do_start(rank1, vname_a)}$
 ${success}$
           if (success) cycle
           nerror = nerror + 1
-          if (silent) cycle
           if (this%tap_support) then
-          else
-            write (this%dev, '(A,*(I0,1X))', IOSTAT=ios, ADVANCE='NO') "#       ", ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
+            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(var="indices",nest=this%nest + 1)
+#:for i in range(1,rank1+1)
+            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(i${i}$, nest=this%nest + 2)
+#:endfor
 #:if rank2 is None
-            write (this%dev, '(${fm}$)', IOSTAT=ios) " [", ${vname_a}$${counter_suffix(rank1)}$, "]"
+            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_a}$${counter_suffix(rank1)}$, nest=this%nest + 1)
 #:else
-            write (this%dev, '(${fm}$)', IOSTAT=ios) " [", ${vname_a}$${counter_suffix(rank1)}$, "] ${strnop(op)}$ [", ${vname_b}$${counter_suffix(rank2)}$, "]"
+            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(var="variables",nest=this%nest + 1)
+            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_a}$${counter_suffix(rank1)}$, nest=this%nest + 2)
+            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_b}$${counter_suffix(rank2)}$, nest=this%nest + 2)
 #:endif
-          end if
+          endif
+          if (silent) cycle
+          write (this%dev, '(A,*(I0,1X))', IOSTAT=ios, ADVANCE='NO') "#       ", ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
+#:if rank2 is None
+          write (this%dev, '(${fm}$)', IOSTAT=ios) " [", ${vname_a}$${counter_suffix(rank1)}$, "]"
+#:else
+          write (this%dev, '(${fm}$)', IOSTAT=ios) " [", ${vname_a}$${counter_suffix(rank1)}$, "] ${strnop(op)}$ [", ${vname_b}$${counter_suffix(rank2)}$, "]"
+#:endif
 ${do_end(rank1)}$
         if (this%tap_support) then
+          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_end(nest=this%nest + 1)
         else
           if (silent) call report_error_as_image(this%dev, SIZE(${vname_a}$), MIN(SIZE(${vname_a}$, 1), 50), [${error_rate}$])
           call report_error_rate(this%dev, SIZE(${vname_a}$), nerror)
@@ -44,8 +79,11 @@ ${do_end(rank1)}$
       end block
     end if
 #:enddef
-#:def error_list(op, fm, rank1, rank2, error_rate, success, subvar=None, vname_a="a", vname_b="b")
-${error_list_loop(op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b) if rank1 > 0 else error_list_scalar(op, fm, rank2, vname_a, vname_b)}$
+#:def error_list(routine, op, fm, rank1, rank2, error_rate, success, subvar=None, vname_a="a", vname_b="b")
+    call test_result_append(this%results, err)
+    if (PRESENT(is_failed)) is_failed = err
+${report_result(routine)}$
+${error_list_loop(routine, op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b) if rank1 > 0 else error_list_scalar(routine, op, fm, rank2, vname_a, vname_b)}$
 #:enddef
   subroutine report_rank_error(dev, num_test, nest, size_a, size_b, tap, routine, unitname)
     use mod_unittest_tap14_yaml
