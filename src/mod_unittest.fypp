@@ -43,6 +43,7 @@ module mod_unittest
     integer                        :: verbose
     integer                        :: dump_line_limit
     character(:), allocatable      :: script_name
+    character(:), allocatable      :: section
     type(test_result), allocatable :: results(:)
     type(timestamp), allocatable   :: times(:)
     logical                        :: terminate_with_error_code
@@ -196,29 +197,7 @@ contains
     integer                            :: ios
 !
     if (.not. ALLOCATED(this%script_name)) then
-      this%terminate_with_error_code = .true.
-      this%dump_line_limit = 10
-      this%dev = STDERR
-      this%tap_support = .false.
-      if (PRESENT(tap_support)) then
-        this%dump_line_limit = 0
-        this%tap_support = tap_support
-      end if
-      call argparse_(this, argparse)
-      block
-        integer                   :: lna
-        character(:), allocatable :: tmp
-        call GET_COMMAND_ARGUMENT(0, length=lna, status=ios)
-        if (ios /= 0) return
-        allocate (character(0) :: this%script_name)
-        allocate (character(lna) :: tmp)
-        call GET_COMMAND_ARGUMENT(0, value=tmp, status=ios)
-        this%script_name = tmp(${"INDEX(tmp, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"}$:)
-        deallocate (tmp)
-      end block
-      if (this%tap_support) then
-        write(STDOUT, '(A)', iostat=ios) "TAP version 14"
-      end if
+      call utest_setup(this, tap_support, argparse)
     end if
 !
     if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code
@@ -228,6 +207,9 @@ contains
     call timestamp_append(this%times)
 !
     if (ALLOCATED(this%results)) then
+      call tap_report_subtests(this)
+      this%section = ""
+      if (PRESENT(section)) this%section = section
       block
         integer                        :: n
         type(test_result), allocatable :: tmp(:)
@@ -242,6 +224,14 @@ contains
       this%results(1) = test_result(0, .false.)
     end if
 !
+    if (this%tap_support)then
+      if (this%section=="") then
+        write (STDOUT, '(A)', iostat=ios) "# Subtest: "
+      else
+        write (STDOUT, '(2A)', iostat=ios) "# Subtest: ", this%section
+      end if
+    end if
+!
     if (this%verbose > 0) then
       write (this%dev, '(A)', err=100) SEP2
       write (this%dev, '(A)', err=100) '# Test command :: '//this%script_name
@@ -254,15 +244,40 @@ contains
 100 return
   end subroutine utest_init
 !
+  subroutine utest_setup(this, tap_support, argparse)
+    class(unittest), intent(inout)     :: this
+    logical, intent(in), optional      :: tap_support
+    logical, intent(in), optional      :: argparse
+    integer                            :: ios
+    this%terminate_with_error_code = .true.
+    this%dump_line_limit = 10
+    this%dev = STDERR
+    this%tap_support = .false.
+    if (PRESENT(tap_support)) then
+      this%dump_line_limit = 0
+      this%tap_support = tap_support
+    end if
+    call argparse_(this, argparse)
+    if (this%tap_support) then
+      write (STDOUT, '(A)', iostat=ios) "TAP version 14"
+    end if
+    if (.not. ALLOCATED(this%section)) this%section = ""
+  end subroutine utest_setup
+!
   subroutine argparse_(this, argparse)
     class(unittest), intent(inout) :: this
     logical, intent(in), optional  :: argparse
     character(:), allocatable      :: argv
     integer                        :: i, narg, length, ios
+    call GET_COMMAND_ARGUMENT(0, length=length, status=ios)
+    if (ios > 0) call error_stop('# ARGPARSE FAILED', 1)
+    allocate (character(length) :: argv)
+    call GET_COMMAND_ARGUMENT(0, value=argv, status=ios)
+    if (ios > 0) call error_stop('# ARGPARSE FAILED', 1)
+    this%script_name = argv(${"INDEX(argv, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"}$:)
     if (PRESENT(argparse)) then
       if (.not. argparse) return
     end if
-    argv = ""
     narg = COMMAND_ARGUMENT_COUNT()
     do i = 1, narg
       call GET_COMMAND_ARGUMENT(i, length = length, status=ios)
@@ -278,6 +293,36 @@ contains
     end do
   end subroutine argparse_
 !
+  subroutine tap_report_subtests(this)
+    use mod_unittest_tap14_yaml
+    class(unittest), intent(in) :: this
+    integer                     :: ntst, nerr
+    character(32)               :: csuc, cerr
+    integer                     :: ios
+    if (.not. this%tap_support) return
+    ntst = n_test(this%results)
+    nerr = n_error(this%results)
+    write (csuc, '(I0)') ntst - nerr
+    write (cerr, '(I0)') nerr
+    write (STDOUT, '(A,I0)', iostat=ios) "    1..", ntst
+    if (nerr > 0) then
+      write (STDOUT, '(A)', iostat=ios, ADVANCE="no") "not "
+    end if
+    if (this%section == "") then
+      write (STDOUT, '(A)', iostat=ios) "ok"
+    else
+      write (STDOUT, '(2A)', iostat=ios) "ok - ", this%section
+    end if
+    if (nerr < 1) return
+    write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=1)
+    if (this%section /= "") then
+      write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("name", '"'//this%section//'"', nest=1)
+    end if
+    write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("succcess", TRIM(ADJUSTL(csuc)), nest=1)
+    write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("fail", TRIM(ADJUSTL(cerr)), nest=1)
+    write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_end(nest=1)
+  end subroutine tap_report_subtests
+!
   subroutine utest_finish(this)
     class(unittest), intent(inout) :: this
     real(RK)                       :: cputime, time
@@ -285,6 +330,7 @@ contains
     call timestamp_append(this%times)
     time = elappes_time(this%times)
     cputime = elappes_cputime(this%times)
+    call tap_report_subtests(this)
 !
     if (this%verbose > 0) then
       if (n_test(this%results) > 0) then
@@ -321,6 +367,7 @@ contains
   pure subroutine utest_free(this)
     type(unittest), intent(inout) :: this
     if (ALLOCATED(this%script_name)) deallocate (this%script_name)
+    if (ALLOCATED(this%section)) deallocate (this%section)
     if (ALLOCATED(this%times)) deallocate (this%times)
     if (ALLOCATED(this%results)) deallocate (this%results)
     this%terminate_with_error_code = .true.
@@ -396,6 +443,12 @@ contains
     l = u - results(u)%id + 1
     res = COUNT(results(l:u)%err)
   end function n_error
+!
+  pure function n_section(results) result(res)
+    type(test_result), intent(in) :: results(:)
+    integer                       :: res
+    res = COUNT(results%id == 0)
+  end function n_section
 !
 end module mod_unittest
 

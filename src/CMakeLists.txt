@@ -28,7 +28,6 @@ endfunction()
 
 list(APPEND fyppIncludes
    result_functions.fypp
-   report_functions.fypp
    image_functions.fypp
    )
 
@@ -60,6 +59,7 @@ add_custom_command(
   )
 
 list(APPEND incfiles ${CMAKE_CURRENT_BINARY_DIR}/constants.f90)
+list(APPEND incfiles ${CMAKE_CURRENT_SOURCE_DIR}/report_functions.fypp)
 
 if(f18errorstop)
   fypp_generate("error_stop_f18.fypp" "error_stop.f90" "${fyppFlags}" "" "${f90files}" f90files)
