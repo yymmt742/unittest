@@ -7,6 +7,14 @@ program main
   type(unittest) :: u
 !
 #:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
+!  call u%init('is_eye_${post}$', terminate_with_error_code=.false.)
+!  call ${routine + post}$(u)
+#:endfor
+!
+! call u%finish_and_terminate()
+!
+  call u%init(terminate_with_error_code=.false.)
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
   call ${routine + post}$(u)
 #:endfor
 !
@@ -23,8 +31,6 @@ contains
     integer :: i, j
     logical :: is_failed
 !<&
-    call u%init('is_eye ${post}$', terminate_with_error_code=.false.)
-!
     do concurrent(i=1:SIZE(i2, 1), j=1:SIZE(i2, 2))
       i2(i, j) = MERGE(1, 0, i==j)
     end do
