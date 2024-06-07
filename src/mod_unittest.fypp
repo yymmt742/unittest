@@ -323,14 +323,24 @@ contains
     write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_end(nest=1)
   end subroutine tap_report_subtests
 !
+  subroutine tap_report_tests(this)
+    use mod_unittest_tap14_yaml
+    class(unittest), intent(in) :: this
+    integer                     :: nsec
+    integer                     :: ios
+    if (.not. this%tap_support) return
+    nsec = n_section(this%results)
+    write (STDOUT, '(A,I0)', iostat=ios) "1..", nsec
+  end subroutine tap_report_tests
+!
   subroutine utest_finish(this)
     class(unittest), intent(inout) :: this
     real(RK)                       :: cputime, time
-!
     call timestamp_append(this%times)
     time = elappes_time(this%times)
     cputime = elappes_cputime(this%times)
     call tap_report_subtests(this)
+    call tap_report_tests(this)
 !
     if (this%verbose > 0) then
       if (n_test(this%results) > 0) then
