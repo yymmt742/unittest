@@ -35,7 +35,7 @@
         character(:), allocatable :: unam, asse
         logical :: success, silent
         integer :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$${"" if subvar is None else "\n"+subvar}$
-        silent = this%verbose <= 0 .and. SIZE(${vname_a}$) > this%dump_line_limit
+        silent = this%verbose <= 0 .or. SIZE(${vname_a}$) >= this%dump_line_limit
         nerror = 0
         if (this%tap_support) then
           write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=this%nest + 1)
@@ -149,7 +149,7 @@ ${error_list_loop(routine, op, fm, rank1, rank2, error_rate, success, subvar, vn
     character(*), intent(in), optional :: unitname
     character(*), parameter            :: SEP3 = ${SEP3}$
     character(*), parameter            :: FAILED = ACHAR(INT(z'1b'))//"[91mFAILED"//ACHAR(INT(z'1b'))//"[m"
-    character(*), parameter            :: OK     = ACHAR(INT(z'1b'))//"[94mOK"//ACHAR(INT(z'1b'))//"[m"
+    character(*), parameter            :: OK     = ACHAR(INT(z'1b'))//"[92mOK"//ACHAR(INT(z'1b'))//"[m"
     character(:), allocatable          :: ps
     integer                            :: ios
     if (tap) then

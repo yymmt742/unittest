@@ -207,7 +207,7 @@ contains
 !
     if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code
     if (PRESENT(dump_line_limit)) this%dump_line_limit = dump_line_limit
-    this%verbose = MERGE(1, 0, .not.this%tap_support .or. this%dump_line_limit < 0)
+    this%verbose = MERGE(1, 0, .not.this%tap_support .and. this%dump_line_limit /= 0)
 !
     if (this%section /= "" .and. PRESENT(section)) then
       this%nest = 2
