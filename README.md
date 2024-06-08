@@ -78,12 +78,10 @@ program main
   use mod_unittest
   implicit none
   type(unittest) :: u
-
   call u%init('Simple unittests')
-  call u%assert(1 + 2 == 3, "test 1 :: 1 + 2 == 3")
-  call u%assert(3 + 4 == 8, "test 2 :: 3 + 4 == 8")
+  call u%assert(1 + 2 == 3)
+  call u%assert(3 + 4 == 8)
   call u%finish_and_terminate()
-
 end program main
 ```
 returns the following results
@@ -110,6 +108,11 @@ a simplified error heatmap is available when the test fails.
 
 [![Screen Shot][product-screenshot2]]()
 
+When the executable is run with the --tap option,
+the test results are output in [tap](https://testanything.org/) format.
+
+[![Screen Shot][product-screenshot3]]()
+
 For detail, see [api-reference](https://yymmt742.github.io/unittest).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -132,6 +135,7 @@ YYMMT742 - yymmt@kuchem.kyoto-u.ac.jp
 [product-screenshot0]: assets/snap_00.png
 [product-screenshot1]: assets/snap_01.png
 [product-screenshot2]: assets/snap_02.png
+[product-screenshot3]: assets/snap_03.png
 [fypp]: https://img.shields.io/badge/fypp-064F8C?style=for-the-badge
 [fypp-url]: https://fypp.readthedocs.io/en/stable/index.html
 [cmake]: https://img.shields.io/badge/Cmake-064F8C?style=for-the-badge&logo=cmake&logoColor=EEEEEE
