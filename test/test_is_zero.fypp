@@ -13,12 +13,15 @@ program main
   call u%finish_and_terminate()
 !
 contains
-#:for ktp in [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+#:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
+#:set nans = ["-1", "TRANSFER(-1_INT64, 0.0_DP)", "TRANSFER(-1_INT64, 0.0_DP)"]
+#:for ktp, nan in zip(ktps, nans)
 #:for kind, type, post in ktp
   subroutine ${routine + post}$(u)
     type(unittest), intent(inout) :: u
 #:for rank1, rank2 in RANK_ITERi
-    ${type}$, parameter :: i${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 0, j${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 1
+    ${type}$, parameter :: i${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 0
+    ${type}$, parameter :: j${rank1}$${"("+",".join(["4" for i in range(rank1)])+")" if rank1>0 else ""}$ = 1
 #:endfor
     logical             :: is_failed
 !<&
