@@ -6,7 +6,7 @@
 #:enddef
 #:def success()
           error(i1, i2) = a(i1, i2) - a(i2, i1)
-          success = INT(ABS(error(i1, i2)) * mp) <= 1
+          success = INT(ABS(error(i1, i2)) * mp) < 1
 #:enddef
 #:def error_rate(type, op)
 ${"REAL(ABS(error), RK)" if "complex" in type else "REAL(error, RK)"}$

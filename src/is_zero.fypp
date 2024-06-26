@@ -3,7 +3,7 @@
 #:set fmts = [INTEGER_FORMAT, REAL_FORMAT, COMPLEX_FORMAT]
 #:set ktps = [INTEGER_KIND_TYPE_POSTS, REAL_KIND_TYPE_POSTS, COMPLEX_KIND_TYPE_POSTS]
 #:def success(rank1)
-          success = INT(ABS(a${counter_suffix(rank1)}$) * mp) <= 1
+          success = INT(ABS(a${counter_suffix(rank1)}$) * mp) < 1
 #:enddef
 #:def error_rate(type)
 ${"REAL(ABS(a), RK)" if "complex" in type else "REAL(a, RK)"}$
