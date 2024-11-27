@@ -362,10 +362,16 @@ contains
     call utest_free(this)
   end subroutine utest_finish
 !
-  subroutine utest_finish_and_terminate(this)
+  subroutine utest_finish_and_terminate(this, passing_score)
     class(unittest), intent(inout) :: this
+    real(RK), intent(in), optional :: passing_score
     logical                        :: error_terminate
-    error_terminate = this%terminate_with_error_code .and. (COUNT(this%results(:)%err) > 0)
+    if(PRESENT(passing_score))then
+      error_terminate = (REAL(COUNT(this%results(:)%err), RK) / REAL(SIZE(this%results), RK) > (1.0_RK - passing_score))
+    else
+      error_terminate = (COUNT(this%results(:)%err) > 0)
+    endif
+    error_terminate = this%terminate_with_error_code .and. error_terminate
     call this%finish()
     if (error_terminate) then
       call error_stop('# TESTS WERE TERMINATED', 1)
