@@ -1,0 +1,37 @@
+program test_assertion_result
+  use mod_assertion_result, only: assertion_result, assertion_failure
+  implicit none
+  type(assertion_result) :: result, copied
+  type(assertion_failure) :: failure
+  integer :: i
+
+  if (result%size() /= 0) error stop "new result must be empty"
+
+  result%method = "assert_equal"
+  result%shape_a = [2, 3]
+  result%shape_b = [2, 3]
+  do i = 1, 17
+    call result%push(i, "failure detail")
+  end do
+
+  if (result%size() /= 17) error stop "push must increase the logical size"
+  failure = result%get_detail(1)
+  if (failure%flat_index /= 1) error stop "first flat index was not retained"
+  if (trim(failure%detail) /= "failure detail") error stop "first detail was not retained"
+  failure = result%get_detail(17)
+  if (failure%flat_index /= 17) error stop "last flat index was not retained"
+  if (trim(failure%detail) /= "failure detail") error stop "last detail was not retained"
+  if (trim(result%method) /= "assert_equal") error stop "method was not retained"
+  if (any(result%shape_a /= [2, 3])) error stop "shape_a was not retained"
+  if (any(result%shape_b /= [2, 3])) error stop "shape_b was not retained"
+
+  copied = result
+  call result%push(18, "after copy")
+  if (copied%size() /= 17) error stop "copy changed after original was extended"
+  if (result%size() /= 18) error stop "push after copy failed"
+
+  call result%clear()
+  if (result%size() /= 0) error stop "clear must reset the logical size"
+  if (allocated(result%shape_a)) error stop "clear must release shape_a"
+  if (allocated(result%shape_b)) error stop "clear must release shape_b"
+end program test_assertion_result

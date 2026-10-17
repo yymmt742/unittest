@@ -53,6 +53,8 @@ endif()
 set(f90files)
 set(incfiles)
 
+list(APPEND f90files ${CMAKE_CURRENT_SOURCE_DIR}/mod_assertion_result.f90)
+
 add_executable(
   get_constants
   ${CMAKE_CURRENT_SOURCE_DIR}/get_constants.f90
