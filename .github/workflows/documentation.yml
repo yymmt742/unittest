@@ -12,19 +12,19 @@ env:
 
 jobs:
   documentation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Setup-python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
-        python-version: '3.x'
+        python-version: '3.13'
 
     - name: Install Dependencies
       run: |
-        pip install -v ford==7.0.5
+        pip install -v ford==7.0.13
         pip install fypp
         python --version
         ford --version
@@ -34,7 +34,7 @@ jobs:
       run: |
         ford doc/api-doc-ford-settings.md
     - name: Upload Documentation
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: documentation
         path: doc/api-doc
@@ -44,13 +44,13 @@ jobs:
       if: ${{ github.ref == 'refs/heads/main'}}
       uses: technote-space/broken-link-checker-action@v1
       with:
-        TARGET: file://${{ github.workspace }}/api-doc/index.html
+      TARGET: file://${{ github.workspace }}/doc/api-doc/index.html
         RECURSIVE: true
         ASSIGNEES: ${{ github.actor }}
 
     - name: Deploy API Documentation
-      uses: JamesIves/github-pages-deploy-action@4.1.0
-      if: github.event_name == 'push' && github.repository == 'yymmt742/unittest' && ( startsWith( github.ref, 'refs/tags/' ) || github.ref == 'refs/heads/master' )
+      uses: JamesIves/github-pages-deploy-action@v4.9.0
+      if: github.event_name == 'push' && github.repository == 'yymmt742/unittest' && ( startsWith( github.ref, 'refs/tags/' ) || github.ref == 'refs/heads/main' )
       with:
         branch: gh-pages
         folder: doc/api-doc

@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-22.04, ubuntu-24.04, macos-latest, windows-latest]
         toolchain:
           - {compiler: gcc, version: 9}
           - {compiler: gcc, version: 10}
@@ -28,22 +28,43 @@ jobs:
           - {compiler: gcc, version: 13}
           - {compiler: intel, version: '2023.2'}
           - {compiler: intel-classic, version: '2021.10'}
-          - {compiler: nvidia-hpc, version: '23.11'}
+          - {compiler: nvidia-hpc, version: '26.1'}
         exclude:
           - os: macos-latest
             toolchain: {compiler: gcc, version: 9}
           - os: macos-latest
             toolchain: {compiler: gcc, version: 10}
           - os: macos-latest
+            toolchain: {compiler: gcc, version: 11}
+          - os: macos-latest
+            toolchain: {compiler: gcc, version: 12}
+          - os: macos-latest
             toolchain: {compiler: intel, version: '2023.2'}
           - os: macos-latest
-            toolchain: {compiler: nvidia-hpc, version: '23.11'}
+            toolchain: {compiler: nvidia-hpc, version: '26.1'}
           - os: windows-latest
-            toolchain: {compiler: nvidia-hpc, version: '23.11'}
+            toolchain: {compiler: nvidia-hpc, version: '26.1'}
+          # Keep legacy GCC coverage on Ubuntu 22.04 and test GCC 13 on 24.04.
+          - os: ubuntu-22.04
+            toolchain: {compiler: gcc, version: 13}
+          - os: ubuntu-22.04
+            toolchain: {compiler: intel, version: '2023.2'}
+          - os: ubuntu-22.04
+            toolchain: {compiler: intel-classic, version: '2021.10'}
+          - os: ubuntu-22.04
+            toolchain: {compiler: nvidia-hpc, version: '26.1'}
+          - os: ubuntu-24.04
+            toolchain: {compiler: gcc, version: 9}
+          - os: ubuntu-24.04
+            toolchain: {compiler: gcc, version: 10}
+          - os: ubuntu-24.04
+            toolchain: {compiler: gcc, version: 11}
+          - os: ubuntu-24.04
+            toolchain: {compiler: gcc, version: 12}
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup fortran
         uses: fortran-lang/setup-fortran@v1
@@ -52,8 +73,16 @@ jobs:
           compiler: ${{ matrix.toolchain.compiler }}
           version: ${{ matrix.toolchain.version }}
 
+      - name: Set macOS SDK for Fortran linker
+        if: contains(matrix.os, 'macos')
+        shell: bash
+        run: |
+          sdkroot="$(xcrun --sdk macosx --show-sdk-path)"
+          echo "SDKROOT=${sdkroot}" >> "${GITHUB_ENV}"
+          test -f "${sdkroot}/usr/lib/libSystem.tbd"
+
       - name: Set up Python 3.x
-        uses: actions/setup-python@v5 # Use pip to install latest CMake, & FORD/Jin2For, etc.
+        uses: actions/setup-python@v7 # Use pip to install latest CMake, & FORD/Jin2For, etc.
         with:
           python-version: 3.x
 
@@ -94,4 +123,3 @@ jobs:
 
       - name: Install project
         run: cmake --install build
-
