@@ -80,6 +80,7 @@ add_library(
   ${PROJECT_NAME} STATIC
   ${f90files}
   )
+add_library(unittest::unittest ALIAS ${PROJECT_NAME})
 target_include_directories(
   ${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}
@@ -87,7 +88,7 @@ target_include_directories(
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${LIB_MOD_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_MODULEDIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/mod_files>
   )
 set_target_properties(
   ${PROJECT_NAME} PROPERTIES
@@ -152,15 +153,16 @@ elseif(WIN32)
 install(
   TARGETS unittest
   EXPORT unittest-export
-  ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
-  LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   )
 install(
   DIRECTORY ${LIB_MOD_DIR}
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake/${PROJECT_NAME}/mod_files/"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/mod_files"
   )
 install(
   EXPORT ${PROJECT_NAME}-export
   FILE unittest-config.cmake
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake/${PROJECT_NAME}"
+  NAMESPACE unittest::
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
   )

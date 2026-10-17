@@ -51,7 +51,7 @@ Integration with the project is possible via cmake.
 * fypp
 * fortran compiler
   gfortran >= 9.4.0
-* cmake >= 3.9
+* cmake >= 3.14
 
 ### Installation
 
@@ -65,6 +65,27 @@ Integration with the project is possible via cmake.
    cmake --build build
    cmake --install build
    ```
+
+The project's own tests are enabled by default when building this repository
+directly. Set `-DBUILD_TESTING=OFF` to build only the library. When this project
+is included from another CMake project, its tests are disabled by default; set
+`-DUNITTEST_BUILD_TESTING=ON` to opt in.
+
+To use an installed copy from another CMake project:
+
+```cmake
+find_package(unittest CONFIG REQUIRED)
+target_link_libraries(my_target PRIVATE unittest::unittest)
+```
+
+For an in-tree dependency, add this repository with `add_subdirectory(...)` and
+link the same `unittest::unittest` target. FYPP is required when building from
+source; it is not needed when consuming an installed package.
+
+`UNITTEST_MAXIMUM_RANK` controls the maximum rank generated for the general
+array assertions. Raising it adds many type and rank combinations, which
+increases compile time and module size. The matrix-specific eye and symmetry
+assertions remain rank two.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -142,4 +163,3 @@ YYMMT742 - yymmt@kuchem.kyoto-u.ac.jp
 [cmake-url]: https://cmake.org/
 [fortran-shield]: https://img.shields.io/badge/Fortran-734F96?style=for-the-badge&logo=fortran&logoColor=FFFFFF
 [fortran-url]: https://fortran-lang.org/
-

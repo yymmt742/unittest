@@ -4,6 +4,8 @@ project(
   DESCRIPTION "Fortran90 unittest"
   LANGUAGES Fortran)
 
+include(GNUInstallDirs)
+
 cmake_policy(SET CMP0076 NEW)
 
 enable_language(Fortran)
@@ -11,8 +13,15 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL GNU AND CMAKE_Fortran_COMPILER_VERSION VER
   message(FATAL_ERROR "GCC 9 or newer required.")
 endif()
 
-if(NOT DEFINED CMAKE_MAXIMUM_RANK)
-  set(CMAKE_MAXIMUM_RANK 1 CACHE STRING "Maxmum array rank")
+if(DEFINED CMAKE_MAXIMUM_RANK AND NOT DEFINED UNITTEST_MAXIMUM_RANK)
+  message(DEPRECATION "CMAKE_MAXIMUM_RANK is deprecated; use UNITTEST_MAXIMUM_RANK instead.")
+  set(UNITTEST_MAXIMUM_RANK "${CMAKE_MAXIMUM_RANK}" CACHE STRING "Maximum array rank supported by unittest")
+endif()
+if(NOT DEFINED UNITTEST_MAXIMUM_RANK)
+  set(UNITTEST_MAXIMUM_RANK 1 CACHE STRING "Maximum array rank supported by unittest")
+endif()
+if(NOT UNITTEST_MAXIMUM_RANK MATCHES "^[0-9]+$" OR UNITTEST_MAXIMUM_RANK GREATER 15)
+  message(FATAL_ERROR "UNITTEST_MAXIMUM_RANK must be an integer between 0 and 15.")
 endif()
 
 find_program(FYPP fypp)
@@ -42,14 +51,24 @@ list(
   "-DHP_SUPPORT=$<BOOL:${HP_SUPPORT}>"
   "-DXDP_SUPPORT=$<BOOL:${XDP_SUPPORT}>"
   "-DQP_SUPPORT=$<BOOL:${QP_SUPPORT}>"
-  "-DMAXIMUM_RANK=${CMAKE_MAXIMUM_RANK}"
+  "-DMAXIMUM_RANK=${UNITTEST_MAXIMUM_RANK}"
   "-DWIN32=$<BOOL:${WIN32}>"
   "-DUNIX=$<BOOL:${UNIX}>"
   "-I${PROJECT_SOURCE_DIR}/include"
   )
 
-enable_testing()
-include(CTest)
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+  include(CTest)
+  set(_unittest_build_testing_default ${BUILD_TESTING})
+else()
+  set(_unittest_build_testing_default OFF)
+endif()
+option(UNITTEST_BUILD_TESTING "Build and register unittest's own tests" ${_unittest_build_testing_default})
 
 add_subdirectory(src)
-add_subdirectory(test)
+if(UNITTEST_BUILD_TESTING)
+  if(NOT BUILD_TESTING)
+    enable_testing()
+  endif()
+  add_subdirectory(test)
+endif()
