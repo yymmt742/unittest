@@ -35,6 +35,7 @@ list(APPEND fyppIncludes
 list(APPEND fyppSources
    mod_unittest_kinds.fypp
    mod_unittest_tap14_yaml.fypp
+   xd_methods.fypp
    bool.fypp
    equal.fypp
    almost_equal.fypp

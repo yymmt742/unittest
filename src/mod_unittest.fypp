@@ -88,6 +88,21 @@ module mod_unittest
       unittest_assert_not_allclose_xd_r32, unittest_assert_not_allclose_xd_r64, &
       unittest_assert_not_allclose_xd_c32, unittest_assert_not_allclose_xd_c64
 #:endif
+#:for routine, ktp in XD_METHOD_GROUPS
+#:if not XD_ONLY_SUPPORT
+#:for kind, type, post in ktp
+    procedure, private :: unittest_assert_${routine}$_xd_${post}$
+#:endfor
+    generic            :: assert_${routine}$_xd => &
+      ${", &\n      ".join(["unittest_assert_" + routine + "_xd_" + post for kind, type, post in ktp])}$
+#:elif routine in ["is_eye", "is_symmetric"]
+#:for kind, type, post in ktp
+    procedure, private :: unittest_assert_${routine}$_xd_${post}$
+#:endfor
+    generic            :: assert_${routine}$ => &
+      ${", &\n      ".join(["unittest_assert_" + routine + "_xd_" + post for kind, type, post in ktp])}$
+#:endif
+#:endfor
 #:for routines, ktp, rank in procs
 #:for routine in routines
 ${generic_procedure(routine, ktp, rank)}$
@@ -194,6 +209,36 @@ ${generic_procedure(routine, ktp, rank)}$
       logical, intent(out), optional :: is_failed
       real(dp), intent(in), optional :: rtol, atol
     end subroutine unittest_assert_not_allclose_xd_c64
+#:for routine, ktp in XD_METHOD_GROUPS
+#:for kind, type, post in ktp
+    module subroutine unittest_assert_${routine}$_xd_${post}$(this, &
+#:if routine in ["true", "false"]
+      expr, shape_expr, &
+#:elif routine in ["is_zero", "is_eye", "is_symmetric"]
+      a, shape_a, &
+#:else
+      a, shape_a, b, shape_b, &
+#:endif
+      unitname, &
+#:if routine in ["almost_equal", "not_almost_equal", "is_zero", "is_eye", "is_symmetric"]
+      place, &
+#:endif
+      is_failed)
+      class(unittest), intent(inout) :: this
+      ${type}$, intent(in) :: ${"expr(*)" if routine in ["true", "false"] else "a(*)"}$
+      integer, intent(in) :: ${"shape_expr(:)" if routine in ["true", "false"] else "shape_a(:)"}$
+#:if routine not in ["true", "false", "is_zero", "is_eye", "is_symmetric"]
+      ${type}$, intent(in) :: b(*)
+      integer, intent(in) :: shape_b(:)
+#:endif
+      character(*), intent(in), optional :: unitname
+#:if routine in ["almost_equal", "not_almost_equal", "is_zero", "is_eye", "is_symmetric"]
+      integer, intent(in), optional :: place
+#:endif
+      logical, intent(out), optional :: is_failed
+    end subroutine unittest_assert_${routine}$_xd_${post}$
+#:endfor
+#:endfor
 !
 #:def arg_type_bool(type, rank1)
       class(unittest), intent(inout)     :: this

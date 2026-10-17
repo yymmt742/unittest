@@ -1,0 +1,122 @@
+#:include "common.fypp"
+submodule(mod_unittest) xd_methods
+  implicit none
+contains
+#:include "report_functions.fypp"
+#:for routine, ktp in XD_METHOD_GROUPS
+#:for kind, type, post in ktp
+  module procedure unittest_assert_${routine}$_xd_${post}$
+#:if routine in ["true", "false", "equal", "not_equal", "almost_equal", "not_almost_equal", "less", "less_equal", "greater", "greater_equal", "is_zero"]
+    integer :: n
+#:endif
+#:if routine in ["almost_equal", "not_almost_equal", "is_zero", "is_eye", "is_symmetric"]
+    integer :: i
+#:endif
+#:if routine in ["is_eye", "is_symmetric"]
+    integer :: j
+#:endif
+    logical :: err
+#:if routine in ["almost_equal", "not_almost_equal", "is_zero", "is_eye", "is_symmetric"]
+#:if routine in ["is_zero"]
+    ${"real(RK)" if "INT" in kind else "real(" + kind + ")"}$ :: mp
+#:else
+    ${"real(RK)" if "INT" in kind else "real(" + kind + ")"}$ :: mp, diff
+#:endif
+#:endif
+#:if routine in ["true", "false"]
+    n = PRODUCT(shape_expr)
+    err = ${".not.ALL(expr(1:n))" if routine == "true" else "ANY(expr(1:n))"}$
+#:elif routine in ["equal", "not_equal", "almost_equal", "not_almost_equal", "less", "less_equal", "greater", "greater_equal"]
+    if (SIZE(shape_a) /= SIZE(shape_b)) then
+      err = .true.
+      if (PRESENT(is_failed)) is_failed = err
+      call test_result_append(this%results, err)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, &
+        shape_a, shape_b, this%tap_support, "${routine + '_xd'}$", unitname)
+      return
+    end if
+    if (ANY(shape_a /= shape_b)) then
+      err = .true.
+      if (PRESENT(is_failed)) is_failed = err
+      call test_result_append(this%results, err)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, &
+        shape_a, shape_b, this%tap_support, "${routine + '_xd'}$", unitname)
+      return
+    end if
+    n = PRODUCT(shape_a)
+#:if routine in ["equal", "not_equal"]
+    err = .not.ALL(a(1:n) ${(".eqv." if "logical" in type else "==") if routine == "equal" else (".neqv." if "logical" in type else "/=")}$ b(1:n))
+#:elif routine in ["less", "less_equal", "greater", "greater_equal"]
+    err = .not.ALL(a(1:n) ${{"less":"<", "less_equal":"<=", "greater":">", "greater_equal":">="}[routine]}$ b(1:n))
+#:else
+    if (PRESENT(place)) then; mp = 10**place
+    else; mp = 10**7
+    end if
+    err = ${".false." if routine == "almost_equal" else ".true."}$
+    do i = 1, n
+      diff = ABS(a(i) - b(i)) * mp
+      if (INT(diff) >= 1) then
+        err = ${".true." if routine == "almost_equal" else ".false."}$
+        exit
+      end if
+    end do
+#:endif
+#:elif routine == "is_zero"
+    n = PRODUCT(shape_a)
+    if (PRESENT(place)) then; mp = 10**place
+    else; mp = 10**7
+    end if
+    err = .false.
+    do i = 1, n
+      if (INT(ABS(a(i)) * mp) >= 1) then
+        err = .true.
+        exit
+      end if
+    end do
+#:else
+    if (SIZE(shape_a) /= 2) then
+      err = .true.
+      if (PRESENT(is_failed)) is_failed = err
+      call test_result_append(this%results, err)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, &
+        shape_a, [2], this%tap_support, "${routine + '_xd'}$", unitname)
+      return
+    end if
+    if (shape_a(1) /= shape_a(2)) then
+      err = .true.
+      if (PRESENT(is_failed)) is_failed = err
+      call test_result_append(this%results, err)
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, &
+        [shape_a(1)], [shape_a(2)], this%tap_support, "${routine + '_xd'}$", unitname)
+      return
+    end if
+    if (PRESENT(place)) then; mp = 10**place
+    else; mp = 10**7
+    end if
+    err = .false.
+    do j = 1, shape_a(2)
+      do i = 1, shape_a(1)
+#:if routine == "is_eye"
+        diff = ABS(a(i + (j - 1) * shape_a(1)) - MERGE(1, 0, i == j)) * mp
+        if (INT(diff) >= 1) err = .true.
+#:else
+        if (i < j) then
+          diff = ABS(a(i + (j - 1) * shape_a(1)) - a(j + (i - 1) * shape_a(1))) * mp
+          if (INT(diff) >= 1) err = .true.
+        end if
+#:endif
+        if (err) exit
+      end do
+      if (err) exit
+    end do
+#:endif
+    if (PRESENT(is_failed)) is_failed = err
+    call test_result_append(this%results, err)
+    call report_result(this%dev, this%results(SIZE(this%results))%id, this%nest, err, &
+      this%tap_support, "${routine + '_xd'}$", unitname)
+  end procedure unittest_assert_${routine}$_xd_${post}$
+#:endfor
+#:endfor
+include "result_functions.f90"
+include "image_functions.f90"
+end submodule xd_methods

@@ -93,7 +93,12 @@ array procedures, and binds them under the usual generic names such as
 `assert` and `assert_allclose`. Array data must be passed as a contiguous
 rank-one sequence together with its shape; rank-two-and-higher direct overloads
 are omitted. In this mode the XD implementations currently cover logical
-`assert` and real/complex `allclose` and `not_allclose`.
+`assert`, `true`/`false`, `equal`/`not_equal`, `almost_equal`/`not_almost_equal`,
+the ordered comparisons, `is_zero`, `is_eye`, `is_symmetric`, and real/complex
+`allclose`/`not_allclose`. In a regular build, these array methods are exposed
+with an `_xd` suffix (for example, `assert_equal_xd`); in XD-only mode they are
+included in their regular generic names. Debug builds always generate the full
+interface set so the complete test suite is available.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

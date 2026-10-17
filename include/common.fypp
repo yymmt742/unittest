@@ -78,6 +78,14 @@
 #:set REAL_KIND_TYPE_POSTS = list(zip(REAL_KINDS, REAL_TYPES, REAL_POSTFIX))
 #:set COMPLEX_KIND_TYPE_POSTS = list(zip(REAL_KINDS, COMPLEX_TYPES, COMPLEX_POSTFIX))
 #:set LOGICAL_KIND_TYPE_POSTS = list(zip(LOGICAL_KINDS, LOGICAL_TYPES, LOGICAL_POSTFIX))
+# XD methods use flat assumed-size data plus an explicit shape. Keep these
+# groups shared by the type-bound generics, interface blocks, and FYPP bodies.
+#:set XD_BOOL_METHODS = [("true", LOGICAL_KIND_TYPE_POSTS), ("false", LOGICAL_KIND_TYPE_POSTS)]
+#:set XD_EQUAL_METHODS = [("equal", INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS), ("not_equal", INTEGER_KIND_TYPE_POSTS + LOGICAL_KIND_TYPE_POSTS)]
+#:set XD_ALMOST_METHODS = [("almost_equal", INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS), ("not_almost_equal", INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS)]
+#:set XD_COMPARE_METHODS = [("less", INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS), ("less_equal", INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS), ("greater", INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS), ("greater_equal", INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS)]
+#:set XD_SINGLE_METHODS = [("is_zero", INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS), ("is_eye", INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS), ("is_symmetric", INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS)]
+#:set XD_METHOD_GROUPS = XD_BOOL_METHODS + XD_EQUAL_METHODS + XD_ALMOST_METHODS + XD_COMPARE_METHODS + XD_SINGLE_METHODS
 
 #:set OPERATORS = ["==", "/=", "<", "<=", ">", ">=", ".eqv.", ".neqv.", "~", "!~", "", ".not."]
 #:set NEGA_OPRS = ["/=", "==", ">=", ">", "<=", "<", ".neqv.", ".eqv.", "!~", "~", ".not.", ""]
@@ -123,8 +131,15 @@ $:f"{i}.0_" + kind if "REAL" in kind else f"{i}_" + kind
 procedure, private :: ${routine_name(g, post, rank1, rank2)}$
 #:endfor
 #:endfor
+#:set xd_names = []
+#:if XD_ONLY_SUPPORT and g in ["true", "false", "equal", "not_equal", "almost_equal", "not_almost_equal", "less", "less_equal", "greater", "greater_equal", "is_zero"]
+#:for kind, type, post in tup
+#:set xd_names = xd_names + ["unittest_assert_" + g + "_xd_" + post]
+procedure, private :: unittest_assert_${g}$_xd_${post}$
+#:endfor
+#:endif
 generic            :: assert${"" if g == "" else "_" + g}$ => &
-${", &\n  ".join([", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup]) for rank1, rank2 in ranks])}$
+${", &\n  ".join([", &\n  ".join(["                      " + routine_name(g, post, rank1, rank2) for kind, type, post in tup]) for rank1, rank2 in ranks] + (["                      " + name for name in xd_names] if xd_names else []))}$
 #:enddef
 
 #:def flatten(expr, rank1, rank2=None)

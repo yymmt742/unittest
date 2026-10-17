@@ -1,0 +1,72 @@
+#:include "common.fypp"
+#:set suffix = "" if XD_ONLY_SUPPORT else "_xd"
+program test_xd_methods
+  use mod_unittest
+  use mod_unittest_kinds
+  implicit none
+  type(unittest) :: u
+  logical :: failed
+  call u%init('XD methods', terminate_with_error_code=.false.)
+#:for kind, type, post in LOGICAL_KIND_TYPE_POSTS
+  block
+    ${type}$ :: a(4), b(4)
+    a = [.true., .true., .true., .true.]
+    b = [.true., .true., .true., .true.]
+    call u%assert_true${suffix}$(a, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    b = .false.
+    call u%assert_false${suffix}$(b, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    call u%assert_equal${suffix}$(a, [2, 2], a, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    call u%assert_not_equal${suffix}$(a, [2, 2], b, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+  end block
+#:endfor
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS
+  block
+    ${type}$ :: a(4), b(4)
+    a = [1, 2, 3, 4]
+    b = a
+    call u%assert_equal${suffix}$(a, [2, 2], b, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    b = b + 1
+    call u%assert_not_equal${suffix}$(a, [2, 2], b, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+  end block
+#:endfor
+#:for kind, type, post in INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS
+  block
+    ${type}$ :: a(4), b(4), zero(4), eye(4), sym(4)
+    a = [1, 2, 3, 4]
+    b = [1, 2, 3, 4]
+    zero = 0
+    eye = [1, 0, 0, 1]
+    sym = [1, 2, 2, 3]
+    call u%assert_almost_equal${suffix}$(a, [2, 2], b, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    b = b + 1
+    call u%assert_not_almost_equal${suffix}$(a, [2, 2], b, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    call u%assert_is_zero${suffix}$(zero, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    call u%assert_is_eye${suffix}$(eye, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    call u%assert_is_symmetric${suffix}$(sym, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+#:if "complex" not in type
+    a = [1, 2, 3, 4]
+    b = [2, 3, 4, 5]
+    call u%assert_less${suffix}$(a, [2, 2], b, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    call u%assert_less_equal${suffix}$(a, [2, 2], b, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    call u%assert_greater${suffix}$(b, [2, 2], a, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+    call u%assert_greater_equal${suffix}$(b, [2, 2], a, [2, 2], is_failed=failed)
+    if (failed) call error_stop(code=1)
+#:endif
+  end block
+#:endfor
+  call u%finish_and_terminate()
+end program test_xd_methods
