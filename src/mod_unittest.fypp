@@ -8,6 +8,7 @@ module mod_unittest
   use mod_unittest_kinds
   use mod_unittest_tap14_yaml
   use mod_assertion_result, only: test_result, n_test, n_error, &
+                                  assertion_result, ASSERTION_DETAIL_LEN, &
                                   report_rank_error, report_rank_error_tap
   implicit none
   private

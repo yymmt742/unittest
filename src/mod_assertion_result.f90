@@ -1,4 +1,5 @@
 module mod_assertion_result
+  use, intrinsic :: iso_fortran_env, only: real64
   use mod_unittest_tap14_yaml, only: tap14_yaml_document_start, tap14_yaml_document_end, &
                                      tap14_yaml_body, tap14_yaml_list
   implicit none
@@ -35,7 +36,10 @@ module mod_assertion_result
     procedure, public :: size => assertion_result_size
     procedure, public :: get_detail => assertion_result_get_detail
     procedure, public :: clear => assertion_result_clear
-    final :: assertion_result_finalize
+    procedure, public :: destroy => assertion_result_destroy
+    procedure, public :: error_rate => assertion_result_error_rate
+    procedure, public :: report_error_rate => assertion_result_report_error_rate
+    procedure, public :: report_result => assertion_result_report_result
   end type assertion_result
 
 contains
@@ -57,6 +61,132 @@ contains
     first = MAX(1, SIZE(results) - results(SIZE(results))%id + 1)
     res = COUNT(results(first:)%err)
   end function n_error
+
+  pure real(real64) function assertion_result_error_rate(this) result(rate)
+    class(assertion_result), intent(in) :: this
+    integer :: total_size
+
+    if (ALLOCATED(this%shape_b)) then
+      if (.not. ALLOCATED(this%shape_a)) then
+        rate = 1.0_real64
+        return
+      end if
+      if (SIZE(this%shape_a) /= SIZE(this%shape_b)) then
+        rate = 1.0_real64
+        return
+      end if
+      if (ANY(this%shape_a /= this%shape_b)) then
+        rate = 1.0_real64
+        return
+      end if
+    end if
+
+    total_size = 1
+    if (ALLOCATED(this%shape_a)) total_size = PRODUCT(this%shape_a)
+    if (total_size == 0) then
+      rate = 0.0_real64
+    else
+      rate = REAL(this%n_details, real64) / REAL(total_size, real64)
+    end if
+  end function assertion_result_error_rate
+
+  subroutine assertion_result_report_error_rate(this, dev)
+    class(assertion_result), intent(in) :: this
+    integer, intent(in) :: dev
+    integer :: total_size, ios
+    real(real64) :: rate
+    character(*), parameter :: spacer = '#'//REPEAT(' ', 7)
+    character(*), parameter :: separator = spacer//REPEAT('-', 56)
+
+    total_size = 1
+    if (ALLOCATED(this%shape_a)) total_size = PRODUCT(this%shape_a)
+    if (total_size <= 1) return
+    rate = this%error_rate()
+    write (dev, '(A)', iostat=ios) separator
+    write (dev, '(A,F7.3,A,I0,A,I0,A)', iostat=ios) &
+      spacer//'  ErrorRate: ', 100.0_real64 * rate, ' %  ( ', this%n_details, ' / ', total_size, ' )'
+  end subroutine assertion_result_report_error_rate
+
+  subroutine assertion_result_report_result(this, dev, num_test, nest, tap, unitname, show_details)
+    class(assertion_result), intent(in) :: this
+    integer, intent(in) :: dev, num_test, nest
+    logical, intent(in) :: tap
+    character(*), intent(in), optional :: unitname
+    logical, intent(in), optional :: show_details
+    character(:), allocatable :: name, message, prefix, status
+    character(*), parameter :: spacer = '#'//REPEAT(' ', 7)
+    character(*), parameter :: failed = ACHAR(INT(z'1b'))//'[91mFAILED'//ACHAR(INT(z'1b'))//'[m'
+    character(*), parameter :: passed = ACHAR(INT(z'1b'))//'[92mOK'//ACHAR(INT(z'1b'))//'[m'
+    integer :: i, ios
+    logical :: show, rank_error
+
+    name = result_name(unitname, TRIM(this%method), num_test)
+    show = .true.
+    if (PRESENT(show_details)) show = show_details
+    rank_error = .false.
+    if (ALLOCATED(this%shape_b)) then
+      rank_error = .not. ALLOCATED(this%shape_a)
+      if (ALLOCATED(this%shape_a)) then
+        rank_error = SIZE(this%shape_a) /= SIZE(this%shape_b)
+        if (.not. rank_error) rank_error = ANY(this%shape_a /= this%shape_b)
+      end if
+    end if
+    if (tap) then
+      status = tap_status(unitname, num_test)
+      if (this%n_details > 0 .or. rank_error) status = 'not '//status
+      write (dev, '(A)', iostat=ios) REPEAT('  ', MAX(0, nest))//status
+      if (this%n_details == 0 .and. .not. rank_error) return
+      message = ''
+      message = message//tap14_yaml_document_start(nest=nest + 1)
+      message = message//tap14_yaml_body('name', '"'//name//'"', nest=nest + 1)
+      message = message//tap14_yaml_body('assertion', TRIM(this%method), nest=nest + 1)
+      message = message//tap14_yaml_body('values', '', nest=nest + 1)
+      if (rank_error) then
+        message = message//tap14_yaml_body('rank', 'false', nest=nest + 1)
+        if (ALLOCATED(this%shape_a)) then
+          message = message//tap14_yaml_body('shape_a', '', nest=nest + 1)
+          do i = 1, SIZE(this%shape_a)
+            message = message//tap14_yaml_list(this%shape_a(i), nest=nest + 2)
+          end do
+        end if
+        message = message//tap14_yaml_body('shape_b', '', nest=nest + 2)
+        do i = 1, SIZE(this%shape_b)
+          message = message//tap14_yaml_list(this%shape_b(i), nest=nest + 2)
+        end do
+      end if
+      if (this%n_details > 0) then
+        message = message//tap14_yaml_body('indices', '', nest=nest + 1)
+        do i = 1, this%n_details
+          message = message//tap14_yaml_list(this%details(i)%flat_idx, nest=nest + 2)
+        end do
+        message = message//tap14_yaml_body('details', '', nest=nest + 1)
+        do i = 1, this%n_details
+          message = message//tap14_yaml_list('"'//TRIM(this%details(i)%detail)//'"', nest=nest + 2)
+        end do
+      end if
+      message = message//tap14_yaml_document_end(nest=nest + 1)
+      write (dev, '(A)', iostat=ios) message
+      return
+    end if
+
+    call format_result_prefix(unitname, num_test, TRIM(this%method), prefix)
+    if (this%n_details > 0 .or. rank_error) then
+      write (dev, '(A)', iostat=ios) prefix//failed
+      if (show) then
+        do i = 1, this%n_details
+          write (dev, '(A,I0,1X,A)', iostat=ios) spacer//'  ', this%details(i)%flat_idx, &
+            TRIM(this%details(i)%detail)
+        end do
+      end if
+      if (rank_error .and. ALLOCATED(this%shape_a)) then
+        write (dev, '(A)', iostat=ios) spacer//'  RankMissMatch: '// &
+          format_shape(this%shape_a)//' /= '//format_shape(this%shape_b)
+      end if
+      call this%report_error_rate(dev)
+    else
+      write (dev, '(A)', iostat=ios) prefix//passed
+    end if
+  end subroutine assertion_result_report_result
 
   pure function report_rank_error(num_test, size_a, size_b, routine, unitname) result(message)
     integer, intent(in) :: num_test
@@ -127,6 +257,21 @@ contains
     end if
   end function result_name
 
+  pure subroutine format_result_prefix(unitname, num_test, routine, prefix)
+    character(*), intent(in), optional :: unitname
+    integer, intent(in) :: num_test
+    character(*), intent(in) :: routine
+    character(:), allocatable, intent(out) :: prefix
+    character(:), allocatable :: name
+    character(7) :: count_text
+    integer :: padding
+
+    write (count_text, '(I7)') num_test
+    name = result_name(unitname, routine, num_test)
+    padding = MAX(0, 44 - LEN(name))
+    prefix = '#'//count_text//' '//name//REPEAT(' ', padding)//'... '
+  end subroutine format_result_prefix
+
   pure function format_shape(shape) result(text)
     integer, intent(in) :: SHAPE(:)
     character(:), allocatable :: text
@@ -196,9 +341,9 @@ contains
     this%method = ''
   end subroutine assertion_result_clear
 
-  pure subroutine assertion_result_finalize(this)
-    type(assertion_result), intent(inout) :: this
+  pure subroutine assertion_result_destroy(this)
+    class(assertion_result), intent(inout) :: this
     call this%clear()
-  end subroutine assertion_result_finalize
+  end subroutine assertion_result_destroy
 
 end module mod_assertion_result

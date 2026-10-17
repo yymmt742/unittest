@@ -1,12 +1,14 @@
 program test_assertion_result
+  use, intrinsic :: iso_fortran_env, only: real64
   use mod_assertion_result, only: assertion_result, assertion_failure, test_result, &
                                   n_test, n_error, report_rank_error, report_rank_error_tap
   implicit none
-  type(assertion_result) :: result, copied
+  type(assertion_result) :: result, copied, rate_result, rank_result, scalar_result
   type(assertion_failure) :: failure
   type(test_result) :: no_results(0), errors(3), subtest_results(5), marker_only(1)
-  integer :: i
-  character(:), allocatable :: message, tap_message
+  integer :: i, report_unit, ios
+  character(:), allocatable :: message, tap_message, captured
+  character(512) :: report_line
 
   if (n_test(no_results) /= 0) error stop "n_test must handle an empty result list"
   if (n_error(no_results) /= 0) error stop "n_error must handle an empty result list"
@@ -37,6 +39,55 @@ program test_assertion_result
   if (index(tap_message, "shape_a:") == 0 .or. index(tap_message, "shape_b:") == 0) &
     error stop "TAP rank report must include both shapes"
 
+  rate_result%method = "assert_equal"
+  rate_result%shape_a = [4]
+  call rate_result%push(2, "[1] /= [2]")
+  call rate_result%push(4, "[3] /= [4]")
+  if (abs(rate_result%error_rate() - 0.5_real64) > 1.0e-12_real64) &
+    error stop "error rate must be details divided by tensor size"
+  rank_result%shape_a = [2, 2]
+  rank_result%shape_b = [2, 3]
+  if (rank_result%error_rate() /= 1.0_real64) error stop "rank mismatch error rate must be one"
+  call scalar_result%push(1, "scalar failed")
+  if (scalar_result%error_rate() /= 1.0_real64) error stop "scalar error rate must be one"
+
+  open (newunit=report_unit, status="scratch", action="readwrite")
+  call rate_result%report_error_rate(report_unit)
+  rewind (report_unit)
+  read (report_unit, '(A)', iostat=ios) report_line
+  read (report_unit, '(A)', iostat=ios) report_line
+  if (ios /= 0 .or. index(report_line, "ErrorRate") == 0) &
+    error stop "report_error_rate must write the computed rate"
+  close (report_unit)
+
+  open (newunit=report_unit, status="scratch", action="readwrite")
+  call rate_result%report_result(report_unit, 2, 0, .false., "comparison", show_details=.true.)
+  rewind (report_unit)
+  captured = ""
+  do
+    read (report_unit, '(A)', iostat=ios) report_line
+    if (ios /= 0) exit
+    captured = captured//trim(report_line)//new_line('')
+  end do
+  close (report_unit)
+  if (index(captured, "FAILED") == 0 .or. index(captured, "[1] /= [2]") == 0) &
+    error stop "report_result must output failure details"
+  if (index(captured, "ErrorRate") == 0) error stop "report_result must output error rate"
+
+  open (newunit=report_unit, status="scratch", action="readwrite")
+  call rate_result%report_result(report_unit, 2, 0, .true., "comparison")
+  rewind (report_unit)
+  captured = ""
+  do
+    read (report_unit, '(A)', iostat=ios) report_line
+    if (ios /= 0) exit
+    captured = captured//trim(report_line)//new_line('')
+  end do
+  close (report_unit)
+  if (index(captured, "not ok 2 # comparison") == 0) error stop "report_result must write TAP failure status"
+  if (index(captured, "[3] /= [4]") == 0) error stop "report_result must include TAP failure details"
+  call rate_result%destroy()
+
   if (result%size() /= 0) error stop "new result must be empty"
 
   result%method = "assert_equal"
@@ -66,4 +117,8 @@ program test_assertion_result
   if (result%size() /= 0) error stop "clear must reset the logical size"
   if (allocated(result%shape_a)) error stop "clear must release shape_a"
   if (allocated(result%shape_b)) error stop "clear must release shape_b"
+  call result%destroy()
+  call copied%destroy()
+  call rank_result%destroy()
+  call scalar_result%destroy()
 end program test_assertion_result

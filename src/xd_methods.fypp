@@ -6,16 +6,18 @@ contains
 #:for routine, ktp in XD_METHOD_GROUPS
 #:for kind, type, post in ktp
   module procedure unittest_assert_${routine}$_xd_${post}$
+    integer :: i
 #:if routine in ["true", "false", "equal", "not_equal", "almost_equal", "not_almost_equal", "less", "less_equal", "greater", "greater_equal", "is_zero"]
     integer :: n
 #:endif
-#:if routine in ["almost_equal", "not_almost_equal", "is_zero", "is_eye", "is_symmetric"]
-    integer :: i
-#:endif
 #:if routine in ["is_eye", "is_symmetric"]
-    integer :: j
+    integer :: j, flat_idx
 #:endif
     logical :: err
+    type(assertion_result) :: result
+#:if routine in ["is_eye", "is_symmetric"]
+    integer :: flat_idx
+#:endif
 #:if routine in ["almost_equal", "not_almost_equal", "is_zero", "is_eye", "is_symmetric"]
 #:if routine in ["is_zero"]
     ${"real(RK)" if "INT" in kind else "real(" + kind + ")"}$ :: mp
@@ -130,10 +132,71 @@ contains
       if (err) exit
     end do
 #:endif
+#:if routine in ["true", "false"]
+    result%shape_a = shape_expr
+#:else
+    result%shape_a = shape_a
+#:if routine not in ["is_zero", "is_eye", "is_symmetric"]
+    result%shape_b = shape_b
+#:endif
+#:endif
+    result%method = "${routine + '_xd'}$"
+    if (err) then
+#:if routine in ["true", "false"]
+      do i = 1, n
+#:if routine == "true"
+        if (.not. expr(i)) call result%push(i, "logical value is false")
+#:else
+        if (expr(i)) call result%push(i, "logical value is true")
+#:endif
+      end do
+#:elif routine in ["equal", "not_equal", "less", "less_equal", "greater", "greater_equal"]
+#:if routine in ["equal", "not_equal"]
+#:set op = (".eqv." if "logical" in type else "==") if routine == "equal" else (".neqv." if "logical" in type else "/=")
+#:else
+#:set op = {"less":"<", "less_equal":"<=", "greater":">", "greater_equal":">="}[routine]
+#:endif
+      do i = 1, n
+        if (.not.(a(i) ${op}$ b(i))) call result%push(i, "comparison failed")
+      end do
+#:elif routine in ["almost_equal", "not_almost_equal"]
+      do i = 1, n
+        diff = ABS(a(i) - b(i)) * mp
+#:if routine == "almost_equal"
+        if (INT(diff) >= 1) call result%push(i, "values are not almost equal")
+#:else
+        if (INT(diff) < 1) call result%push(i, "values are almost equal")
+#:endif
+      end do
+#:elif routine == "is_zero"
+      do i = 1, n
+        if (INT(ABS(a(i)) * mp) >= 1) call result%push(i, "value is nonzero")
+      end do
+#:elif routine == "is_eye"
+      do j = 1, shape_a(2)
+        do i = 1, shape_a(1)
+          flat_idx = i + (j - 1) * shape_a(1)
+          diff = ABS(a(flat_idx) - MERGE(1, 0, i == j)) * mp
+          if (INT(diff) >= 1) call result%push(flat_idx, "matrix element differs from identity")
+        end do
+      end do
+#:elif routine == "is_symmetric"
+      do j = 1, shape_a(2)
+        do i = 1, shape_a(1)
+          if (i < j) then
+            flat_idx = i + (j - 1) * shape_a(1)
+            diff = ABS(a(flat_idx) - a(j + (i - 1) * shape_a(1))) * mp
+            if (INT(diff) >= 1) call result%push(flat_idx, "symmetric matrix elements differ")
+          end if
+        end do
+      end do
+#:endif
+    end if
     if (PRESENT(is_failed)) is_failed = err
     call test_result_append(this%results, err)
-    call report_result(this%dev, this%results(SIZE(this%results))%id, this%nest, err, &
-      this%tap_support, "${routine + '_xd'}$", unitname)
+    call result%report_result(this%dev, this%results(SIZE(this%results))%id, this%nest, &
+      this%tap_support, unitname)
+    call result%destroy()
   end procedure unittest_assert_${routine}$_xd_${post}$
 #:endfor
 #:endfor

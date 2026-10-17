@@ -4,23 +4,26 @@ submodule(mod_unittest) bool_xd
 contains
 #:include "report_functions.fypp"
   module procedure unittest_assert_xd_logical
-    integer :: i, n, ios
+    integer :: i, n
     logical :: err
+    type(assertion_result) :: result
     n = PRODUCT(shape_expr)
     err = .not.ALL(expr(1:n))
     call test_result_append(this%results, err)
     if (PRESENT(is_failed)) is_failed = err
-    call report_result(this%dev, this%results(SIZE(this%results))%id, this%nest, err, &
-      this%tap_support, "assert_xd", unitname)
-    if (err .and. this%verbose > 0) then
+    result%method = "assert_xd"
+    result%shape_a = shape_expr
+    if (err) then
       do i = 1, n
         if (.not.expr(i)) then
-          write(this%dev, '(A,I0,A)', iostat=ios) "#        first false flat element: ", i, &
-            " (shape supplied by caller)"
-          exit
+          call result%push(i, "logical value is false")
         end if
       end do
     end if
+    call result%report_result(this%dev, this%results(SIZE(this%results))%id, &
+      this%nest, this%tap_support, unitname, &
+      show_details=this%verbose > 0 .and. n < this%dump_line_limit)
+    call result%destroy()
   end procedure unittest_assert_xd_logical
 include "result_functions.f90"
 include "image_functions.f90"
