@@ -24,10 +24,19 @@
 #:set PATH_SLASH = "'/'"
 #:endif
 
+#:if not defined("XD_ONLY_SUPPORT")
+#:set XD_ONLY_SUPPORT = False
+#:endif
+#:if XD_ONLY_SUPPORT
+#:set RANK_ITERi  = [(0, None)]
+#:set RANK_ITERii = [(0, 0)]
+#:set RANK_MATRIX = []
+#:else
 #:set RANK_ITERi  = [(i, None) for i in range(MAXIMUM_RANK + 1)]
 #:set RANK_ITERii = [(i, i) for i in range(MAXIMUM_RANK + 1)] + [(i, 0) for i in range(1, MAXIMUM_RANK + 1)]
-#:set RANK_SCALAR = [(0, None)]
 #:set RANK_MATRIX = [(2, None)]
+#:endif
+#:set RANK_SCALAR = [(0, None)]
 
 #:set INTEGER_KINDS = ["INT8", "INT16", "INT32", "INT64"]
 #:set INTEGER_POSTFIX = ["i8", "i16", "i32", "i64"]

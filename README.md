@@ -87,6 +87,14 @@ array assertions. Raising it adds many type and rank combinations, which
 increases compile time and module size. The matrix-specific eye and symmetry
 assertions remain rank two.
 
+For a smaller API and faster build, configure with
+`-DUNITTEST_XD_ONLY=ON`. This keeps scalar overloads and the available XD
+array procedures, and binds them under the usual generic names such as
+`assert` and `assert_allclose`. Array data must be passed as a contiguous
+rank-one sequence together with its shape; rank-two-and-higher direct overloads
+are omitted. In this mode the XD implementations currently cover logical
+`assert` and real/complex `allclose` and `not_allclose`.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->

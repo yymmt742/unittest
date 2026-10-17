@@ -23,6 +23,22 @@ endif()
 if(NOT UNITTEST_MAXIMUM_RANK MATCHES "^[0-9]+$" OR UNITTEST_MAXIMUM_RANK GREATER 15)
   message(FATAL_ERROR "UNITTEST_MAXIMUM_RANK must be an integer between 0 and 15.")
 endif()
+option(UNITTEST_XD_ONLY "Build scalar and XD interfaces only" OFF)
+set(UNITTEST_XD_ONLY_EFFECTIVE "${UNITTEST_XD_ONLY}")
+string(TOLOWER "${CMAKE_BUILD_TYPE}" _unittest_build_type)
+set(_unittest_has_debug_config FALSE)
+foreach(_unittest_config IN LISTS CMAKE_CONFIGURATION_TYPES)
+  string(TOLOWER "${_unittest_config}" _unittest_config_lower)
+  if(_unittest_config_lower STREQUAL "debug")
+    set(_unittest_has_debug_config TRUE)
+  endif()
+endforeach()
+if(_unittest_build_type STREQUAL "debug" OR _unittest_has_debug_config)
+  if(UNITTEST_XD_ONLY_EFFECTIVE)
+    message(STATUS "Debug configuration detected; disabling UNITTEST_XD_ONLY so all procedure interfaces are built.")
+  endif()
+  set(UNITTEST_XD_ONLY_EFFECTIVE OFF)
+endif()
 
 find_program(FYPP fypp)
 if(NOT FYPP)
@@ -52,6 +68,7 @@ list(
   "-DXDP_SUPPORT=$<BOOL:${XDP_SUPPORT}>"
   "-DQP_SUPPORT=$<BOOL:${QP_SUPPORT}>"
   "-DMAXIMUM_RANK=${UNITTEST_MAXIMUM_RANK}"
+  "-DXD_ONLY_SUPPORT=$<BOOL:${UNITTEST_XD_ONLY_EFFECTIVE}>"
   "-DWIN32=$<BOOL:${WIN32}>"
   "-DUNIX=$<BOOL:${UNIX}>"
   "-I${PROJECT_SOURCE_DIR}/include"

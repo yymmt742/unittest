@@ -36,17 +36,18 @@ list(APPEND fyppSources
    mod_unittest_kinds.fypp
    mod_unittest_tap14_yaml.fypp
    bool.fypp
-   bool_xd.fypp
    equal.fypp
    almost_equal.fypp
    compare.fypp
    allclose.fypp
-   allclose_xd.fypp
-   is_eye.fypp
    is_zero.fypp
-   is_symmetric.fypp
    mod_unittest.fypp
    )
+if(UNITTEST_XD_ONLY_EFFECTIVE)
+  list(APPEND fyppSources bool_xd.fypp allclose_xd.fypp)
+else()
+  list(APPEND fyppSources bool_xd.fypp allclose_xd.fypp is_eye.fypp is_symmetric.fypp)
+endif()
 
 set(f90files)
 set(incfiles)

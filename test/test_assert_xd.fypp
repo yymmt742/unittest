@@ -10,14 +10,25 @@ program test_assert_xd
   a = .true.
   flat(1:4) => a
   call u%init('assert_xd', terminate_with_error_code=.false.)
+#:if XD_ONLY_SUPPORT
+  call u%assert(.true., is_failed=failed)
+  if (failed) call error_stop(code=1)
+  call u%assert(flat, [2, 2], is_failed=failed)
+  if (failed) call error_stop(code=1)
+#:else
   call u%assert_xd(a, [2, 2], is_failed=failed)
   if (failed) call error_stop(code=1)
   call u%assert_xd(a(1, 1), [2, 2], is_failed=failed)
   if (failed) call error_stop(code=1)
   call u%assert_xd(flat, [2, 2], is_failed=failed)
   if (failed) call error_stop(code=1)
+#:endif
   a(2, 1) = .false.
+#:if XD_ONLY_SUPPORT
+  call u%assert(flat, [2, 2], is_failed=failed)
+#:else
   call u%assert_xd(a, [2, 2], is_failed=failed)
+#:endif
   if (.not.failed) call error_stop(code=1)
   call u%finish_and_terminate()
 end program test_assert_xd

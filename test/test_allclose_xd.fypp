@@ -15,18 +15,38 @@ program test_allclose_xd
   bflat(1:4) => b
   c = reshape(a, [4])
   call u%init('allclose_xd', terminate_with_error_code=.false.)
+#:if XD_ONLY_SUPPORT
+  call u%assert_allclose(1.0_dp, 1.0_dp, is_failed=failed)
+#:else
   call u%assert_allclose_xd(aflat, [2, 2], bflat, [2, 2], is_failed=failed)
+#:endif
   if (failed) call error_stop(code=1)
+#:if XD_ONLY_SUPPORT
+  call u%assert_allclose(aflat, [2, 2], c, [4], is_failed=failed)
+#:else
   call u%assert_allclose_xd(aflat, [2, 2], c, [4], is_failed=failed)
+#:endif
   if (.not. failed) call error_stop(code=1)
+#:if XD_ONLY_SUPPORT
+  call u%assert_not_allclose(aflat, [2, 2], c, [4], is_failed=failed)
+#:else
   call u%assert_not_allclose_xd(aflat, [2, 2], c, [4], is_failed=failed)
+#:endif
   if (.not. failed) call error_stop(code=1)
   b = a
   b(2, 1) = b(2, 1) + 1.0_dp
   bflat = reshape(b, [4])
+#:if XD_ONLY_SUPPORT
+  call u%assert_allclose(aflat, [2, 2], bflat, [2, 2], is_failed=failed)
+#:else
   call u%assert_allclose_xd(aflat, [2, 2], bflat, [2, 2], is_failed=failed)
+#:endif
   if (.not. failed) call error_stop(code=1)
+#:if XD_ONLY_SUPPORT
+  call u%assert_not_allclose(aflat, [2, 2], bflat, [2, 2], is_failed=failed)
+#:else
   call u%assert_not_allclose_xd(aflat, [2, 2], bflat, [2, 2], is_failed=failed)
+#:endif
   if (failed) call error_stop(code=1)
   call u%finish_and_terminate()
 end program test_allclose_xd

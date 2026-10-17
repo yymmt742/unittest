@@ -38,6 +38,15 @@ module mod_unittest
 #:set is_zero = [["is_zero"], INTEGER_KIND_TYPE_POSTS + REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERi]
 #:set allclose = [["allclose", "not_allclose"], REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS, RANK_ITERii]
 #:set procs = [asse, bool, equal, almost_equal, compare, is_eye, is_symmetric, is_zero, allclose]
+#:if XD_ONLY_SUPPORT
+#:set procs = [bool, equal, almost_equal, compare, is_zero]
+#:set allclose_xd_posts = [post for kind, type, post in REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS if kind in ["sp", "dp"]]
+#:set allclose_scalar_posts = [post for kind, type, post in REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS]
+#:set allclose_scalar_names = [routine_name("allclose", post, 0, 0) for post in allclose_scalar_posts]
+#:set not_allclose_scalar_names = [routine_name("not_allclose", post, 0, 0) for post in allclose_scalar_posts]
+#:set allclose_xd_names = ["unittest_assert_allclose_xd_" + post for post in allclose_xd_posts]
+#:set not_allclose_xd_names = ["unittest_assert_not_allclose_xd_" + post for post in allclose_xd_posts]
+#:endif
   type unittest
     private
     integer                        :: dev
@@ -52,7 +61,22 @@ module mod_unittest
     logical                        :: tap_support
   contains
     procedure         :: init => utest_init
+#:if XD_ONLY_SUPPORT
+    procedure, private :: unittest_assert_logical_0
+    procedure, private :: unittest_assert_xd_logical
+    generic            :: assert => unittest_assert_logical_0, unittest_assert_xd_logical
+#:else
     procedure          :: assert_xd => unittest_assert_xd_logical
+#:endif
+#:if XD_ONLY_SUPPORT
+#:for specific in allclose_scalar_names + not_allclose_scalar_names + allclose_xd_names + not_allclose_xd_names
+    procedure, private :: ${specific}$
+#:endfor
+    generic            :: assert_allclose => &
+      ${", &\n      ".join(allclose_scalar_names + allclose_xd_names)}$
+    generic            :: assert_not_allclose => &
+      ${", &\n      ".join(not_allclose_scalar_names + not_allclose_xd_names)}$
+#:else
     procedure, private :: unittest_assert_allclose_xd_r32, unittest_assert_allclose_xd_r64
     procedure, private :: unittest_assert_allclose_xd_c32, unittest_assert_allclose_xd_c64
     procedure, private :: unittest_assert_not_allclose_xd_r32, unittest_assert_not_allclose_xd_r64
@@ -63,6 +87,7 @@ module mod_unittest
     generic            :: assert_not_allclose_xd => &
       unittest_assert_not_allclose_xd_r32, unittest_assert_not_allclose_xd_r64, &
       unittest_assert_not_allclose_xd_c32, unittest_assert_not_allclose_xd_c64
+#:endif
 #:for routines, ktp, rank in procs
 #:for routine in routines
 ${generic_procedure(routine, ktp, rank)}$
