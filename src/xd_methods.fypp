@@ -36,7 +36,6 @@ contains
       result%shape_a = shape_a
       result%shape_b = shape_b
       call this%apend_result(result, unitname=unitname)
-      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     end if
@@ -47,7 +46,6 @@ contains
       result%shape_a = shape_a
       result%shape_b = shape_b
       call this%apend_result(result, unitname=unitname)
-      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     end if
@@ -89,7 +87,6 @@ contains
       result%shape_a = shape_a
       result%shape_b = [2]
       call this%apend_result(result, unitname=unitname)
-      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     end if
@@ -100,7 +97,6 @@ contains
       result%shape_a = [shape_a(1)]
       result%shape_b = [shape_a(2)]
       call this%apend_result(result, unitname=unitname)
-      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     end if

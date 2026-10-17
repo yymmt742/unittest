@@ -22,6 +22,7 @@ module mod_assertion_result
     integer, allocatable :: shape_a(:)
     integer, allocatable :: shape_b(:)
     character(ASSERTION_METHOD_LEN) :: method = ''
+    character(ASSERTION_METHOD_LEN) :: unitname = ''
     ! Private vector storage; only elements 1:n_details are live.
     type(assertion_failure), allocatable, private :: details(:)
     integer, private :: n_details = 0
@@ -258,6 +259,7 @@ contains
     call this%clear()
     this%id = source%id
     this%method = source%method
+    this%unitname = source%unitname
     if (ALLOCATED(source%shape_a)) this%shape_a = source%shape_a
     if (ALLOCATED(source%shape_b)) this%shape_b = source%shape_b
     this%n_details = source%n_details
@@ -278,6 +280,7 @@ contains
     if (ALLOCATED(this%shape_b)) deallocate (this%shape_b)
     this%n_details = 0
     this%method = ''
+    this%unitname = ''
     this%id = 0
   end subroutine assertion_result_clear
 

@@ -32,7 +32,6 @@ ${common_check(rank1, rank2, routine)}$
       result%shape_a = [SIZE(a, 1)]
       result%shape_b = [SIZE(a, 2)]
       call this%apend_result(result, unitname=unitname)
-      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     endif

@@ -163,7 +163,6 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
       result%shape_a = SHAPE(a)
       result%shape_b = SHAPE(b)
       call this%apend_result(result, unitname=unitname)
-      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     end if

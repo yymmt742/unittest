@@ -142,8 +142,8 @@ a simplified error heatmap is available when the test fails.
 
 [![Screen Shot][product-screenshot2]]()
 
-When the executable is run with the --tap option,
-the test results are output in [tap](https://testanything.org/) format.
+Initialize `unittest` with `tap_support=.true.` to output test results in
+[tap](https://testanything.org/) format.
 
 [![Screen Shot][product-screenshot3]]()
 

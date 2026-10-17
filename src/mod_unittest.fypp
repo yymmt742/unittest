@@ -347,34 +347,38 @@ ${arg_type_ab(type, rank1, rank2)}$
   end interface
 !
 contains
-  function utest_new(section, terminate_with_error_code, dump_line_limit, tap_support, argparse) result(res)
+  function utest_new(section, terminate_with_error_code, dump_line_limit, tap_support, flush, dev) result(res)
     character(*), intent(in), optional :: section
     logical, intent(in), optional      :: terminate_with_error_code
     integer, intent(in), optional      :: dump_line_limit
     logical, intent(in), optional      :: tap_support
-    logical, intent(in), optional      :: argparse
+    logical, intent(in), optional      :: flush
+    integer, intent(in), optional      :: dev
     type(unittest)                     :: res
-    call utest_init(res, section, terminate_with_error_code, dump_line_limit, tap_support, argparse)
+    call utest_init(res, section, terminate_with_error_code, dump_line_limit, tap_support, flush, dev)
   end function utest_new
 !
-  subroutine utest_init(this, section, terminate_with_error_code, dump_line_limit, tap_support, argparse)
+  subroutine utest_init(this, section, terminate_with_error_code, dump_line_limit, tap_support, flush, dev)
     class(unittest), intent(inout)     :: this
     character(*), intent(in), optional :: section
     logical, intent(in), optional      :: terminate_with_error_code
     integer, intent(in), optional      :: dump_line_limit
     logical, intent(in), optional      :: tap_support
-    logical, intent(in), optional      :: argparse
+    logical, intent(in), optional      :: flush
+    integer, intent(in), optional      :: dev
     integer                            :: ios
 !
     call timestamp_append(this%times)
 !
     if (.not. ALLOCATED(this%script_name)) then
-      call utest_setup(this, tap_support, argparse)
+      call utest_setup(this, tap_support)
       if (PRESENT(section)) this%section = section ! if section name is given, treat as subtest.
     end if
 !
     if (PRESENT(terminate_with_error_code)) this%terminate_with_error_code = terminate_with_error_code
     if (PRESENT(dump_line_limit)) this%dump_line_limit = dump_line_limit
+    if (PRESENT(flush)) this%flush = flush
+    if (PRESENT(dev)) this%dev = dev
     this%verbose = MERGE(1, 0, .not.this%tap_support .and. this%dump_line_limit /= 0)
 !
     if (this%section /= "" .and. PRESENT(section)) then
@@ -414,6 +418,8 @@ contains
     if (ALLOCATED(this%results)) n = SIZE(this%results)
     is_marker = .false.
     if (PRESENT(section_marker)) is_marker = section_marker
+    result%unitname = ''
+    if (PRESENT(unitname)) result%unitname = unitname
     if (is_marker) then
       result%id = 0
     else if (n == 0) then
@@ -582,55 +588,44 @@ contains
     if (PRESENT(unitname)) status = status//' # '//TRIM(unitname)
   end function utest_tap_status
 !
-  subroutine utest_setup(this, tap_support, argparse)
+  subroutine utest_setup(this, tap_support)
     class(unittest), intent(inout)     :: this
     logical, intent(in), optional      :: tap_support
-    logical, intent(in), optional      :: argparse
     integer                            :: ios
     this%terminate_with_error_code = .true.
     this%dump_line_limit = 10
     this%dev = STDERR
     this%tap_support = .false.
+    this%flush = .false.
     this%nest = 0
     if (PRESENT(tap_support)) then
       this%dump_line_limit = 0
       this%tap_support = tap_support
     end if
-    call argparse_(this, argparse)
+    call get_program_name(this)
     if (this%tap_support) then
       write (STDOUT, '(A)', iostat=ios) "TAP version 14"
     end if
     if (.not. ALLOCATED(this%section)) this%section = ""
   end subroutine utest_setup
 !
-  subroutine argparse_(this, argparse)
+  subroutine get_program_name(this)
     class(unittest), intent(inout) :: this
-    logical, intent(in), optional  :: argparse
     character(:), allocatable      :: argv
-    integer                        :: i, narg, length, ios
+    integer                        :: length, ios
     call GET_COMMAND_ARGUMENT(0, length=length, status=ios)
-    if (ios > 0) call error_stop('# ARGPARSE FAILED', 1)
+    if (ios > 0) then
+      this%script_name = 'unittest'
+      return
+    end if
     allocate (character(length) :: argv)
     call GET_COMMAND_ARGUMENT(0, value=argv, status=ios)
-    if (ios > 0) call error_stop('# ARGPARSE FAILED', 1)
-    this%script_name = argv(${"INDEX(argv, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"}$:)
-    if (PRESENT(argparse)) then
-      if (.not. argparse) return
+    if (ios > 0) then
+      this%script_name = 'unittest'
+      return
     end if
-    narg = COMMAND_ARGUMENT_COUNT()
-    do i = 1, narg
-      call GET_COMMAND_ARGUMENT(i, length = length, status=ios)
-      if (ios /= 0) cycle
-      if (LEN(argv) < length) argv = REPEAT(" ", length)
-      call GET_COMMAND_ARGUMENT(i, argv, status=ios)
-      if (ios /= 0) cycle
-      select case(argv)
-      case("--tap")
-        this%dump_line_limit = 0
-        this%tap_support = .true.
-      end select
-    end do
-  end subroutine argparse_
+    this%script_name = argv(${"INDEX(argv, " + PATH_SLASH + ", .true.) + 1" if WIN32 or UNIX else "1"}$:)
+  end subroutine get_program_name
 !
   subroutine tap_report_subtests(this)
     use mod_unittest_tap14_yaml
@@ -676,9 +671,59 @@ contains
   subroutine utest_finish(this)
     class(unittest), intent(inout) :: this
     real(RK)                       :: cputime, time
+    integer                        :: i
+    integer                        :: empty_shape(0)
+    character(:), allocatable      :: message
+    character(:), allocatable      :: unitname
+    message = ''
     call timestamp_append(this%times)
     time = elappes_time(this%times)
     cputime = elappes_cputime(this%times)
+    if (.not. this%flush .and. allocated(this%results)) then
+      do i = 1, size(this%results)
+        if (.not. this%results(i)%has_rank_error()) cycle
+        unitname = trim(this%results(i)%unitname)
+        if (this%tap_support) then
+          if (allocated(this%results(i)%shape_a)) then
+            if (len(unitname) > 0) then
+              message = report_rank_error_tap(this%results(i)%id, this%nest, this%results(i)%shape_a, &
+                this%results(i)%shape_b, trim(this%results(i)%method), unitname)
+            else
+              message = report_rank_error_tap(this%results(i)%id, this%nest, this%results(i)%shape_a, &
+                this%results(i)%shape_b, trim(this%results(i)%method))
+            end if
+          else
+            if (len(unitname) > 0) then
+              message = report_rank_error_tap(this%results(i)%id, this%nest, empty_shape, &
+                this%results(i)%shape_b, trim(this%results(i)%method), unitname)
+            else
+              message = report_rank_error_tap(this%results(i)%id, this%nest, empty_shape, &
+                this%results(i)%shape_b, trim(this%results(i)%method))
+            end if
+          end if
+          write (STDOUT, '(A)') message
+        else
+          if (allocated(this%results(i)%shape_a)) then
+            if (len(unitname) > 0) then
+              message = report_rank_error(this%results(i)%id, this%results(i)%shape_a, &
+                this%results(i)%shape_b, trim(this%results(i)%method), unitname)
+            else
+              message = report_rank_error(this%results(i)%id, this%results(i)%shape_a, &
+                this%results(i)%shape_b, trim(this%results(i)%method))
+            end if
+          else
+            if (len(unitname) > 0) then
+              message = report_rank_error(this%results(i)%id, empty_shape, &
+                this%results(i)%shape_b, trim(this%results(i)%method), unitname)
+            else
+              message = report_rank_error(this%results(i)%id, empty_shape, &
+                this%results(i)%shape_b, trim(this%results(i)%method))
+            end if
+          end if
+          write (this%dev, '(A)') message
+        end if
+      end do
+    end if
     call tap_report_subtests(this)
     call tap_report_tests(this)
 !
@@ -741,6 +786,7 @@ contains
     if (ALLOCATED(this%results)) deallocate (this%results)
     this%terminate_with_error_code = .true.
     this%tap_support = .false.
+    this%flush = .false.
     this%dump_line_limit = 10
   end subroutine utest_free
 !
