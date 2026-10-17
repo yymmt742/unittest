@@ -52,6 +52,17 @@ module mod_unittest
     logical                        :: tap_support
   contains
     procedure         :: init => utest_init
+    procedure          :: assert_xd => unittest_assert_xd_logical
+    procedure, private :: unittest_assert_allclose_xd_r32, unittest_assert_allclose_xd_r64
+    procedure, private :: unittest_assert_allclose_xd_c32, unittest_assert_allclose_xd_c64
+    procedure, private :: unittest_assert_not_allclose_xd_r32, unittest_assert_not_allclose_xd_r64
+    procedure, private :: unittest_assert_not_allclose_xd_c32, unittest_assert_not_allclose_xd_c64
+    generic            :: assert_allclose_xd => &
+      unittest_assert_allclose_xd_r32, unittest_assert_allclose_xd_r64, &
+      unittest_assert_allclose_xd_c32, unittest_assert_allclose_xd_c64
+    generic            :: assert_not_allclose_xd => &
+      unittest_assert_not_allclose_xd_r32, unittest_assert_not_allclose_xd_r64, &
+      unittest_assert_not_allclose_xd_c32, unittest_assert_not_allclose_xd_c64
 #:for routines, ktp, rank in procs
 #:for routine in routines
 ${generic_procedure(routine, ktp, rank)}$
@@ -71,6 +82,93 @@ ${generic_procedure(routine, ktp, rank)}$
       character(*), intent(in), optional :: msg
       integer, intent(in), optional      :: code
     end subroutine error_stop
+    module subroutine unittest_assert_xd_logical(this, expr, shape_expr, unitname, is_failed)
+      class(unittest), intent(inout) :: this
+      logical, intent(in) :: expr(*)
+      integer, intent(in) :: shape_expr(:)
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional :: is_failed
+    end subroutine unittest_assert_xd_logical
+    module subroutine unittest_assert_allclose_xd_r32(this, a, shape_a, b, shape_b, unitname, is_failed, rtol, atol)
+      class(unittest), intent(inout) :: this
+      real(sp), intent(in) :: a(*)
+      integer, intent(in) :: shape_a(:)
+      real(sp), intent(in) :: b(*)
+      integer, intent(in) :: shape_b(:)
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional :: is_failed
+      real(sp), intent(in), optional :: rtol, atol
+    end subroutine unittest_assert_allclose_xd_r32
+    module subroutine unittest_assert_allclose_xd_r64(this, a, shape_a, b, shape_b, unitname, is_failed, rtol, atol)
+      class(unittest), intent(inout) :: this
+      real(dp), intent(in) :: a(*)
+      integer, intent(in) :: shape_a(:)
+      real(dp), intent(in) :: b(*)
+      integer, intent(in) :: shape_b(:)
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional :: is_failed
+      real(dp), intent(in), optional :: rtol, atol
+    end subroutine unittest_assert_allclose_xd_r64
+    module subroutine unittest_assert_allclose_xd_c32(this, a, shape_a, b, shape_b, unitname, is_failed, rtol, atol)
+      class(unittest), intent(inout) :: this
+      complex(sp), intent(in) :: a(*)
+      integer, intent(in) :: shape_a(:)
+      complex(sp), intent(in) :: b(*)
+      integer, intent(in) :: shape_b(:)
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional :: is_failed
+      real(sp), intent(in), optional :: rtol, atol
+    end subroutine unittest_assert_allclose_xd_c32
+    module subroutine unittest_assert_allclose_xd_c64(this, a, shape_a, b, shape_b, unitname, is_failed, rtol, atol)
+      class(unittest), intent(inout) :: this
+      complex(dp), intent(in) :: a(*)
+      integer, intent(in) :: shape_a(:)
+      complex(dp), intent(in) :: b(*)
+      integer, intent(in) :: shape_b(:)
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional :: is_failed
+      real(dp), intent(in), optional :: rtol, atol
+    end subroutine unittest_assert_allclose_xd_c64
+    module subroutine unittest_assert_not_allclose_xd_r32(this, a, shape_a, b, shape_b, unitname, is_failed, rtol, atol)
+      class(unittest), intent(inout) :: this
+      real(sp), intent(in) :: a(*)
+      integer, intent(in) :: shape_a(:)
+      real(sp), intent(in) :: b(*)
+      integer, intent(in) :: shape_b(:)
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional :: is_failed
+      real(sp), intent(in), optional :: rtol, atol
+    end subroutine unittest_assert_not_allclose_xd_r32
+    module subroutine unittest_assert_not_allclose_xd_r64(this, a, shape_a, b, shape_b, unitname, is_failed, rtol, atol)
+      class(unittest), intent(inout) :: this
+      real(dp), intent(in) :: a(*)
+      integer, intent(in) :: shape_a(:)
+      real(dp), intent(in) :: b(*)
+      integer, intent(in) :: shape_b(:)
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional :: is_failed
+      real(dp), intent(in), optional :: rtol, atol
+    end subroutine unittest_assert_not_allclose_xd_r64
+    module subroutine unittest_assert_not_allclose_xd_c32(this, a, shape_a, b, shape_b, unitname, is_failed, rtol, atol)
+      class(unittest), intent(inout) :: this
+      complex(sp), intent(in) :: a(*)
+      integer, intent(in) :: shape_a(:)
+      complex(sp), intent(in) :: b(*)
+      integer, intent(in) :: shape_b(:)
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional :: is_failed
+      real(sp), intent(in), optional :: rtol, atol
+    end subroutine unittest_assert_not_allclose_xd_c32
+    module subroutine unittest_assert_not_allclose_xd_c64(this, a, shape_a, b, shape_b, unitname, is_failed, rtol, atol)
+      class(unittest), intent(inout) :: this
+      complex(dp), intent(in) :: a(*)
+      integer, intent(in) :: shape_a(:)
+      complex(dp), intent(in) :: b(*)
+      integer, intent(in) :: shape_b(:)
+      character(*), intent(in), optional :: unitname
+      logical, intent(out), optional :: is_failed
+      real(dp), intent(in), optional :: rtol, atol
+    end subroutine unittest_assert_not_allclose_xd_c64
 !
 #:def arg_type_bool(type, rank1)
       class(unittest), intent(inout)     :: this
@@ -467,4 +565,3 @@ contains
   end function n_section
 !
 end module mod_unittest
-

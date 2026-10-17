@@ -1,0 +1,27 @@
+#:include "common.fypp"
+submodule(mod_unittest) bool_xd
+  implicit none
+contains
+#:include "report_functions.fypp"
+  module procedure unittest_assert_xd_logical
+    integer :: i, n, ios
+    logical :: err
+    n = PRODUCT(shape_expr)
+    err = .not.ALL(expr(1:n))
+    call test_result_append(this%results, err)
+    if (PRESENT(is_failed)) is_failed = err
+    call report_result(this%dev, this%results(SIZE(this%results))%id, this%nest, err, &
+      this%tap_support, "assert_xd", unitname)
+    if (err .and. this%verbose > 0) then
+      do i = 1, n
+        if (.not.expr(i)) then
+          write(this%dev, '(A,I0,A)', iostat=ios) "#        first false flat element: ", i, &
+            " (shape supplied by caller)"
+          exit
+        end if
+      end do
+    end if
+  end procedure unittest_assert_xd_logical
+include "result_functions.f90"
+include "image_functions.f90"
+end submodule bool_xd

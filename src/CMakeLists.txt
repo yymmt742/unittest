@@ -36,10 +36,12 @@ list(APPEND fyppSources
    mod_unittest_kinds.fypp
    mod_unittest_tap14_yaml.fypp
    bool.fypp
+   bool_xd.fypp
    equal.fypp
    almost_equal.fypp
    compare.fypp
    allclose.fypp
+   allclose_xd.fypp
    is_eye.fypp
    is_zero.fypp
    is_symmetric.fypp

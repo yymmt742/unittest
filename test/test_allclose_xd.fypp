@@ -1,0 +1,32 @@
+#:include "common.fypp"
+program test_allclose_xd
+  use mod_unittest
+  use mod_unittest_kinds
+  implicit none
+  type(unittest) :: u
+  real(dp), target :: a(2, 2), b(2, 2)
+  real(dp), pointer :: aflat(:), bflat(:)
+  real(dp) :: c(4)
+  logical :: failed
+
+  a = reshape([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp], [2, 2])
+  b = a + 1.0e-7_dp
+  aflat(1:4) => a
+  bflat(1:4) => b
+  c = reshape(a, [4])
+  call u%init('allclose_xd', terminate_with_error_code=.false.)
+  call u%assert_allclose_xd(aflat, [2, 2], bflat, [2, 2], is_failed=failed)
+  if (failed) call error_stop(code=1)
+  call u%assert_allclose_xd(aflat, [2, 2], c, [4], is_failed=failed)
+  if (.not. failed) call error_stop(code=1)
+  call u%assert_not_allclose_xd(aflat, [2, 2], c, [4], is_failed=failed)
+  if (.not. failed) call error_stop(code=1)
+  b = a
+  b(2, 1) = b(2, 1) + 1.0_dp
+  bflat = reshape(b, [4])
+  call u%assert_allclose_xd(aflat, [2, 2], bflat, [2, 2], is_failed=failed)
+  if (.not. failed) call error_stop(code=1)
+  call u%assert_not_allclose_xd(aflat, [2, 2], bflat, [2, 2], is_failed=failed)
+  if (failed) call error_stop(code=1)
+  call u%finish_and_terminate()
+end program test_allclose_xd

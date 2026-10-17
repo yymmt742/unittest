@@ -1,0 +1,23 @@
+#:include "common.fypp"
+program test_assert_xd
+  use mod_unittest
+  implicit none
+  type(unittest) :: u
+  logical, target :: a(2, 2)
+  logical, pointer :: flat(:)
+  logical :: failed
+
+  a = .true.
+  flat(1:4) => a
+  call u%init('assert_xd', terminate_with_error_code=.false.)
+  call u%assert_xd(a, [2, 2], is_failed=failed)
+  if (failed) call error_stop(code=1)
+  call u%assert_xd(a(1, 1), [2, 2], is_failed=failed)
+  if (failed) call error_stop(code=1)
+  call u%assert_xd(flat, [2, 2], is_failed=failed)
+  if (failed) call error_stop(code=1)
+  a(2, 1) = .false.
+  call u%assert_xd(a, [2, 2], is_failed=failed)
+  if (.not.failed) call error_stop(code=1)
+  call u%finish_and_terminate()
+end program test_assert_xd

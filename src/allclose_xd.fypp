@@ -1,0 +1,58 @@
+#:include "common.fypp"
+submodule(mod_unittest) allclose_xd
+  implicit none
+contains
+#:include "report_functions.fypp"
+#:for kind, type, post in [x for x in REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS if x[0] in ["sp", "dp"]]
+#:for routine, invert in [("allclose", True), ("not_allclose", False)]
+  module procedure ${"unittest_assert_" + routine + "_xd_" + post}$
+    integer :: i, n, ios
+    real(${kind}$) :: abs_tol, rel_tol, scale, delta
+    logical :: err
+    if (SIZE(shape_a) /= SIZE(shape_b)) then
+      err = .true.
+    else
+      err = ANY(shape_a /= shape_b)
+    end if
+    if (PRESENT(is_failed)) is_failed = err
+    call test_result_append(this%results, err)
+    if (err) then
+      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, &
+        shape_a, shape_b, this%tap_support, "${routine + '_xd'}$", unitname)
+      return
+    end if
+    n = PRODUCT(shape_a)
+    abs_tol = 1E-8_${kind}$
+    rel_tol = 1E-5_${kind}$
+    if (PRESENT(atol)) abs_tol = MAX(atol, 0.0_${kind}$)
+    if (PRESENT(rtol)) rel_tol = MAX(rtol, 0.0_${kind}$)
+    scale = 0.0_${kind}$
+    do i = 1, n
+      scale = MAX(scale, REAL(ABS(a(i)), ${kind}$), REAL(ABS(b(i)), ${kind}$))
+    end do
+    err = ${".false." if invert else ".true."}$
+    do i = 1, n
+      delta = REAL(ABS(a(i) - b(i)), ${kind}$)
+      if (delta >= abs_tol + rel_tol * scale) then
+        ${"err = .true." if invert else "err = .false."}$
+        exit
+      end if
+    end do
+    if (PRESENT(is_failed)) is_failed = err
+    this%results(SIZE(this%results))%err = err
+    call report_result(this%dev, this%results(SIZE(this%results))%id, this%nest, err, &
+      this%tap_support, "${routine + '_xd'}$", unitname)
+    if (err .and. this%verbose > 0) then
+      #:if invert
+      write(this%dev, '(A,I0,A,I0,A)', iostat=ios) &
+        "#        first differing flat element: ", i, " (total elements: ", n, ")"
+      #:else
+      write(this%dev, '(A,I0,A)', iostat=ios) "#        all ", n, " elements are within tolerance"
+      #:endif
+    end if
+  end procedure ${"unittest_assert_" + routine + "_xd_" + post}$
+#:endfor
+#:endfor
+include "result_functions.f90"
+include "image_functions.f90"
+end submodule allclose_xd
