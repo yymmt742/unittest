@@ -11,12 +11,13 @@ check_fortran_source_runs(
 function(fypp_generate src target opts depends list newlist)
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}
-    COMMAND fypp ${opts}
+    COMMAND ${FYPP} ${opts}
             ${CMAKE_CURRENT_SOURCE_DIR}/${src}
             ${CMAKE_CURRENT_BINARY_DIR}/${target}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${src}
             ${CMAKE_CURRENT_SOURCE_DIR}/../include/common.fypp
             ${depends}
+    VERBATIM
     )
   set(list_)
   foreach(t IN LISTS list)

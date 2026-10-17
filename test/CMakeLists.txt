@@ -1,14 +1,14 @@
 macro(ADDTEST name)
   add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_${name}.f90
-    COMMAND fypp ${fyppFlags}
+    COMMAND ${FYPP} ${fyppFlags}
             ${CMAKE_CURRENT_SOURCE_DIR}/test_${name}.fypp
             ${CMAKE_CURRENT_BINARY_DIR}/test_${name}.f90
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test_${name}.fypp
             ${CMAKE_CURRENT_SOURCE_DIR}/../include/common.fypp
+    VERBATIM
     )
   add_executable(test_${name} test_${name}.f90)
-  target_include_directories(test_${name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/../src/mod_files/)
   target_link_libraries(test_${name} PRIVATE unittest)
   target_compile_options(
     test_${name}
