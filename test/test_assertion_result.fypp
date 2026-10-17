@@ -1,9 +1,50 @@
 program test_assertion_result
-  use mod_assertion_result, only: assertion_result, assertion_failure
+  use mod_assertion_result, only: assertion_result, assertion_failure, test_result, &
+                                  n_test, n_error, report_rank_error, report_rank_error_tap
   implicit none
   type(assertion_result) :: result, copied
   type(assertion_failure) :: failure
-  integer :: i
+  type(test_result) :: no_results(0), errors(3), subtest_results(5), marker_only(1)
+  integer :: i, tap_unit, ios
+  character(:), allocatable :: message, captured
+  character(512) :: line
+
+  if (n_test(no_results) /= 0) error stop "n_test must handle an empty result list"
+  if (n_error(no_results) /= 0) error stop "n_error must handle an empty result list"
+  errors = [test_result(1, .true.), test_result(2, .false.), test_result(3, .true.)]
+  if (n_test(errors) /= 3) error stop "n_test must return the latest test id"
+  if (n_error(errors) /= 2) error stop "n_error must count errors in the current section"
+  subtest_results = [test_result(1, .true.), test_result(2, .true.), &
+                     test_result(0, .false.), test_result(1, .false.), test_result(2, .true.)]
+  if (n_test(subtest_results) /= 2) error stop "n_test must reset at a section boundary"
+  if (n_error(subtest_results) /= 1) error stop "n_error must ignore earlier sections"
+  marker_only = [test_result(0, .false.)]
+  if (n_error(marker_only) /= 0) error stop "n_error must handle an empty section"
+
+  message = report_rank_error(3, [2, 3], [2, 4], "assert_equal")
+  if (index(message, "assert_equal 3") == 0) error stop "rank report must include method and test number"
+  if (index(message, "FAILED") == 0) error stop "rank report must mark the assertion as failed"
+  if (index(message, "RankMissMatch: [2, 3] /= [2, 4]") == 0) &
+    error stop "rank report must include both shapes"
+  message = report_rank_error(12, [1], [2], "", "matrix shape")
+  if (index(message, "matrix shape") == 0) error stop "rank report must use the supplied unit name"
+  if (index(message, "RankMissMatch: [1] /= [2]") == 0) error stop "rank report must format rank-one shapes"
+
+  open (newunit=tap_unit, status="scratch", action="readwrite")
+  call report_rank_error_tap(3, 0, [2, 3], [2, 4], "assert_equal", "matrix shape", output=tap_unit)
+  rewind (tap_unit)
+  captured = ""
+  do
+    read (tap_unit, '(A)', iostat=ios) line
+    if (ios /= 0) exit
+    captured = captured//trim(line)//new_line('')
+  end do
+  close (tap_unit)
+  if (index(captured, "not ok 3 # matrix shape") == 0) error stop "TAP rank report must emit a not-ok result"
+  if (index(captured, "assertion: assert_equal") == 0) error stop "TAP rank report must include the assertion"
+  if (index(captured, "rank: false") == 0) error stop "TAP rank report must mark rank mismatch"
+  if (index(captured, "shape_a:") == 0 .or. index(captured, "shape_b:") == 0) &
+    error stop "TAP rank report must include both shapes"
 
   if (result%size() /= 0) error stop "new result must be empty"
 

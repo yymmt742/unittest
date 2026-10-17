@@ -30,8 +30,13 @@ ${common_check(rank1, rank2, routine)}$
     if (PRESENT(is_failed)) is_failed = err
     if (err)then
       call test_result_append(this%results, err)
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, &
-     &                       [SIZE(a, 1)], [SIZE(a, 2)], this%tap_support, unitname)
+      if (this%tap_support) then
+        call report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
+          [SIZE(a, 1)], [SIZE(a, 2)], "is_eye_xd", unitname)
+      else
+        write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &
+          [SIZE(a, 1)], [SIZE(a, 2)], "is_eye_xd", unitname)
+      end if
       return
     endif
     if (PRESENT(place)) then; mp = 10**place
@@ -56,4 +61,3 @@ ${error_list(routine, op, fm, rank1, rank2, error_rate(type, op), success(op), s
 include "result_functions.f90"
 include "image_functions.f90"
 end submodule is_eye
-

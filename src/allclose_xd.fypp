@@ -17,8 +17,13 @@ contains
     if (PRESENT(is_failed)) is_failed = err
     call test_result_append(this%results, err)
     if (err) then
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, &
-        shape_a, shape_b, this%tap_support, "${routine + '_xd'}$", unitname)
+      if (this%tap_support) then
+        call report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
+          shape_a, shape_b, "${routine + '_xd'}$", unitname)
+      else
+        write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &
+          shape_a, shape_b, "${routine + '_xd'}$", unitname)
+      end if
       return
     end if
     n = PRODUCT(shape_a)

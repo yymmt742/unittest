@@ -7,6 +7,8 @@ module mod_unittest
                   &                        RK => REAL64
   use mod_unittest_kinds
   use mod_unittest_tap14_yaml
+  use mod_assertion_result, only: test_result, n_test, n_error, &
+                                  report_rank_error, report_rank_error_tap
   implicit none
   private
   public  :: unittest
@@ -21,12 +23,6 @@ module mod_unittest
     integer(INT64) :: time
     real(RK)       :: ctime
   end type timestamp
-!
-  type test_result
-    sequence
-    integer :: id
-    logical :: err
-  end type test_result
 !
 #:set asse = [[""], LOGICAL_KIND_TYPE_POSTS, RANK_SCALAR]
 #:set bool = [["true", "false"], LOGICAL_KIND_TYPE_POSTS, RANK_ITERi]
@@ -612,21 +608,6 @@ contains
       res = 0.0_RK
     end if
   end function elappes_cputime
-!
-  pure function n_test(results) result(res)
-    type(test_result), intent(in) :: results(:)
-    integer                       :: n, res
-    n = SIZE(results)
-    res = results(n)%id
-  end function n_test
-!
-  pure function n_error(results) result(res)
-    type(test_result), intent(in) :: results(:)
-    integer                       :: l, u, res
-    u = SIZE(results)
-    l = u - results(u)%id + 1
-    res = COUNT(results(l:u)%err)
-  end function n_error
 !
   pure function n_section(results) result(res)
     type(test_result), intent(in) :: results(:)

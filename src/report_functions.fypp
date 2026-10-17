@@ -85,59 +85,6 @@ ${do_end(rank1)}$
 ${report_result(routine)}$
 ${error_list_loop(routine, op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b) if rank1 > 0 else error_list_scalar(routine, op, fm, rank2, vname_a, vname_b)}$
 #:enddef
-  subroutine report_rank_error(dev, num_test, nest, size_a, size_b, tap, routine, unitname)
-    use mod_unittest_tap14_yaml
-    !! print rank error
-    integer, intent(in)                :: dev
-    integer, intent(in)                :: num_test
-    integer, intent(in)                :: nest
-    integer, intent(in)                :: size_a(:)
-    integer, intent(in)                :: size_b(:)
-    character(*), intent(in)           :: routine
-    logical, intent(in)                :: tap
-    character(*), intent(in), optional :: unitname
-    character(:), allocatable          :: ps
-    character(*), parameter            :: WSPC = ${WSPC}$
-    character(*), parameter            :: SEP3 = ${SEP3}$
-    character(*), parameter            :: FAILED = ACHAR(INT(z'1b'))//"[91mFAILED"//ACHAR(INT(z'1b'))//"[m"
-    character(*), parameter            :: rankMissMatch = WSPC//'  RankMissMatch: '
-    integer                            :: ios
-    if (tap) then
-      call tap_string(unitname, num_test, routine, ps)
-      write(STDOUT, '(A)', IOSTAT=ios) REPEAT("  ", nest)//"not "//ps
-      block
-        character(:), allocatable :: unam, asse
-        integer                   :: i
-        call name_(unitname, routine, num_test, unam)
-        call assertion_(routine, asse)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=nest + 1)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("name", '"'//unam//'"', nest=nest + 1)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("assertion", asse, nest=nest + 1)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("values", "", nest=nest + 1)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("rank", "false", nest=nest + 1)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("shape_a", "", nest=nest + 1)
-        do i = 1, SIZE(size_a)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(size_a(i), nest=nest + 2)
-        end do
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("shape_b", "", nest=nest + 2)
-        do i = 1, SIZE(size_b)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(size_b(i), nest=nest + 2)
-        end do
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_end(nest=nest + 1)
-      end block
-    else
-      call padd_string(unitname, num_test, routine, ${L_WDH}$, ps)
-      write (dev, '(A)', IOSTAT=ios) ps//FAILED
-      write (dev, '(A)', IOSTAT=ios) SEP3
-      write (dev, '(2A)', IOSTAT=ios, ADVANCE="NO") rankMissMatch, '['
-      write (dev, '(*(I0,:,", "))', IOSTAT=ios, ADVANCE="NO") size_a
-      write (dev, '(A)', IOSTAT=ios, ADVANCE="NO") '] /= ['
-      write (dev, '(*(I0,:,", "))', IOSTAT=ios, ADVANCE="NO") size_b
-      write (dev, '(A)', IOSTAT=ios) ']'
-      write (dev, '(A)', IOSTAT=ios) SEP3
-    endif
-  end subroutine report_rank_error
-!
   subroutine report_result(dev, num_test, nest, err, tap, routine, unitname)
     !! print test result
     integer, intent(in)                :: dev
