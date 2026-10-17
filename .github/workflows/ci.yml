@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04, macos-latest, windows-latest]
+        os: [ubuntu-22.04, ubuntu-24.04, macos-latest, windows-2022]
         toolchain:
           - {compiler: gcc, version: 9}
           - {compiler: gcc, version: 10}
@@ -42,8 +42,17 @@ jobs:
             toolchain: {compiler: intel, version: '2023.2'}
           - os: macos-latest
             toolchain: {compiler: nvidia-hpc, version: '26.1'}
-          - os: windows-latest
+          - os: windows-2022
             toolchain: {compiler: nvidia-hpc, version: '26.1'}
+          # Windows 2022 has GCC 13+ and supports these Intel versions.
+          - os: windows-2022
+            toolchain: {compiler: gcc, version: 9}
+          - os: windows-2022
+            toolchain: {compiler: gcc, version: 10}
+          - os: windows-2022
+            toolchain: {compiler: gcc, version: 11}
+          - os: windows-2022
+            toolchain: {compiler: gcc, version: 12}
           # Keep legacy GCC coverage on Ubuntu 22.04 and test GCC 13 on 24.04.
           - os: ubuntu-22.04
             toolchain: {compiler: gcc, version: 13}
@@ -92,7 +101,7 @@ jobs:
       - name: Configure with CMake (windows)
         if: contains(matrix.os, 'windows')
         run: >-
-          cmake -Wdev
+          cmake -Wauthor
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_INSTALL_PREFIX=_dist
           -G "MinGW Makefiles"
@@ -101,7 +110,7 @@ jobs:
       - name: Configure with CMake (UNIX)
         if: contains(matrix.os, 'ubuntu') || contains(matrix.os, 'macos')
         run: >-
-          cmake -Wdev
+          cmake -Wauthor
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_INSTALL_PREFIX=_dist
           -S . -B build
