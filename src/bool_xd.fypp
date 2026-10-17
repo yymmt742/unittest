@@ -19,9 +19,8 @@ contains
         end if
       end do
     end if
-    call this%push(result)
-    call result%report_result(this%dev, result%id, &
-      this%nest, this%tap_support, unitname, &
+    call this%apend_result(result, unitname=unitname)
+    call this%report_result(result, unitname, &
       show_details=this%verbose > 0 .and. n < this%dump_line_limit)
     call result%destroy()
   end procedure unittest_assert_xd_logical

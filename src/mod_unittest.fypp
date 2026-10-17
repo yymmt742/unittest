@@ -8,7 +8,7 @@ module mod_unittest
   use mod_unittest_kinds
   use mod_unittest_tap14_yaml
   use mod_assertion_result, only: n_test, n_error, &
-                                  assertion_result, ASSERTION_DETAIL_LEN, &
+                                  assertion_result, assertion_failure, ASSERTION_DETAIL_LEN, &
                                   report_rank_error, report_rank_error_tap
   implicit none
   private
@@ -56,9 +56,11 @@ module mod_unittest
     type(timestamp), allocatable   :: times(:)
     logical                        :: terminate_with_error_code
     logical                        :: tap_support
+    logical                        :: flush = .FALSE.
   contains
     procedure         :: init => utest_init
-    procedure         :: push => utest_push
+    procedure         :: apend_result => utest_apend_result
+    procedure         :: report_result => utest_report_result
 #:if XD_ONLY_SUPPORT
     procedure, private :: unittest_assert_logical_0
     procedure, private :: unittest_assert_xd_logical
@@ -384,7 +386,7 @@ contains
 !
     block
       type(assertion_result) :: marker
-      call this%push(marker, section_marker=.true.)
+      call this%apend_result(marker, section_marker=.true.)
     end block
 !
     if (this%verbose > 0) then
@@ -398,11 +400,13 @@ contains
 !
   end subroutine utest_init
 
-  subroutine utest_push(this, result, section_marker)
+  subroutine utest_apend_result(this, result, section_marker, unitname)
     class(unittest), intent(inout) :: this
     type(assertion_result), intent(inout) :: result
     logical, intent(in), optional :: section_marker
+    character(*), intent(in), optional :: unitname
     type(assertion_result), allocatable :: expanded(:)
+    integer :: empty_shape(0)
     integer :: n
     logical :: is_marker
 
@@ -422,7 +426,161 @@ contains
     if (n > 0) expanded(:n) = this%results(:n)
     call expanded(n + 1)%copy_from(result)
     call MOVE_ALLOC(expanded, this%results)
-  end subroutine utest_push
+    if (this%flush .and. result%has_rank_error()) then
+      if (this%tap_support) then
+        if (ALLOCATED(result%shape_a)) then
+          write (STDOUT, '(A)') report_rank_error_tap(result%id, this%nest, result%shape_a, &
+            result%shape_b, TRIM(result%method), unitname)
+        else
+          write (STDOUT, '(A)') report_rank_error_tap(result%id, this%nest, empty_shape, &
+            result%shape_b, TRIM(result%method), unitname)
+        end if
+      else
+        if (ALLOCATED(result%shape_a)) then
+          write (this%dev, '(A)') report_rank_error(result%id, result%shape_a, &
+            result%shape_b, TRIM(result%method), unitname)
+        else
+          write (this%dev, '(A)') report_rank_error(result%id, empty_shape, &
+            result%shape_b, TRIM(result%method), unitname)
+        end if
+      end if
+    end if
+  end subroutine utest_apend_result
+
+  subroutine utest_report_result(this, result, unitname, show_details, dev)
+    class(unittest), intent(in) :: this
+    type(assertion_result), intent(in) :: result
+    character(*), intent(in), optional :: unitname
+    logical, intent(in), optional :: show_details
+    integer, intent(in), optional :: dev
+    integer :: output_unit, i, ios
+    integer :: empty_shape(0)
+    logical :: show
+    character(:), allocatable :: name, message, status
+    character(*), parameter :: spacer = '#'//REPEAT(' ', 7)
+    character(*), parameter :: failed = ACHAR(INT(z'1b'))//'[91mFAILED'//ACHAR(INT(z'1b'))//'[m'
+    character(*), parameter :: passed = ACHAR(INT(z'1b'))//'[92mOK'//ACHAR(INT(z'1b'))//'[m'
+
+    output_unit = this%dev
+    if (PRESENT(dev)) output_unit = dev
+    if (result%has_rank_error()) then
+      if (this%flush) return
+      if (this%tap_support) then
+        if (ALLOCATED(result%shape_a)) then
+          write (output_unit, '(A)', iostat=ios) report_rank_error_tap(result%id, this%nest, &
+            result%shape_a, result%shape_b, TRIM(result%method), unitname)
+        else
+          write (output_unit, '(A)', iostat=ios) report_rank_error_tap(result%id, this%nest, &
+            empty_shape, result%shape_b, TRIM(result%method), unitname)
+        end if
+      else
+        if (ALLOCATED(result%shape_a)) then
+          write (output_unit, '(A)', iostat=ios) report_rank_error(result%id, result%shape_a, &
+            result%shape_b, TRIM(result%method), unitname)
+        else
+          write (output_unit, '(A)', iostat=ios) report_rank_error(result%id, empty_shape, &
+            result%shape_b, TRIM(result%method), unitname)
+        end if
+      end if
+      return
+    end if
+
+    name = utest_result_name(unitname, TRIM(result%method), result%id)
+    show = .true.
+    if (PRESENT(show_details)) show = show_details
+    if (this%tap_support) then
+      status = utest_tap_status(unitname, result%id)
+      if (result%size() > 0) status = 'not '//status
+      write (output_unit, '(A)', iostat=ios) REPEAT('  ', MAX(0, this%nest))//status
+      if (result%size() == 0) return
+      message = tap14_yaml_document_start(nest=this%nest + 1)
+      message = message//tap14_yaml_body('name', '"'//name//'"', nest=this%nest + 1)
+      message = message//tap14_yaml_body('assertion', TRIM(result%method), nest=this%nest + 1)
+      message = message//tap14_yaml_body('values', '', nest=this%nest + 1)
+      message = message//tap14_yaml_body('indices', '', nest=this%nest + 1)
+      do i = 1, result%size()
+        block
+          type(assertion_failure) :: failure
+          failure = result%get_detail(i)
+          message = message//tap14_yaml_list(failure%flat_idx, nest=this%nest + 2)
+        end block
+      end do
+      message = message//tap14_yaml_body('details', '', nest=this%nest + 1)
+      do i = 1, result%size()
+        block
+          type(assertion_failure) :: failure
+          failure = result%get_detail(i)
+          message = message//tap14_yaml_list('"'//TRIM(failure%detail)//'"', nest=this%nest + 2)
+        end block
+      end do
+      message = message//tap14_yaml_document_end(nest=this%nest + 1)
+      write (output_unit, '(A)', iostat=ios) message
+      return
+    end if
+
+    if (result%is_error()) then
+      write (output_unit, '(A)', iostat=ios) utest_result_prefix(unitname, result%id, &
+        TRIM(result%method))//failed
+      if (show) then
+        do i = 1, result%size()
+          block
+            type(assertion_failure) :: failure
+            failure = result%get_detail(i)
+            write (output_unit, '(A,I0,1X,A)', iostat=ios) spacer//'  ', failure%flat_idx, &
+              TRIM(failure%detail)
+          end block
+        end do
+      end if
+      call result%report_error_rate(output_unit)
+    else
+      write (output_unit, '(A)', iostat=ios) utest_result_prefix(unitname, result%id, &
+        TRIM(result%method))//passed
+    end if
+  end subroutine utest_report_result
+
+  pure function utest_result_name(unitname, routine, num_test) result(name)
+    character(*), intent(in), optional :: unitname
+    character(*), intent(in) :: routine
+    integer, intent(in) :: num_test
+    character(:), allocatable :: name
+    character(32) :: count_text
+
+    if (PRESENT(unitname)) then
+      name = TRIM(unitname)
+    else
+      write (count_text, '(I0)') num_test
+      if (routine == '') then
+        name = 'TEST '//TRIM(count_text)
+      else
+        name = routine//' '//TRIM(count_text)
+      end if
+    end if
+  end function utest_result_name
+
+  pure function utest_result_prefix(unitname, num_test, routine) result(prefix)
+    character(*), intent(in), optional :: unitname
+    integer, intent(in) :: num_test
+    character(*), intent(in) :: routine
+    character(:), allocatable :: prefix, name
+    character(7) :: count_text
+    integer :: padding
+
+    write (count_text, '(I7)') num_test
+    name = utest_result_name(unitname, routine, num_test)
+    padding = MAX(0, 44 - LEN(name))
+    prefix = '#'//count_text//' '//name//REPEAT(' ', padding)//'... '
+  end function utest_result_prefix
+
+  pure function utest_tap_status(unitname, num_test) result(status)
+    character(*), intent(in), optional :: unitname
+    integer, intent(in) :: num_test
+    character(:), allocatable :: status
+    character(32) :: count_text
+
+    write (count_text, '(I0)') num_test
+    status = 'ok '//TRIM(count_text)
+    if (PRESENT(unitname)) status = status//' # '//TRIM(unitname)
+  end function utest_tap_status
 !
   subroutine utest_setup(this, tap_support, argparse)
     class(unittest), intent(inout)     :: this

@@ -31,8 +31,8 @@ ${common_check(rank1, rank2, routine)}$
       result%method = "is_symmetric_xd"
       result%shape_a = [SIZE(a, 1)]
       result%shape_b = [SIZE(a, 2)]
-      call this%push(result)
-      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call this%apend_result(result, unitname=unitname)
+      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     endif

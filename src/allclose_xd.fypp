@@ -20,8 +20,8 @@ contains
       result%method = "${routine + '_xd'}$"
       result%shape_a = shape_a
       result%shape_b = shape_b
-      call this%push(result)
-      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call this%apend_result(result, unitname=unitname)
+      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     end if
@@ -55,9 +55,8 @@ contains
       call result%push(0, "all elements are within tolerance")
 #:endif
     if (PRESENT(is_failed)) is_failed = err
-    call this%push(result)
-    call result%report_result(this%dev, result%id, &
-      this%nest, this%tap_support, unitname, &
+    call this%apend_result(result, unitname=unitname)
+    call this%report_result(result, unitname, &
       show_details=this%verbose > 0 .and. n < this%dump_line_limit)
     call result%destroy()
   end procedure ${"unittest_assert_" + routine + "_xd_" + post}$

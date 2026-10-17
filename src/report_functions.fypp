@@ -16,9 +16,8 @@
 #:endif
         call result%push(1, TRIM(detail))
       end if
-      call this%push(result)
-      call result%report_result(this%dev, result%id, &
-        this%nest, this%tap_support, unitname)
+      call this%apend_result(result, unitname=unitname)
+      call this%report_result(result, unitname)
       call result%destroy()
     end block
 #:enddef
@@ -48,9 +47,8 @@ ${success}$
 #:endif
           call result%push(flat_idx, TRIM(detail))
 ${do_end(rank1)}$
-        call this%push(result)
-        call result%report_result(this%dev, result%id, &
-          this%nest, this%tap_support, unitname, show_details=.not.silent)
+        call this%apend_result(result, unitname=unitname)
+        call this%report_result(result, unitname, show_details=.not.silent)
         call result%destroy()
         if (silent .and. .not.this%tap_support) &
           call report_error_as_image(this%dev, SIZE(${vname_a}$), &
@@ -64,8 +62,8 @@ ${do_end(rank1)}$
 #:if rank2 is not None
         result%shape_b = SHAPE(${vname_b}$)
 #:endif
-        call this%push(result)
-        call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+        call this%apend_result(result, unitname=unitname)
+        call this%report_result(result, unitname)
         call result%destroy()
       end block
     end if

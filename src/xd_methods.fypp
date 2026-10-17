@@ -35,8 +35,8 @@ contains
       result%method = "${routine + '_xd'}$"
       result%shape_a = shape_a
       result%shape_b = shape_b
-      call this%push(result)
-      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call this%apend_result(result, unitname=unitname)
+      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     end if
@@ -46,8 +46,8 @@ contains
       result%method = "${routine + '_xd'}$"
       result%shape_a = shape_a
       result%shape_b = shape_b
-      call this%push(result)
-      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call this%apend_result(result, unitname=unitname)
+      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     end if
@@ -88,8 +88,8 @@ contains
       result%method = "${routine + '_xd'}$"
       result%shape_a = shape_a
       result%shape_b = [2]
-      call this%push(result)
-      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call this%apend_result(result, unitname=unitname)
+      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     end if
@@ -99,8 +99,8 @@ contains
       result%method = "${routine + '_xd'}$"
       result%shape_a = [shape_a(1)]
       result%shape_b = [shape_a(2)]
-      call this%push(result)
-      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call this%apend_result(result, unitname=unitname)
+      if (.not. this%flush) call this%report_result(result, unitname)
       call result%destroy()
       return
     end if
@@ -185,9 +185,8 @@ contains
 #:endif
     end if
     if (PRESENT(is_failed)) is_failed = err
-    call this%push(result)
-    call result%report_result(this%dev, result%id, this%nest, &
-      this%tap_support, unitname)
+    call this%apend_result(result, unitname=unitname)
+    call this%report_result(result, unitname)
     call result%destroy()
   end procedure unittest_assert_${routine}$_xd_${post}$
 #:endfor
