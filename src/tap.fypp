@@ -1,0 +1,34 @@
+#:include "common.fypp"
+submodule(mod_unittest) tap14
+  implicit none
+  character(*), parameter :: TAP_Version_ = "TAP version 14"//NEWLINE("")
+contains
+!
+  pure function tap14_Version() result(res)
+    character(:), allocatable   :: res
+    res = TAP_Version_
+  end function tap14_Version
+!
+  pure function tap14_TestPoint(itest, ok) result(res)
+    res = //"1.."
+  end function tap14_Version
+!
+  pure function tap14_TestPoint_ok(itest, desc) result(res)
+    integer, intent(in)       :: itest
+    character(*), intent(in)  :: desc
+    character(:), allocatable :: res
+    character(32)             :: tmp
+    write(tmp, '(I0)') itest
+    res = "ok "//TRIM(itest)//" - "//desc//NEWLINE("")
+  end function tap14_TestPoint_ok
+!
+  pure function tap14_TestPoint_notok(itest, desc) result(res)
+    integer, intent(in)       :: itest
+    character(*), intent(in)  :: desc
+    character(:), allocatable :: res
+    character(32)             :: tmp
+    write(tmp, '(I0)') itest
+    res = "not ok "//TRIM(itest)//" - "//desc//NEWLINE("")
+  end function tap14_TestPoint_notok
+end submodule tap14
+

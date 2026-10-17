@@ -1,0 +1,74 @@
+#:include "common.fypp"
+#:def error_list_scalar(routine, op, fm, rank2, vname_a, vname_b)
+    block
+      type(assertion_result) :: result
+      character(ASSERTION_DETAIL_LEN) :: detail
+      result%method = "${routine}$"
+      result%shape_a = SHAPE(${vname_a}$)
+#:if rank2 is not None
+      result%shape_b = SHAPE(${vname_b}$)
+#:endif
+      if (err) then
+#:if rank2 is None
+        write (detail, '(${fm}$)') "[", ${vname_a}$, "]"
+#:else
+        write (detail, '(${fm}$)') "[", ${vname_a}$, "] ${strnop(op)}$ [", ${vname_b}$, "]"
+#:endif
+        call result%push(1, TRIM(detail))
+      end if
+      call this%apend_result(result, unitname=unitname)
+      call this%report_result(result, unitname)
+      call result%destroy()
+    end block
+#:enddef
+#:def error_list_loop(routine, op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b)
+    if (err) then
+      block
+        type(assertion_result) :: result
+        character(ASSERTION_DETAIL_LEN) :: detail
+        logical :: success, silent
+        integer :: ${', '.join(["flat_idx"] + ["i"+str(i) for i in range(1,rank1+1)])}$${"" if subvar is None else "\n"+subvar}$
+        result%method = "${routine}$"
+        result%shape_a = SHAPE(${vname_a}$)
+#:if rank2 is not None
+        result%shape_b = SHAPE(${vname_b}$)
+#:endif
+        silent = this%verbose <= 0 .or. SIZE(${vname_a}$) >= this%dump_line_limit
+        flat_idx = 0
+${do_start(rank1, vname_a)}$
+${success}$
+          flat_idx = flat_idx + 1
+          if (success) cycle
+#:if rank2 is None
+          write (detail, '(${fm}$)') "[", ${vname_a}$${counter_suffix(rank1)}$, "]"
+#:else
+          write (detail, '(${fm}$)') "[", ${vname_a}$${counter_suffix(rank1)}$, &
+            "] ${strnop(op)}$ [", ${vname_b}$${counter_suffix(rank2)}$, "]"
+#:endif
+          call result%push(flat_idx, TRIM(detail))
+${do_end(rank1)}$
+        call this%apend_result(result, unitname=unitname)
+        call this%report_result(result, unitname, show_details=.not.silent)
+        call result%destroy()
+        if (silent .and. .not.this%tap_support) &
+          call report_error_as_image(this%dev, SIZE(${vname_a}$), &
+            MIN(SIZE(${vname_a}$, 1), 50), [${error_rate}$])
+      end block
+    else
+      block
+        type(assertion_result) :: result
+        result%method = "${routine}$"
+        result%shape_a = SHAPE(${vname_a}$)
+#:if rank2 is not None
+        result%shape_b = SHAPE(${vname_b}$)
+#:endif
+        call this%apend_result(result, unitname=unitname)
+        call this%report_result(result, unitname)
+        call result%destroy()
+      end block
+    end if
+#:enddef
+#:def error_list(routine, op, fm, rank1, rank2, error_rate, success, subvar=None, vname_a="a", vname_b="b")
+    if (PRESENT(is_failed)) is_failed = err
+${error_list_loop(routine, op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b) if rank1 > 0 else error_list_scalar(routine, op, fm, rank2, vname_a, vname_b)}$
+#:enddef
