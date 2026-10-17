@@ -31,7 +31,7 @@ ${common_check(rank1, rank2, routine)}$
     if (err)then
       call test_result_append(this%results, err)
       if (this%tap_support) then
-        call report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
+        write (STDOUT, '(A)') report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
           [SIZE(a, 1)], [SIZE(a, 2)], "is_eye_xd", unitname)
       else
         write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &

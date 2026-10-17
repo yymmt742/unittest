@@ -15,10 +15,10 @@ contains
       err = ANY(shape_a /= shape_b)
     end if
     if (PRESENT(is_failed)) is_failed = err
-    call test_result_append(this%results, err)
-    if (err) then
+      call test_result_append(this%results, err)
+      if (err) then
       if (this%tap_support) then
-        call report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
+        write (STDOUT, '(A)') report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
           shape_a, shape_b, "${routine + '_xd'}$", unitname)
       else
         write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &

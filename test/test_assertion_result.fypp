@@ -5,9 +5,8 @@ program test_assertion_result
   type(assertion_result) :: result, copied
   type(assertion_failure) :: failure
   type(test_result) :: no_results(0), errors(3), subtest_results(5), marker_only(1)
-  integer :: i, tap_unit, ios
-  character(:), allocatable :: message, captured
-  character(512) :: line
+  integer :: i
+  character(:), allocatable :: message, tap_message
 
   if (n_test(no_results) /= 0) error stop "n_test must handle an empty result list"
   if (n_error(no_results) /= 0) error stop "n_error must handle an empty result list"
@@ -30,20 +29,12 @@ program test_assertion_result
   if (index(message, "matrix shape") == 0) error stop "rank report must use the supplied unit name"
   if (index(message, "RankMissMatch: [1] /= [2]") == 0) error stop "rank report must format rank-one shapes"
 
-  open (newunit=tap_unit, status="scratch", action="readwrite")
-  call report_rank_error_tap(3, 0, [2, 3], [2, 4], "assert_equal", "matrix shape", output=tap_unit)
-  rewind (tap_unit)
-  captured = ""
-  do
-    read (tap_unit, '(A)', iostat=ios) line
-    if (ios /= 0) exit
-    captured = captured//trim(line)//new_line('')
-  end do
-  close (tap_unit)
-  if (index(captured, "not ok 3 # matrix shape") == 0) error stop "TAP rank report must emit a not-ok result"
-  if (index(captured, "assertion: assert_equal") == 0) error stop "TAP rank report must include the assertion"
-  if (index(captured, "rank: false") == 0) error stop "TAP rank report must mark rank mismatch"
-  if (index(captured, "shape_a:") == 0 .or. index(captured, "shape_b:") == 0) &
+  tap_message = report_rank_error_tap(3, 0, [2, 3], [2, 4], "assert_equal", "matrix shape")
+  if (index(tap_message, "not ok 3 # matrix shape") == 0) &
+    error stop "TAP rank report must emit a not-ok result"
+  if (index(tap_message, "assertion: assert_equal") == 0) error stop "TAP rank report must include the assertion"
+  if (index(tap_message, "rank: false") == 0) error stop "TAP rank report must mark rank mismatch"
+  if (index(tap_message, "shape_a:") == 0 .or. index(tap_message, "shape_b:") == 0) &
     error stop "TAP rank report must include both shapes"
 
   if (result%size() /= 0) error stop "new result must be empty"
@@ -57,10 +48,10 @@ program test_assertion_result
 
   if (result%size() /= 17) error stop "push must increase the logical size"
   failure = result%get_detail(1)
-  if (failure%flat_index /= 1) error stop "first flat index was not retained"
+  if (failure%flat_idx /= 1) error stop "first flat index was not retained"
   if (trim(failure%detail) /= "failure detail") error stop "first detail was not retained"
   failure = result%get_detail(17)
-  if (failure%flat_index /= 17) error stop "last flat index was not retained"
+  if (failure%flat_idx /= 17) error stop "last flat index was not retained"
   if (trim(failure%detail) /= "failure detail") error stop "last detail was not retained"
   if (trim(result%method) /= "assert_equal") error stop "method was not retained"
   if (any(result%shape_a /= [2, 3])) error stop "shape_a was not retained"

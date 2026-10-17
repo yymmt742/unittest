@@ -160,7 +160,7 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
     if (err) then
       call test_result_append(this%results, err)
       if (this%tap_support) then
-        call report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
+        write (STDOUT, '(A)') report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
           SHAPE(a), SHAPE(b), "${routine}$", unitname)
       else
         write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &
