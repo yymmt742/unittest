@@ -25,13 +25,16 @@ contains
     ${"real(RK)" if "INT" in kind else "real("+kind+")"}$ :: mp, diff
     ${type}$ :: b
     integer :: i, j
+    type(assertion_result) :: result
 ${common_check(rank1, rank2, routine)}$
     err = SIZE(a, 1) /= SIZE(a, 2)
     if (PRESENT(is_failed)) is_failed = err
     if (err)then
-      call test_result_append(this%results, err)
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, &
-     &                       [SIZE(a, 1)], [SIZE(a, 2)], this%tap_support, unitname)
+      result%method = "is_eye_xd"
+      result%shape_a = [SIZE(a, 1)]
+      result%shape_b = [SIZE(a, 2)]
+      call this%apend_result(result, unitname=unitname)
+      call result%destroy()
       return
     endif
     if (PRESENT(place)) then; mp = 10**place
@@ -53,7 +56,5 @@ ${error_list(routine, op, fm, rank1, rank2, error_rate(type, op), success(op), s
 #:endfor
 #:endfor
 #:endfor
-include "result_functions.f90"
 include "image_functions.f90"
 end submodule is_eye
-

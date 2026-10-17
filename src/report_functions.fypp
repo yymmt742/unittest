@@ -1,238 +1,74 @@
 #:include "common.fypp"
 #:def error_list_scalar(routine, op, fm, rank2, vname_a, vname_b)
-    if (err) then
-      block
-        character(:), allocatable :: unam, asse
-        integer  :: ios
-        if (this%tap_support) then
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=this%nest + 1)
-          call name_(unitname, "${routine}$", this%results(SIZE(this%results))%id, unam)
-          call assertion_("${routine}$", asse)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("name", '"'//unam//'"', nest=this%nest + 1)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("assertion", asse, nest=this%nest + 1)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("values", "", nest=this%nest + 1)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(var="variables",nest=this%nest + 1)
-#:if rank2 is None
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_a}$, nest=this%nest + 1)
-#:else
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_a}$, nest=this%nest + 2)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_b}$, nest=this%nest + 2)
+    block
+      type(assertion_result) :: result
+      character(ASSERTION_DETAIL_LEN) :: detail
+      result%method = "${routine}$"
+      result%shape_a = SHAPE(${vname_a}$)
+#:if rank2 is not None
+      result%shape_b = SHAPE(${vname_b}$)
 #:endif
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_end(nest=this%nest + 1)
-        else
+      if (err) then
 #:if rank2 is None
-          write (this%dev, '(${fm}$)', IOSTAT=ios)  "#        Assertion Error: [", ${vname_a}$, "]"
+        write (detail, '(${fm}$)') "[", ${vname_a}$, "]"
 #:else
-          write (this%dev, '(${fm}$)', IOSTAT=ios)  "#        Assertion Error: [", ${vname_a}$, "] ${strnop(op)}$ [", ${vname_b}$, "]"
+        write (detail, '(${fm}$)') "[", ${vname_a}$, "] ${strnop(op)}$ [", ${vname_b}$, "]"
 #:endif
-        end if
-      end block
-    end if
+        call result%push(1, TRIM(detail))
+      end if
+      call this%apend_result(result, unitname=unitname)
+      call this%report_result(result, unitname)
+      call result%destroy()
+    end block
 #:enddef
 #:def error_list_loop(routine, op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b)
     if (err) then
       block
-        character(:), allocatable :: unam, asse
+        type(assertion_result) :: result
+        character(ASSERTION_DETAIL_LEN) :: detail
         logical :: success, silent
-        integer :: ${', '.join(["ios, nerror"] + ["i"+str(i) for i in range(1,rank1+1)])}$${"" if subvar is None else "\n"+subvar}$
+        integer :: ${', '.join(["flat_idx"] + ["i"+str(i) for i in range(1,rank1+1)])}$${"" if subvar is None else "\n"+subvar}$
+        result%method = "${routine}$"
+        result%shape_a = SHAPE(${vname_a}$)
+#:if rank2 is not None
+        result%shape_b = SHAPE(${vname_b}$)
+#:endif
         silent = this%verbose <= 0 .or. SIZE(${vname_a}$) >= this%dump_line_limit
-        nerror = 0
-        if (this%tap_support) then
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=this%nest + 1)
-          call name_(unitname, "${routine}$", this%results(SIZE(this%results))%id, unam)
-          call assertion_("${routine}$", asse)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("name", '"'//unam//'"', nest=this%nest + 1)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("assertion", asse, nest=this%nest + 1)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("values", "", nest=this%nest + 1)
-        endif
+        flat_idx = 0
 ${do_start(rank1, vname_a)}$
 ${success}$
+          flat_idx = flat_idx + 1
           if (success) cycle
-          nerror = nerror + 1
-          if (this%tap_support) then
-            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(var="indices",nest=this%nest + 1)
-#:for i in range(1,rank1+1)
-            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(i${i}$, nest=this%nest + 2)
-#:endfor
 #:if rank2 is None
-            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_a}$${counter_suffix(rank1)}$, nest=this%nest + 1)
+          write (detail, '(${fm}$)') "[", ${vname_a}$${counter_suffix(rank1)}$, "]"
 #:else
-            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(var="variables",nest=this%nest + 1)
-            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_a}$${counter_suffix(rank1)}$, nest=this%nest + 2)
-            write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(${vname_b}$${counter_suffix(rank2)}$, nest=this%nest + 2)
+          write (detail, '(${fm}$)') "[", ${vname_a}$${counter_suffix(rank1)}$, &
+            "] ${strnop(op)}$ [", ${vname_b}$${counter_suffix(rank2)}$, "]"
 #:endif
-          endif
-          if (silent) cycle
-          write (this%dev, '(A,*(I0,1X))', IOSTAT=ios, ADVANCE='NO') "#       ", ${', '.join(["i"+str(i) for i in range(1,rank1+1)])}$
-#:if rank2 is None
-          write (this%dev, '(${fm}$)', IOSTAT=ios) " [", ${vname_a}$${counter_suffix(rank1)}$, "]"
-#:else
-          write (this%dev, '(${fm}$)', IOSTAT=ios) " [", ${vname_a}$${counter_suffix(rank1)}$, "] ${strnop(op)}$ [", ${vname_b}$${counter_suffix(rank2)}$, "]"
-#:endif
+          call result%push(flat_idx, TRIM(detail))
 ${do_end(rank1)}$
-        if (this%tap_support) then
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_end(nest=this%nest + 1)
-        else
-          if (silent) call report_error_as_image(this%dev, SIZE(${vname_a}$), MIN(SIZE(${vname_a}$, 1), 50), [${error_rate}$])
-          call report_error_rate(this%dev, SIZE(${vname_a}$), nerror)
-        end if
+        call this%apend_result(result, unitname=unitname)
+        call this%report_result(result, unitname, show_details=.not.silent)
+        call result%destroy()
+        if (silent .and. .not.this%tap_support) &
+          call report_error_as_image(this%dev, SIZE(${vname_a}$), &
+            MIN(SIZE(${vname_a}$, 1), 50), [${error_rate}$])
+      end block
+    else
+      block
+        type(assertion_result) :: result
+        result%method = "${routine}$"
+        result%shape_a = SHAPE(${vname_a}$)
+#:if rank2 is not None
+        result%shape_b = SHAPE(${vname_b}$)
+#:endif
+        call this%apend_result(result, unitname=unitname)
+        call this%report_result(result, unitname)
+        call result%destroy()
       end block
     end if
 #:enddef
 #:def error_list(routine, op, fm, rank1, rank2, error_rate, success, subvar=None, vname_a="a", vname_b="b")
-    call test_result_append(this%results, err)
     if (PRESENT(is_failed)) is_failed = err
-${report_result(routine)}$
 ${error_list_loop(routine, op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b) if rank1 > 0 else error_list_scalar(routine, op, fm, rank2, vname_a, vname_b)}$
 #:enddef
-  subroutine report_rank_error(dev, num_test, nest, size_a, size_b, tap, routine, unitname)
-    use mod_unittest_tap14_yaml
-    !! print rank error
-    integer, intent(in)                :: dev
-    integer, intent(in)                :: num_test
-    integer, intent(in)                :: nest
-    integer, intent(in)                :: size_a(:)
-    integer, intent(in)                :: size_b(:)
-    character(*), intent(in)           :: routine
-    logical, intent(in)                :: tap
-    character(*), intent(in), optional :: unitname
-    character(:), allocatable          :: ps
-    character(*), parameter            :: WSPC = ${WSPC}$
-    character(*), parameter            :: SEP3 = ${SEP3}$
-    character(*), parameter            :: FAILED = ACHAR(INT(z'1b'))//"[91mFAILED"//ACHAR(INT(z'1b'))//"[m"
-    character(*), parameter            :: rankMissMatch = WSPC//'  RankMissMatch: '
-    integer                            :: ios
-    if (tap) then
-      call tap_string(unitname, num_test, routine, ps)
-      write(STDOUT, '(A)', IOSTAT=ios) REPEAT("  ", nest)//"not "//ps
-      block
-        character(:), allocatable :: unam, asse
-        integer                   :: i
-        call name_(unitname, routine, num_test, unam)
-        call assertion_(routine, asse)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_start(nest=nest + 1)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("name", '"'//unam//'"', nest=nest + 1)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("assertion", asse, nest=nest + 1)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("values", "", nest=nest + 1)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("rank", "false", nest=nest + 1)
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("shape_a", "", nest=nest + 1)
-        do i = 1, SIZE(size_a)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(size_a(i), nest=nest + 2)
-        end do
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_body("shape_b", "", nest=nest + 2)
-        do i = 1, SIZE(size_b)
-          write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_list(size_b(i), nest=nest + 2)
-        end do
-        write (STDOUT, '(A)', ADVANCE="NO", IOSTAT=ios) tap14_yaml_document_end(nest=nest + 1)
-      end block
-    else
-      call padd_string(unitname, num_test, routine, ${L_WDH}$, ps)
-      write (dev, '(A)', IOSTAT=ios) ps//FAILED
-      write (dev, '(A)', IOSTAT=ios) SEP3
-      write (dev, '(2A)', IOSTAT=ios, ADVANCE="NO") rankMissMatch, '['
-      write (dev, '(*(I0,:,", "))', IOSTAT=ios, ADVANCE="NO") size_a
-      write (dev, '(A)', IOSTAT=ios, ADVANCE="NO") '] /= ['
-      write (dev, '(*(I0,:,", "))', IOSTAT=ios, ADVANCE="NO") size_b
-      write (dev, '(A)', IOSTAT=ios) ']'
-      write (dev, '(A)', IOSTAT=ios) SEP3
-    endif
-  end subroutine report_rank_error
-!
-  subroutine report_result(dev, num_test, nest, err, tap, routine, unitname)
-    !! print test result
-    integer, intent(in)                :: dev
-    integer, intent(in)                :: num_test
-    integer, intent(in)                :: nest
-    logical, intent(in)                :: err
-    logical, intent(in)                :: tap
-    character(*), intent(in)           :: routine
-    character(*), intent(in), optional :: unitname
-    character(*), parameter            :: SEP3 = ${SEP3}$
-    character(*), parameter            :: FAILED = ACHAR(INT(z'1b'))//"[91mFAILED"//ACHAR(INT(z'1b'))//"[m"
-    character(*), parameter            :: OK     = ACHAR(INT(z'1b'))//"[92mOK"//ACHAR(INT(z'1b'))//"[m"
-    character(:), allocatable          :: ps
-    integer                            :: ios
-    if (tap) then
-      call tap_string(unitname, num_test, routine, ps)
-      if (err) ps = "not "//ps
-      write(STDOUT, '(A)', IOSTAT=ios) REPEAT("  ", nest)//ps
-    else
-      call padd_string(unitname, num_test, routine, ${L_WDH}$, ps)
-      if (err) then; ps = ps//FAILED
-      else; ps = ps//OK
-      end if
-      write (dev, '(A)', IOSTAT=ios) ps
-    end if
-  end subroutine report_result
-!
-  subroutine report_error_rate(dev, n, nerror)
-    integer, intent(in)     :: dev, n, nerror
-    real(RK)                :: error_rate
-    character(*), parameter :: WSPC = ${WSPC}$
-    character(*), parameter :: SEP3 = ${SEP3}$
-    character(*), parameter :: ErrorRateIs = WSPC//'  ErrorRate: '
-    integer                 :: ios
-    if (n > 1) then
-      error_rate = real(100 * nerror, RK) / real(n, RK)
-      write (dev, '(A)', IOSTAT=ios) SEP3
-      write (dev, '(A,f7.3,A,I0,A,I0,A)', IOSTAT=ios) &
-     &  ErrorRateIs, error_rate, ' %  ( ', nerror, ' / ', n, ' )'
-    end if
-  end subroutine report_error_rate
-!
-  pure subroutine name_(unitname, routine, ntest, res)
-    character(*), intent(in), optional       :: unitname
-    character(*), intent(in)                 :: routine
-    integer, intent(in)                      :: ntest
-    character(:), allocatable, intent(inout) :: res
-    if (PRESENT(unitname)) then
-      res = TRIM(unitname)
-    else
-      block
-        character(32) :: cntest
-        write (cntest, '(I0)') ntest
-        if (routine == "") then
-          res = "TEST "//TRIM(ADJUSTL(cntest))
-        else
-          res = routine//" "//TRIM(ADJUSTL(cntest))
-        end if
-      end block
-    end if
-  end subroutine name_
-!
-  pure subroutine assertion_(routine, res)
-    character(*), intent(in)                 :: routine
-    character(:), allocatable, intent(inout) :: res
-    if (routine == "") then
-      res = "assert"
-    else
-      res = routine
-    end if
-  end subroutine assertion_
-!
-  pure subroutine padd_string(unitname, ntest, routine, nline, res)
-    character(*), intent(in), optional       :: unitname
-    integer, intent(in)                      :: ntest
-    character(*), intent(in)                 :: routine
-    integer, intent(in)                      :: nline
-    character(:), allocatable, intent(inout) :: res
-    character(:), allocatable                :: un
-    character(7)                             :: cntest
-    integer                                  :: npad
-    write (cntest, '(I7)') ntest
-    call name_(unitname, routine, ntest, un)
-    npad = MAX(0, nline - LEN(un))
-    res = "#"//cntest//' '//un//REPEAT(' ', npad)//'... '
-  end subroutine padd_string
-!
-  pure subroutine tap_string(unitname, ntest, routine, res)
-    character(*), intent(in), optional       :: unitname
-    integer, intent(in)                      :: ntest
-    character(*), intent(in)                 :: routine
-    character(:), allocatable, intent(inout) :: res
-    character(32)                            :: cntest
-    write (cntest, '(I0)') ntest
-    res = 'ok '//TRIM(cntest)
-    if (PRESENT(unitname)) res = res//" # "//TRIM(unitname)
-  end subroutine tap_string
-!

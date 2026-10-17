@@ -6,22 +6,28 @@ contains
 #:for kind, type, post in [x for x in REAL_KIND_TYPE_POSTS + COMPLEX_KIND_TYPE_POSTS if x[0] in ["sp", "dp"]]
 #:for routine, invert in [("allclose", True), ("not_allclose", False)]
   module procedure ${"unittest_assert_" + routine + "_xd_" + post}$
-    integer :: i, n, ios
+    integer :: i, n
     real(${kind}$) :: abs_tol, rel_tol, scale, delta
     logical :: err
+    type(assertion_result) :: result
     if (SIZE(shape_a) /= SIZE(shape_b)) then
       err = .true.
     else
       err = ANY(shape_a /= shape_b)
     end if
     if (PRESENT(is_failed)) is_failed = err
-    call test_result_append(this%results, err)
-    if (err) then
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, &
-        shape_a, shape_b, this%tap_support, "${routine + '_xd'}$", unitname)
+      if (err) then
+      result%method = "${routine + '_xd'}$"
+      result%shape_a = shape_a
+      result%shape_b = shape_b
+      call this%apend_result(result, unitname=unitname)
+      call result%destroy()
       return
     end if
     n = PRODUCT(shape_a)
+    result%method = "${routine + '_xd'}$"
+    result%shape_a = shape_a
+    result%shape_b = shape_b
     abs_tol = 1E-8_${kind}$
     rel_tol = 1E-5_${kind}$
     if (PRESENT(atol)) abs_tol = MAX(atol, 0.0_${kind}$)
@@ -34,25 +40,26 @@ contains
     do i = 1, n
       delta = REAL(ABS(a(i) - b(i)), ${kind}$)
       if (delta >= abs_tol + rel_tol * scale) then
-        ${"err = .true." if invert else "err = .false."}$
+#:if invert
+        err = .true.
+        call result%push(i, "values differ beyond allclose tolerance")
+#:else
+        err = .false.
         exit
+#:endif
       end if
     end do
+#:if not invert
+    if (err) &
+      call result%push(0, "all elements are within tolerance")
+#:endif
     if (PRESENT(is_failed)) is_failed = err
-    this%results(SIZE(this%results))%err = err
-    call report_result(this%dev, this%results(SIZE(this%results))%id, this%nest, err, &
-      this%tap_support, "${routine + '_xd'}$", unitname)
-    if (err .and. this%verbose > 0) then
-      #:if invert
-      write(this%dev, '(A,I0,A,I0,A)', iostat=ios) &
-        "#        first differing flat element: ", i, " (total elements: ", n, ")"
-      #:else
-      write(this%dev, '(A,I0,A)', iostat=ios) "#        all ", n, " elements are within tolerance"
-      #:endif
-    end if
+    call this%apend_result(result, unitname=unitname)
+    call this%report_result(result, unitname, &
+      show_details=this%verbose > 0 .and. n < this%dump_line_limit)
+    call result%destroy()
   end procedure ${"unittest_assert_" + routine + "_xd_" + post}$
 #:endfor
 #:endfor
-include "result_functions.f90"
 include "image_functions.f90"
 end submodule allclose_xd

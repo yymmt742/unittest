@@ -51,6 +51,8 @@ macro(ADDTEST name)
   add_test(NAME ${name} COMMAND $<TARGET_FILE:test_${name}>)
 endmacro(ADDTEST)
 
+ADDTEST(assertion_result)
+
 if(UNITTEST_XD_ONLY_EFFECTIVE)
   ADDTEST(assert_xd)
   ADDTEST(allclose_xd)

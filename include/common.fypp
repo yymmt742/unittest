@@ -155,16 +155,22 @@ $:common_check_1(routine) if rank1>0 and (rank2 is not None and rank2>0) else co
 #:enddef
 #:def common_check_1(routine)
     logical :: err
+    type(assertion_result) :: result
     err = ANY(SHAPE(a) /= SHAPE(b))
     if(PRESENT(is_failed)) is_failed = err
     if (err) then
-      call test_result_append(this%results, err)
-      call report_rank_error(this%dev, this%results(SIZE(this%results))%id, this%nest, SHAPE(a), SHAPE(b), this%tap_support, "${routine}$", unitname)
+      result%method = "${routine}$"
+      result%shape_a = SHAPE(a)
+      result%shape_b = SHAPE(b)
+      call this%apend_result(result, unitname=unitname)
+      call result%destroy()
       return
     end if
 #:enddef
 #:def report_result(routine)
-    call report_result(this%dev, this%results(SIZE(this%results))%id, this%nest, err, this%tap_support, "${routine}$", unitname)
+    call this%apend_result(result, unitname=unitname)
+    call this%report_result(result, unitname)
+    call result%destroy()
 #:enddef
 
 #:set L_MSG = 56

@@ -1,0 +1,181 @@
+program test_assertion_result
+  use, intrinsic :: iso_fortran_env, only: real64
+  use mod_assertion_result, only: assertion_result, assertion_failure, &
+                                  n_test, n_error, report_rank_error, report_rank_error_tap
+  use mod_unittest, only: unittest
+  implicit none
+  type(assertion_result) :: result, copied, rate_result, rank_result, scalar_result
+  type(assertion_failure) :: failure
+  type(unittest) :: reporter, tap_reporter, deferred_reporter, flush_reporter
+  type(assertion_result) :: no_results(0), errors(3), subtest_results(5), marker_only(1)
+  integer :: i, report_unit, ios, report_size, rank_pos
+  character(:), allocatable :: message, tap_message, captured
+  character(512) :: report_line
+
+  if (n_test(no_results) /= 0) error stop "n_test must handle an empty result list"
+  if (n_error(no_results) /= 0) error stop "n_error must handle an empty result list"
+  errors(1)%id = 1
+  call errors(1)%push(1, "first failure")
+  errors(2)%id = 2
+  errors(3)%id = 3
+  call errors(3)%push(1, "third failure")
+  if (n_test(errors) /= 3) error stop "n_test must return the latest test id"
+  if (n_error(errors) /= 2) error stop "n_error must count errors in the current section"
+  subtest_results(1)%id = 1
+  call subtest_results(1)%push(1, "earlier failure")
+  subtest_results(2)%id = 2
+  call subtest_results(2)%push(1, "earlier failure")
+  subtest_results(3)%id = 0
+  subtest_results(4)%id = 1
+  subtest_results(5)%id = 2
+  call subtest_results(5)%push(1, "current failure")
+  if (n_test(subtest_results) /= 2) error stop "n_test must reset at a section boundary"
+  if (n_error(subtest_results) /= 1) error stop "n_error must ignore earlier sections"
+  marker_only(1)%id = 0
+  if (n_error(marker_only) /= 0) error stop "n_error must handle an empty section"
+
+  message = report_rank_error(3, [2, 3], [2, 4], "assert_equal")
+  if (index(message, "assert_equal 3") == 0) error stop "rank report must include method and test number"
+  if (index(message, "FAILED") == 0) error stop "rank report must mark the assertion as failed"
+  if (index(message, "RankMissMatch: [2, 3] /= [2, 4]") == 0) &
+    error stop "rank report must include both shapes"
+  message = report_rank_error(12, [1], [2], "", "matrix shape")
+  if (index(message, "matrix shape") == 0) error stop "rank report must use the supplied unit name"
+  if (index(message, "RankMissMatch: [1] /= [2]") == 0) error stop "rank report must format rank-one shapes"
+
+  tap_message = report_rank_error_tap(3, 0, [2, 3], [2, 4], "assert_equal", "matrix shape")
+  if (index(tap_message, "not ok 3 # matrix shape") == 0) &
+    error stop "TAP rank report must emit a not-ok result"
+  if (index(tap_message, "assertion: assert_equal") == 0) error stop "TAP rank report must include the assertion"
+  if (index(tap_message, "rank: false") == 0) error stop "TAP rank report must mark rank mismatch"
+  if (index(tap_message, "shape_a:") == 0 .or. index(tap_message, "shape_b:") == 0) &
+    error stop "TAP rank report must include both shapes"
+
+  rate_result%method = "assert_equal"
+  rate_result%shape_a = [4]
+  call rate_result%push(2, "[1] /= [2]")
+  call rate_result%push(4, "[3] /= [4]")
+  if (abs(rate_result%error_rate() - 0.5_real64) > 1.0e-12_real64) &
+    error stop "error rate must be details divided by tensor size"
+  rank_result%shape_a = [2, 2]
+  rank_result%shape_b = [2, 3]
+  if (rank_result%error_rate() /= 1.0_real64) error stop "rank mismatch error rate must be one"
+  call scalar_result%push(1, "scalar failed")
+  if (scalar_result%error_rate() /= 1.0_real64) error stop "scalar error rate must be one"
+
+  open (newunit=report_unit, status="scratch", action="readwrite")
+  call rate_result%report_error_rate(report_unit)
+  rewind (report_unit)
+  read (report_unit, '(A)', iostat=ios) report_line
+  read (report_unit, '(A)', iostat=ios) report_line
+  if (ios /= 0 .or. index(report_line, "ErrorRate") == 0) &
+    error stop "report_error_rate must write the computed rate"
+  close (report_unit)
+
+  open (newunit=report_unit, status="scratch", action="readwrite")
+  call reporter%init(dump_line_limit=0)
+  rate_result%id = 2
+  call reporter%report_result(rate_result, "comparison", show_details=.true., dev=report_unit)
+  rewind (report_unit)
+  captured = ""
+  do
+    read (report_unit, '(A)', iostat=ios) report_line
+    if (ios /= 0) exit
+    captured = captured//trim(report_line)//new_line('')
+  end do
+  close (report_unit)
+  if (index(captured, "FAILED") == 0 .or. index(captured, "[1] /= [2]") == 0) &
+    error stop "report_result must output failure details"
+  if (index(captured, "ErrorRate") == 0) error stop "report_result must output error rate"
+
+  open (newunit=report_unit, status="scratch", action="readwrite")
+  call tap_reporter%init(tap_support=.true.)
+  call tap_reporter%apend_result(rate_result)
+  call tap_reporter%report_result(rate_result, "comparison", dev=report_unit)
+  rewind (report_unit)
+  captured = ""
+  do
+    read (report_unit, '(A)', iostat=ios) report_line
+    if (ios /= 0) exit
+    captured = captured//trim(report_line)//new_line('')
+  end do
+  close (report_unit)
+  if (index(captured, "not ok 1 # comparison") == 0) error stop "report_result must write TAP failure status"
+  if (index(captured, "[3] /= [4]") == 0) error stop "report_result must include TAP failure details"
+  call rate_result%destroy()
+  call reporter%finish()
+  call tap_reporter%finish()
+
+  rank_result%method = "assert_equal"
+  open (newunit=report_unit, status="scratch", action="readwrite")
+  call deferred_reporter%init(dump_line_limit=0, flush=.false., dev=report_unit)
+  call deferred_reporter%apend_result(rank_result, unitname="deferred rank mismatch")
+  inquire (unit=report_unit, size=report_size)
+  if (report_size /= 0) error stop "flush=false must defer rank mismatch output until finish"
+  call deferred_reporter%finish()
+  rewind (report_unit)
+  captured = ""
+  do
+    read (report_unit, '(A)', iostat=ios) report_line
+    if (ios /= 0) exit
+    captured = captured//trim(report_line)//new_line('')
+  end do
+  close (report_unit)
+  if (index(captured, "deferred rank mismatch") == 0) &
+    error stop "finish must report deferred rank mismatches with their unit name"
+
+  open (newunit=report_unit, status="scratch", action="readwrite")
+  call flush_reporter%init(dump_line_limit=0, flush=.true., dev=report_unit)
+  call flush_reporter%apend_result(rank_result, unitname="immediate rank mismatch")
+  inquire (unit=report_unit, size=report_size)
+  if (report_size == 0) error stop "flush=true must report rank mismatch during append"
+  call flush_reporter%finish()
+  rewind (report_unit)
+  captured = ""
+  do
+    read (report_unit, '(A)', iostat=ios) report_line
+    if (ios /= 0) exit
+    captured = captured//trim(report_line)//new_line('')
+  end do
+  close (report_unit)
+  rank_pos = index(captured, "RankMissMatch:")
+  if (rank_pos == 0) error stop "flush=true must include the rank mismatch report"
+  if (index(captured(rank_pos + 1:), "RankMissMatch:") /= 0) &
+    error stop "flush=true must not report the same rank mismatch again at finish"
+
+  if (result%size() /= 0) error stop "new result must be empty"
+
+  result%method = "assert_equal"
+  result%id = 17
+  result%shape_a = [2, 3]
+  result%shape_b = [2, 3]
+  do i = 1, 17
+    call result%push(i, "failure detail")
+  end do
+
+  if (result%size() /= 17) error stop "push must increase the logical size"
+  failure = result%get_detail(1)
+  if (failure%flat_idx /= 1) error stop "first flat index was not retained"
+  if (trim(failure%detail) /= "failure detail") error stop "first detail was not retained"
+  failure = result%get_detail(17)
+  if (failure%flat_idx /= 17) error stop "last flat index was not retained"
+  if (trim(failure%detail) /= "failure detail") error stop "last detail was not retained"
+  if (trim(result%method) /= "assert_equal") error stop "method was not retained"
+  if (any(result%shape_a /= [2, 3])) error stop "shape_a was not retained"
+  if (any(result%shape_b /= [2, 3])) error stop "shape_b was not retained"
+
+  call copied%copy_from(result)
+  if (copied%id /= 17) error stop "copy_from must copy the test id"
+  call result%push(18, "after copy")
+  if (copied%size() /= 17) error stop "copy changed after original was extended"
+  if (result%size() /= 18) error stop "push after copy failed"
+
+  call result%clear()
+  if (result%size() /= 0) error stop "clear must reset the logical size"
+  if (allocated(result%shape_a)) error stop "clear must release shape_a"
+  if (allocated(result%shape_b)) error stop "clear must release shape_b"
+  call result%destroy()
+  call copied%destroy()
+  call rank_result%destroy()
+  call scalar_result%destroy()
+end program test_assertion_result
