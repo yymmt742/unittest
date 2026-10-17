@@ -21,7 +21,5 @@ ${error_list(routine, op, "A,L,A", rank1, rank2, error_rate(op), success(rank1, 
 #:endfor
 #:endfor
 #:endfor
-include "result_functions.f90"
 include "image_functions.f90"
 end submodule bool
-

@@ -28,7 +28,6 @@ function(fypp_generate src target opts depends list newlist)
 endfunction()
 
 list(APPEND fyppIncludes
-   result_functions.fypp
    image_functions.fypp
    )
 

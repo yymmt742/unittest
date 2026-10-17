@@ -24,6 +24,5 @@ ${error_list(routine, op, fm, rank1, rank2, rate, success(rank1, rank2, op))}$
 #:endfor
 #:endfor
 #:endfor
-include "result_functions.f90"
 include "image_functions.f90"
 end submodule compare

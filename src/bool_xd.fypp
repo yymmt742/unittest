@@ -24,6 +24,5 @@ contains
       show_details=this%verbose > 0 .and. n < this%dump_line_limit)
     call result%destroy()
   end procedure unittest_assert_xd_logical
-include "result_functions.f90"
 include "image_functions.f90"
 end submodule bool_xd

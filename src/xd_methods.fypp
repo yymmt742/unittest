@@ -187,6 +187,5 @@ contains
   end procedure unittest_assert_${routine}$_xd_${post}$
 #:endfor
 #:endfor
-include "result_functions.f90"
 include "image_functions.f90"
 end submodule xd_methods
