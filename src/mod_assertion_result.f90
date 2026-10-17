@@ -8,15 +8,8 @@ module mod_assertion_result
   integer, parameter, public :: ASSERTION_DETAIL_LEN = 512
   integer, parameter, public :: ASSERTION_METHOD_LEN = 64
 
-  public :: test_result
   public :: n_test, n_error
   public :: report_rank_error, report_rank_error_tap
-
-  type :: test_result
-    sequence
-    integer :: id
-    logical :: err
-  end type test_result
 
   type, public :: assertion_failure
     sequence
@@ -25,6 +18,7 @@ module mod_assertion_result
   end type assertion_failure
 
   type, public :: assertion_result
+    integer :: id = 0
     integer, allocatable :: shape_a(:)
     integer, allocatable :: shape_b(:)
     character(ASSERTION_METHOD_LEN) :: method = ''
@@ -37,6 +31,8 @@ module mod_assertion_result
     procedure, public :: get_detail => assertion_result_get_detail
     procedure, public :: clear => assertion_result_clear
     procedure, public :: destroy => assertion_result_destroy
+    procedure, public :: copy_from => assertion_result_copy_from
+    procedure, public :: is_error => assertion_result_is_error
     procedure, public :: error_rate => assertion_result_error_rate
     procedure, public :: report_error_rate => assertion_result_report_error_rate
     procedure, public :: report_result => assertion_result_report_result
@@ -45,7 +41,7 @@ module mod_assertion_result
 contains
 
   pure function n_test(results) result(res)
-    type(test_result), intent(in) :: results(:)
+    type(assertion_result), intent(in) :: results(:)
     integer :: res
 
     res = 0
@@ -53,13 +49,15 @@ contains
   end function n_test
 
   pure function n_error(results) result(res)
-    type(test_result), intent(in) :: results(:)
-    integer :: res, first
+    type(assertion_result), intent(in) :: results(:)
+    integer :: res, first, i
 
     res = 0
     if (SIZE(results) == 0) return
     first = MAX(1, SIZE(results) - results(SIZE(results))%id + 1)
-    res = COUNT(results(first:)%err)
+    do i = first, SIZE(results)
+      if (results(i)%is_error()) res = res + 1
+    end do
   end function n_error
 
   pure real(real64) function assertion_result_error_rate(this) result(rate)
@@ -325,6 +323,36 @@ contains
     n = this%n_details
   end function assertion_result_size
 
+  pure logical function assertion_result_is_error(this) result(failed)
+    class(assertion_result), intent(in) :: this
+
+    failed = this%n_details > 0
+    if (failed) return
+    if (.not. ALLOCATED(this%shape_b)) return
+    if (.not. ALLOCATED(this%shape_a)) then
+      failed = .true.
+      return
+    end if
+    if (SIZE(this%shape_a) /= SIZE(this%shape_b)) then
+      failed = .true.
+      return
+    end if
+    failed = ANY(this%shape_a /= this%shape_b)
+  end function assertion_result_is_error
+
+  pure subroutine assertion_result_copy_from(this, source)
+    class(assertion_result), intent(inout) :: this
+    class(assertion_result), intent(in) :: source
+
+    call this%clear()
+    this%id = source%id
+    this%method = source%method
+    if (ALLOCATED(source%shape_a)) this%shape_a = source%shape_a
+    if (ALLOCATED(source%shape_b)) this%shape_b = source%shape_b
+    this%n_details = source%n_details
+    if (ALLOCATED(source%details)) this%details = source%details
+  end subroutine assertion_result_copy_from
+
   pure function assertion_result_get_detail(this, idx) result(detail)
     class(assertion_result), intent(in) :: this
     integer, intent(in) :: idx
@@ -339,6 +367,7 @@ contains
     if (ALLOCATED(this%shape_b)) deallocate (this%shape_b)
     this%n_details = 0
     this%method = ''
+    this%id = 0
   end subroutine assertion_result_clear
 
   pure subroutine assertion_result_destroy(this)

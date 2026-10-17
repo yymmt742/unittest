@@ -23,18 +23,17 @@ contains
   module procedure ${routine_name(routine, post, 2)}$
     ${"real(RK)" if "INT" in kind else "real("+kind+")"}$ :: mp, diff
     integer :: i, j
+    type(assertion_result) :: result
 ${common_check(rank1, rank2, routine)}$
     err = SIZE(a, 1) /= SIZE(a, 2)
     if (PRESENT(is_failed)) is_failed = err
     if (err)then
-      call test_result_append(this%results, err)
-      if (this%tap_support) then
-        write (STDOUT, '(A)') report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
-          [SIZE(a, 1)], [SIZE(a, 2)], "is_symmetric_xd", unitname)
-      else
-        write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &
-          [SIZE(a, 1)], [SIZE(a, 2)], "is_symmetric_xd", unitname)
-      end if
+      result%method = "is_symmetric_xd"
+      result%shape_a = [SIZE(a, 1)]
+      result%shape_b = [SIZE(a, 2)]
+      call this%push(result)
+      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call result%destroy()
       return
     endif
     if (PRESENT(place)) then; mp = 10**place

@@ -16,7 +16,8 @@
 #:endif
         call result%push(1, TRIM(detail))
       end if
-      call result%report_result(this%dev, this%results(SIZE(this%results))%id, &
+      call this%push(result)
+      call result%report_result(this%dev, result%id, &
         this%nest, this%tap_support, unitname)
       call result%destroy()
     end block
@@ -47,7 +48,8 @@ ${success}$
 #:endif
           call result%push(flat_idx, TRIM(detail))
 ${do_end(rank1)}$
-        call result%report_result(this%dev, this%results(SIZE(this%results))%id, &
+        call this%push(result)
+        call result%report_result(this%dev, result%id, &
           this%nest, this%tap_support, unitname, show_details=.not.silent)
         call result%destroy()
         if (silent .and. .not.this%tap_support) &
@@ -62,14 +64,13 @@ ${do_end(rank1)}$
 #:if rank2 is not None
         result%shape_b = SHAPE(${vname_b}$)
 #:endif
-        call result%report_result(this%dev, this%results(SIZE(this%results))%id, &
-          this%nest, this%tap_support, unitname)
+        call this%push(result)
+        call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
         call result%destroy()
       end block
     end if
 #:enddef
 #:def error_list(routine, op, fm, rank1, rank2, error_rate, success, subvar=None, vname_a="a", vname_b="b")
-    call test_result_append(this%results, err)
     if (PRESENT(is_failed)) is_failed = err
 ${error_list_loop(routine, op, fm, rank1, rank2, error_rate, success, subvar, vname_a, vname_b) if rank1 > 0 else error_list_scalar(routine, op, fm, rank2, vname_a, vname_b)}$
 #:enddef

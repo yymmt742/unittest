@@ -9,7 +9,6 @@ contains
     type(assertion_result) :: result
     n = PRODUCT(shape_expr)
     err = .not.ALL(expr(1:n))
-    call test_result_append(this%results, err)
     if (PRESENT(is_failed)) is_failed = err
     result%method = "assert_xd"
     result%shape_a = shape_expr
@@ -20,7 +19,8 @@ contains
         end if
       end do
     end if
-    call result%report_result(this%dev, this%results(SIZE(this%results))%id, &
+    call this%push(result)
+    call result%report_result(this%dev, result%id, &
       this%nest, this%tap_support, unitname, &
       show_details=this%verbose > 0 .and. n < this%dump_line_limit)
     call result%destroy()

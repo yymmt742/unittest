@@ -32,27 +32,23 @@ contains
     if (SIZE(shape_a) /= SIZE(shape_b)) then
       err = .true.
       if (PRESENT(is_failed)) is_failed = err
-      call test_result_append(this%results, err)
-      if (this%tap_support) then
-        write (STDOUT, '(A)') report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
-          shape_a, shape_b, "${routine + '_xd'}$", unitname)
-      else
-        write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &
-          shape_a, shape_b, "${routine + '_xd'}$", unitname)
-      end if
+      result%method = "${routine + '_xd'}$"
+      result%shape_a = shape_a
+      result%shape_b = shape_b
+      call this%push(result)
+      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call result%destroy()
       return
     end if
     if (ANY(shape_a /= shape_b)) then
       err = .true.
       if (PRESENT(is_failed)) is_failed = err
-      call test_result_append(this%results, err)
-      if (this%tap_support) then
-        write (STDOUT, '(A)') report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
-          shape_a, shape_b, "${routine + '_xd'}$", unitname)
-      else
-        write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &
-          shape_a, shape_b, "${routine + '_xd'}$", unitname)
-      end if
+      result%method = "${routine + '_xd'}$"
+      result%shape_a = shape_a
+      result%shape_b = shape_b
+      call this%push(result)
+      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call result%destroy()
       return
     end if
     n = PRODUCT(shape_a)
@@ -89,27 +85,23 @@ contains
     if (SIZE(shape_a) /= 2) then
       err = .true.
       if (PRESENT(is_failed)) is_failed = err
-      call test_result_append(this%results, err)
-      if (this%tap_support) then
-        write (STDOUT, '(A)') report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
-          shape_a, [2], "${routine + '_xd'}$", unitname)
-      else
-        write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &
-          shape_a, [2], "${routine + '_xd'}$", unitname)
-      end if
+      result%method = "${routine + '_xd'}$"
+      result%shape_a = shape_a
+      result%shape_b = [2]
+      call this%push(result)
+      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call result%destroy()
       return
     end if
     if (shape_a(1) /= shape_a(2)) then
       err = .true.
       if (PRESENT(is_failed)) is_failed = err
-      call test_result_append(this%results, err)
-      if (this%tap_support) then
-        write (STDOUT, '(A)') report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
-          [shape_a(1)], [shape_a(2)], "${routine + '_xd'}$", unitname)
-      else
-        write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &
-          [shape_a(1)], [shape_a(2)], "${routine + '_xd'}$", unitname)
-      end if
+      result%method = "${routine + '_xd'}$"
+      result%shape_a = [shape_a(1)]
+      result%shape_b = [shape_a(2)]
+      call this%push(result)
+      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call result%destroy()
       return
     end if
     if (PRESENT(place)) then; mp = 10**place
@@ -193,8 +185,8 @@ contains
 #:endif
     end if
     if (PRESENT(is_failed)) is_failed = err
-    call test_result_append(this%results, err)
-    call result%report_result(this%dev, this%results(SIZE(this%results))%id, this%nest, &
+    call this%push(result)
+    call result%report_result(this%dev, result%id, this%nest, &
       this%tap_support, unitname)
     call result%destroy()
   end procedure unittest_assert_${routine}$_xd_${post}$

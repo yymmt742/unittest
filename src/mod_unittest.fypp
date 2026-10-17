@@ -7,7 +7,7 @@ module mod_unittest
                   &                        RK => REAL64
   use mod_unittest_kinds
   use mod_unittest_tap14_yaml
-  use mod_assertion_result, only: test_result, n_test, n_error, &
+  use mod_assertion_result, only: n_test, n_error, &
                                   assertion_result, ASSERTION_DETAIL_LEN, &
                                   report_rank_error, report_rank_error_tap
   implicit none
@@ -52,12 +52,13 @@ module mod_unittest
     integer                        :: nest
     character(:), allocatable      :: script_name
     character(:), allocatable      :: section
-    type(test_result), allocatable :: results(:)
+    type(assertion_result), allocatable :: results(:)
     type(timestamp), allocatable   :: times(:)
     logical                        :: terminate_with_error_code
     logical                        :: tap_support
   contains
     procedure         :: init => utest_init
+    procedure         :: push => utest_push
 #:if XD_ONLY_SUPPORT
     procedure, private :: unittest_assert_logical_0
     procedure, private :: unittest_assert_xd_logical
@@ -381,20 +382,10 @@ contains
       if (this%tap_support) write (STDOUT, '(2A)', iostat=ios) "# Subtest: ", this%section
     end if
 !
-    if (ALLOCATED(this%results)) then
-      block
-        integer                        :: n
-        type(test_result), allocatable :: tmp(:)
-        n = SIZE(this%results)
-        allocate (tmp(n + 1))
-        if (n > 0) tmp(:n) = this%results(:n)
-        tmp(n + 1) = test_result(0, .false.)
-        call MOVE_ALLOC(from=tmp, to=this%results)
-      end block
-    else
-      ALLOCATE(this%results(1))
-      this%results(1) = test_result(0, .false.)
-    end if
+    block
+      type(assertion_result) :: marker
+      call this%push(marker, section_marker=.true.)
+    end block
 !
     if (this%verbose > 0) then
       write (this%dev, '(A)', iostat=ios) SEP2
@@ -406,6 +397,32 @@ contains
     end if
 !
   end subroutine utest_init
+
+  subroutine utest_push(this, result, section_marker)
+    class(unittest), intent(inout) :: this
+    type(assertion_result), intent(inout) :: result
+    logical, intent(in), optional :: section_marker
+    type(assertion_result), allocatable :: expanded(:)
+    integer :: n
+    logical :: is_marker
+
+    n = 0
+    if (ALLOCATED(this%results)) n = SIZE(this%results)
+    is_marker = .false.
+    if (PRESENT(section_marker)) is_marker = section_marker
+    if (is_marker) then
+      result%id = 0
+    else if (n == 0) then
+      result%id = 1
+    else
+      result%id = this%results(n)%id + 1
+    end if
+
+    allocate (expanded(n + 1))
+    if (n > 0) expanded(:n) = this%results(:n)
+    call expanded(n + 1)%copy_from(result)
+    call MOVE_ALLOC(expanded, this%results)
+  end subroutine utest_push
 !
   subroutine utest_setup(this, tap_support, argparse)
     class(unittest), intent(inout)     :: this
@@ -531,10 +548,23 @@ contains
     class(unittest), intent(inout) :: this
     real(RK), intent(in), optional :: passing_score
     logical                        :: error_terminate
+    integer                        :: i, n_error_all
+    n_error_all = 0
+    if (ALLOCATED(this%results)) then
+      do i = 1, SIZE(this%results)
+        if (this%results(i)%is_error()) n_error_all = n_error_all + 1
+      end do
+    end if
     if(PRESENT(passing_score))then
-      error_terminate = (REAL(COUNT(this%results(:)%err), RK) / REAL(SIZE(this%results), RK) > (1.0_RK - passing_score))
+      error_terminate = .false.
+      if (ALLOCATED(this%results)) then
+        if (SIZE(this%results) > 0) then
+          error_terminate = (REAL(n_error_all, RK) / REAL(SIZE(this%results), RK) > &
+                             (1.0_RK - passing_score))
+        end if
+      end if
     else
-      error_terminate = (COUNT(this%results(:)%err) > 0)
+      error_terminate = n_error_all > 0
     endif
     error_terminate = this%terminate_with_error_code .and. error_terminate
     call this%finish()
@@ -611,7 +641,7 @@ contains
   end function elappes_cputime
 !
   pure function n_section(results) result(res)
-    type(test_result), intent(in) :: results(:)
+    type(assertion_result), intent(in) :: results(:)
     integer                       :: res
     res = COUNT(results%id == 0)
   end function n_section

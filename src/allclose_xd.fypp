@@ -16,15 +16,13 @@ contains
       err = ANY(shape_a /= shape_b)
     end if
     if (PRESENT(is_failed)) is_failed = err
-      call test_result_append(this%results, err)
       if (err) then
-      if (this%tap_support) then
-        write (STDOUT, '(A)') report_rank_error_tap(this%results(SIZE(this%results))%id, this%nest, &
-          shape_a, shape_b, "${routine + '_xd'}$", unitname)
-      else
-        write (this%dev, '(A)') report_rank_error(this%results(SIZE(this%results))%id, &
-          shape_a, shape_b, "${routine + '_xd'}$", unitname)
-      end if
+      result%method = "${routine + '_xd'}$"
+      result%shape_a = shape_a
+      result%shape_b = shape_b
+      call this%push(result)
+      call result%report_result(this%dev, result%id, this%nest, this%tap_support, unitname)
+      call result%destroy()
       return
     end if
     n = PRODUCT(shape_a)
@@ -57,8 +55,8 @@ contains
       call result%push(0, "all elements are within tolerance")
 #:endif
     if (PRESENT(is_failed)) is_failed = err
-    this%results(SIZE(this%results))%err = err
-    call result%report_result(this%dev, this%results(SIZE(this%results))%id, &
+    call this%push(result)
+    call result%report_result(this%dev, result%id, &
       this%nest, this%tap_support, unitname, &
       show_details=this%verbose > 0 .and. n < this%dump_line_limit)
     call result%destroy()

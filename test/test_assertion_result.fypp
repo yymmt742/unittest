@@ -1,25 +1,35 @@
 program test_assertion_result
   use, intrinsic :: iso_fortran_env, only: real64
-  use mod_assertion_result, only: assertion_result, assertion_failure, test_result, &
+  use mod_assertion_result, only: assertion_result, assertion_failure, &
                                   n_test, n_error, report_rank_error, report_rank_error_tap
   implicit none
   type(assertion_result) :: result, copied, rate_result, rank_result, scalar_result
   type(assertion_failure) :: failure
-  type(test_result) :: no_results(0), errors(3), subtest_results(5), marker_only(1)
+  type(assertion_result) :: no_results(0), errors(3), subtest_results(5), marker_only(1)
   integer :: i, report_unit, ios
   character(:), allocatable :: message, tap_message, captured
   character(512) :: report_line
 
   if (n_test(no_results) /= 0) error stop "n_test must handle an empty result list"
   if (n_error(no_results) /= 0) error stop "n_error must handle an empty result list"
-  errors = [test_result(1, .true.), test_result(2, .false.), test_result(3, .true.)]
+  errors(1)%id = 1
+  call errors(1)%push(1, "first failure")
+  errors(2)%id = 2
+  errors(3)%id = 3
+  call errors(3)%push(1, "third failure")
   if (n_test(errors) /= 3) error stop "n_test must return the latest test id"
   if (n_error(errors) /= 2) error stop "n_error must count errors in the current section"
-  subtest_results = [test_result(1, .true.), test_result(2, .true.), &
-                     test_result(0, .false.), test_result(1, .false.), test_result(2, .true.)]
+  subtest_results(1)%id = 1
+  call subtest_results(1)%push(1, "earlier failure")
+  subtest_results(2)%id = 2
+  call subtest_results(2)%push(1, "earlier failure")
+  subtest_results(3)%id = 0
+  subtest_results(4)%id = 1
+  subtest_results(5)%id = 2
+  call subtest_results(5)%push(1, "current failure")
   if (n_test(subtest_results) /= 2) error stop "n_test must reset at a section boundary"
   if (n_error(subtest_results) /= 1) error stop "n_error must ignore earlier sections"
-  marker_only = [test_result(0, .false.)]
+  marker_only(1)%id = 0
   if (n_error(marker_only) /= 0) error stop "n_error must handle an empty section"
 
   message = report_rank_error(3, [2, 3], [2, 4], "assert_equal")
@@ -91,6 +101,7 @@ program test_assertion_result
   if (result%size() /= 0) error stop "new result must be empty"
 
   result%method = "assert_equal"
+  result%id = 17
   result%shape_a = [2, 3]
   result%shape_b = [2, 3]
   do i = 1, 17
@@ -108,7 +119,8 @@ program test_assertion_result
   if (any(result%shape_a /= [2, 3])) error stop "shape_a was not retained"
   if (any(result%shape_b /= [2, 3])) error stop "shape_b was not retained"
 
-  copied = result
+  call copied%copy_from(result)
+  if (copied%id /= 17) error stop "copy_from must copy the test id"
   call result%push(18, "after copy")
   if (copied%size() /= 17) error stop "copy changed after original was extended"
   if (result%size() /= 18) error stop "push after copy failed"
